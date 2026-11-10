@@ -39,7 +39,13 @@ TOP_N = 10
 PAGE = 20
 MAX_BODY = 8 * 1024
 # 동작 → (횟수, 초). ponytail: 메모리에만 둔다(재시작하면 초기화). 가벼운 조작 방지면 충분하다.
-LIMITS = {"post": (10, 3600), "star": (60, 3600), "report": (20, 3600)}
+# 회사 사무실은 여러 사람이 같은 공인 IP 를 쓰므로 넉넉하게 둔다.
+LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping": (600, 3600), "install": (600, 3600)}
+STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
+STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
+ARCHES = {"arm64", "x86_64"}
+VERSION_RE = re.compile(r"\d{1,3}(\.\d{1,3}){0,3}")
+LANG_RE = re.compile(r"[A-Za-z]{2,3}([-_][A-Za-z0-9]{2,8})?")
 
 KINDS = {"eureka", "kumquat", "meyer", "calamansi", "lime", "blood", "yuja", "grapefruit", "pink",
          "hallabong", "buddha", "golden", "rainbow"}
@@ -58,6 +64,44 @@ class BadRequest(Exception):
 
 class RateLimited(Exception):
     pass
+
+
+def day_key(dt):
+    return dt.astimezone(KST).strftime("%Y-%m-%d")
+
+
+def _match(v, pattern):
+    if not isinstance(v, str) or not pattern.fullmatch(v):
+        raise BadRequest()
+    return v
+
+
+def clean_ping(b, now):
+    """익명 사용 통계(동의한 설치만). 설치 ID 는 앱이 만든 무작위 값이고 서버는 해시만 저장한다."""
+    if not isinstance(b, dict):
+        raise BadRequest()
+    install = _match(b.get("install"), re.compile(r"[0-9a-fA-F-]{16,64}")).lower()
+    day = b.get("day")
+    try:
+        d = datetime.strptime(day, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        raise BadRequest()
+    if abs((d - now.astimezone(KST).date()).days) > 2:  # 앱은 자기 시간대의 날짜를 보낸다
+        raise BadRequest()
+    if b.get("arch") not in ARCHES:
+        raise BadRequest()
+    lang = b.get("lang") or ""
+    return {"install": install, "day": day, "version": _match(b.get("version"), VERSION_RE), "os": _match(b.get("os"), VERSION_RE),
+            "lang": _match(lang, LANG_RE) if lang else "", "arch": b["arch"],
+            "minutes": _int(b.get("minutes"), 0, 1440), "opens": _int(b.get("opens"), 0, 10000),
+            "sales": _int(b.get("sales"), 0, 100000), "kinds": _int(b.get("kinds"), 0, 13)}
+
+
+def clean_install(b):
+    """설치 신호(동의와 상관없이, 처음 실행 때 한 번). 식별자가 없다."""
+    if not isinstance(b, dict) or b.get("kind") not in ("new", "upgrade") or b.get("arch") not in ARCHES:
+        raise BadRequest()
+    return {"version": _match(b.get("version"), VERSION_RE), "kind": b["kind"], "arch": b["arch"], "os": _match(b.get("os"), VERSION_RE)}
 
 
 def week_key(dt):
@@ -143,6 +187,14 @@ class Board:
             CREATE TABLE IF NOT EXISTS highlights(week TEXT NOT NULL, kind TEXT NOT NULL, rank INTEGER NOT NULL,
                 post TEXT NOT NULL, owner TEXT NOT NULL, snapshot TEXT NOT NULL, PRIMARY KEY(week, kind, rank));
             CREATE TABLE IF NOT EXISTS closed(week TEXT PRIMARY KEY);
+            CREATE TABLE IF NOT EXISTS install_counts(day TEXT NOT NULL, version TEXT NOT NULL, kind TEXT NOT NULL,
+                arch TEXT NOT NULL, os TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY(day, version, kind, arch, os));
+            CREATE TABLE IF NOT EXISTS participants(install TEXT PRIMARY KEY, first_day TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS pings(install TEXT NOT NULL, day TEXT NOT NULL, version TEXT, os TEXT, lang TEXT,
+                arch TEXT, minutes INTEGER, opens INTEGER, sales INTEGER, kinds INTEGER, received REAL,
+                PRIMARY KEY(install, day));
+            CREATE TABLE IF NOT EXISTS daily(day TEXT PRIMARY KEY, active INTEGER, new INTEGER, minutes INTEGER,
+                opens INTEGER, sales INTEGER);
         """)
 
     def close(self):
@@ -269,6 +321,78 @@ class Board:
             self.db.commit()
         return len(ids)
 
+    # 통계
+
+    @locked
+    def install(self, body, ip, now):
+        p = clean_install(body)
+        self.limit("install", self.ip(ip), now)
+        self.db.execute("INSERT INTO install_counts VALUES(?,?,?,?,?,1) "
+                        "ON CONFLICT(day, version, kind, arch, os) DO UPDATE SET n = n + 1",
+                        (day_key(now), p["version"], p["kind"], p["arch"], p["os"]))
+        self.db.commit()
+
+    @locked
+    def ping(self, body, ip, now):
+        p = clean_ping(body, now)
+        self.limit("ping", self.ip(ip), now)
+        inst = sha(p["install"])
+        self.db.execute("INSERT INTO participants VALUES(?,?) "
+                        "ON CONFLICT(install) DO UPDATE SET first_day = min(first_day, excluded.first_day)", (inst, p["day"]))
+        self.db.execute("INSERT INTO pings VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
+                        "version=excluded.version, os=excluded.os, lang=excluded.lang, arch=excluded.arch, "
+                        "minutes=max(minutes, excluded.minutes), opens=max(opens, excluded.opens), "
+                        "sales=max(sales, excluded.sales), kinds=excluded.kinds, received=excluded.received",
+                        (inst, p["day"], p["version"], p["os"], p["lang"], p["arch"], p["minutes"], p["opens"],
+                         p["sales"], p["kinds"], now.timestamp()))
+        self.db.commit()
+
+    @locked
+    def summary(self, days, now):
+        days = max(1, min(int(days), 400))
+        today = day_key(now)
+
+        def ago(n):
+            return day_key(now - timedelta(days=n))
+
+        def one(sql, *a):
+            return self.db.execute(sql, a).fetchone()[0]
+
+        def by_installs(col):
+            return dict(self.db.execute("SELECT %s, SUM(n) FROM install_counts GROUP BY %s ORDER BY 2 DESC" % (col, col)).fetchall())
+
+        def by_usage(col):
+            return dict(self.db.execute("SELECT %s, COUNT(DISTINCT install) FROM pings WHERE day >= ? GROUP BY %s ORDER BY 2 DESC"
+                                        % (col, col), (ago(6),)).fetchall())
+
+        kinds = by_installs("kind")
+        installs = {"total": one("SELECT COALESCE(SUM(n), 0) FROM install_counts"), "new": kinds.get("new", 0),
+                    "upgrade": kinds.get("upgrade", 0), "today": one("SELECT COALESCE(SUM(n), 0) FROM install_counts WHERE day = ?", today),
+                    "versions": by_installs("version"), "arch": by_installs("arch"), "os": by_installs("os")}
+        active = {k: one("SELECT COUNT(DISTINCT install) FROM pings WHERE day >= ? AND day <= ?", ago(n - 1), today)
+                  for k, n in (("dau", 1), ("wau", 7), ("mau", 30))}
+        cohort = [r[0] for r in self.db.execute("SELECT install FROM participants WHERE first_day BETWEEN ? AND ?", (ago(14), ago(8)))]
+        retained = sum(1 for i in cohort if self.db.execute("SELECT 1 FROM pings WHERE install = ? AND day >= ?", (i, ago(6))).fetchone())
+        usage = {"participants": one("SELECT COUNT(*) FROM participants"),
+                 "new_today": one("SELECT COUNT(*) FROM participants WHERE first_day = ?", today),
+                 "active": active, "retention7": {"cohort": len(cohort), "retained": retained},
+                 "versions": by_usage("version"), "os": by_usage("os"), "arch": by_usage("arch"), "lang": by_usage("lang")}
+        start = ago(days - 1)
+        rows = {d: {"day": d, "installs": 0, "active": a, "new": nw, "avg_minutes": round(m / a) if a else 0, "opens": o, "sales": sl}
+                for d, a, nw, m, o, sl in self.db.execute("SELECT day, active, new, minutes, opens, sales FROM daily WHERE day >= ?", (start,))}
+        for d, a, m, o, sl in self.db.execute("SELECT day, COUNT(DISTINCT install), SUM(minutes), SUM(opens), SUM(sales) "
+                                               "FROM pings WHERE day >= ? GROUP BY day", (start,)):
+            rows[d] = {"day": d, "installs": 0, "active": a, "new": 0, "avg_minutes": round((m or 0) / a) if a else 0,
+                       "opens": o or 0, "sales": sl or 0}
+        for d, nw in self.db.execute("SELECT first_day, COUNT(*) FROM participants WHERE first_day >= ? GROUP BY first_day", (start,)):
+            rows.setdefault(d, {"day": d, "installs": 0, "active": 0, "new": 0, "avg_minutes": 0, "opens": 0, "sales": 0})["new"] = nw
+        for d, n in self.db.execute("SELECT day, SUM(n) FROM install_counts WHERE day >= ? GROUP BY day", (start,)):
+            rows.setdefault(d, {"day": d, "installs": 0, "active": 0, "new": 0, "avg_minutes": 0, "opens": 0, "sales": 0})["installs"] = n
+        week = self.week(now)
+        board = {"posts_this_week": one("SELECT COUNT(*) FROM posts WHERE week = ? AND hidden = 0", week),
+                 "stars_this_week": one("SELECT COUNT(*) FROM stars s JOIN posts p ON p.id = s.post WHERE p.week = ?", week)}
+        return {"today": today, "installs": installs, "usage": usage, "daily": [rows[d] for d in sorted(rows)], "board": board}
+
     # 하이라이트
 
     def _compute(self, week):
@@ -324,6 +448,15 @@ class Board:
                 self.db.execute("DELETE FROM stars WHERE post=?", (pid,))
                 self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
                 self.db.execute("DELETE FROM posts WHERE id=?", (pid,))
+            # 사용 통계 원본은 90일 뒤 지우고 날짜별 합계만 남긴다
+            stats_cut = day_key(now - timedelta(days=STATS_KEEP_DAYS))
+            for (d,) in self.db.execute("SELECT DISTINCT day FROM pings WHERE day < ? AND day NOT IN (SELECT day FROM daily)",
+                                        (stats_cut,)).fetchall():
+                a, m, o, sl = self.db.execute("SELECT COUNT(DISTINCT install), SUM(minutes), SUM(opens), SUM(sales) FROM pings WHERE day=?",
+                                              (d,)).fetchone()
+                nw = self.db.execute("SELECT COUNT(*) FROM participants WHERE first_day=?", (d,)).fetchone()[0]
+                self.db.execute("INSERT INTO daily VALUES(?,?,?,?,?,?)", (d, a, nw, m or 0, o or 0, sl or 0))
+            self.db.execute("DELETE FROM pings WHERE day < ?", (stats_cut,))
             self.db.commit()
 
     def _snap(self, week, kind, rank, p):
@@ -398,6 +531,17 @@ def make_server(board, port=8891, host="127.0.0.1", static=None):
                 if method == "POST" and len(parts) == 3 and parts[0] == "posts" and parts[2] == "report":
                     board.report(parts[1], self.client_ip(), now)
                     return self.send(200, {"ok": True})
+                if method == "POST" and parts == ["stats", "install"]:
+                    board.install(self.body(), self.client_ip(), now)
+                    return self.send(200, {"ok": True})
+                if method == "POST" and parts == ["stats", "ping"]:
+                    board.ping(self.body(), self.client_ip(), now)
+                    return self.send(200, {"ok": True})
+                if method == "GET" and parts == ["stats"]:
+                    auth = self.headers.get("Authorization") or ""
+                    if not STATS_TOKEN or not hmac.compare_digest(auth.encode(), ("Bearer " + STATS_TOKEN).encode()):
+                        return self.send(403, {"error": "forbidden"})
+                    return self.send(200, board.summary(int(q.get("days") or 30), now))
                 if method == "GET" and parts == ["highlights"]:
                     return self.send(200, board.highlights(q.get("week") or board.week(now), now))
                 if method == "GET" and parts == ["weeks"]:
@@ -444,7 +588,7 @@ def make_server(board, port=8891, host="127.0.0.1", static=None):
             self.send_response(204)
             self.cors()
             self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
             self.send_header("Access-Control-Max-Age", "86400")
             self.send_header("Content-Length", "0")
             self.end_headers()
@@ -465,7 +609,8 @@ def open_board(data_dir):
 
 
 def main(argv):
-    global PREFIX, BOARD_URL, CORS_ORIGIN
+    global PREFIX, BOARD_URL, CORS_ORIGIN, STATS_TOKEN
+    STATS_TOKEN = os.environ.get("STATS_TOKEN", "")
     args = dict(zip(argv[1::2], argv[2::2])) if argv[1:2] != ["admin"] else {}
     # 회사 인프라는 Data dir 을 IX_DATA_DIR 로, 포트를 PORT 로 넣어 준다
     data = os.path.expanduser(os.environ.get("IX_DATA_DIR") or os.environ.get("BRAG_DATA") or args.get("--data") or "~/sites-data/lemondesk")

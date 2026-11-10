@@ -28,7 +28,7 @@
   <nav><a href="./">Lemon Desk</a> · <a href="#en">English</a></nav>
 
   <h1>Lemon Desk 개인정보 처리방침</h1>
-  <p class="muted">시행일: 2026년 11월 10일 (설치 수·익명 사용 통계 추가)</p>
+  <p class="muted">시행일: 2026년 11월 10일 (폰으로 보기 추가)</p>
   <p>에이치나인(HNINE, 이하 "우리")은 Lemon Desk 앱과 자랑 게시판(lemondesk.interaction.hnine.com/brag/)을 운영하면서 필요한 최소한의 정보만 다룹니다.</p>
 
   <h2>1. 처리하는 정보</h2>
@@ -38,22 +38,24 @@
     <li><b>게시판에서 별을 주거나 신고하면</b>: 브라우저가 만든 무작위 ID(해시값으로 저장)와 남용을 막기 위한 IP 주소의 해시값을 저장합니다. 원래 IP 주소는 저장하지 않고, 서버 접속 기록에도 남기지 않습니다.</li>
     <li><b>설치 수</b>: 앱을 처음 실행할 때 한 번, 앱 버전·새 설치인지 업데이트인지·CPU 종류(Apple Silicon·Intel)·macOS 주 버전만 보냅니다. 기기나 사람을 알아볼 수 있는 값은 보내지 않고, 날짜별 숫자로만 셉니다.</li>
     <li><b>익명 사용 통계(선택)</b>: 동의한 경우에만 앱이 만든 무작위 설치 ID와 하루 사용량(앱이 켜져 있던 시간, 관리 창을 연 횟수, 판매 횟수, 해금한 나무 종류 수), 앱·macOS 버전, 언어, CPU 종류를 하루 몇 번 보냅니다. 설치 ID는 해시값으로만 저장합니다. 처음 관리 창을 열 때 묻고, 설정 › 익명 사용 통계에서 언제든 끌 수 있습니다.</li>
-    <li><b>수집하지 않는 것</b>: 실명, 이메일, 전화번호, 계정, 위치, 광고 식별자, 과수원 내용.</li>
+    <li><b>폰으로 보기(선택)</b>: 설정에서 켠 경우에만, 폰 화면에 필요한 과수원 요약(창고 숫자와 가득 찰 때까지 남은 시간, 코인, 나무·일꾼·창고 단계와 가격)을 우리 서버를 거쳐 내 폰으로 보내고, 폰에서 누른 판매·심기 명령을 Mac으로 전달합니다. 과수원 요약과 명령은 서버 메모리에만 잠깐 두고 저장하지 않습니다. 저장하는 것은 앱이 만든 무작위 연결 키의 해시값과 마지막으로 쓴 시각뿐입니다.</li>
+    <li><b>수집하지 않는 것</b>: 실명, 이메일, 전화번호, 계정, 위치, 광고 식별자, 과수원 내용(폰으로 보기를 켠 동안의 전달은 위와 같이 저장하지 않습니다).</li>
   </ul>
 
   <h2>2. 처리 목적</h2>
-  <p>게시판에 과수원을 보여 주기, 별을 세고 이주의 하이라이트를 고르기, 같은 사람이 별을 여러 번 주거나 도배하는 것을 막기, 신고된 게시물을 숨기기, 설치·사용 현황을 파악해 앱을 개선하기.</p>
+  <p>게시판에 과수원을 보여 주기, 폰으로 보기를 켠 사람의 과수원을 그 사람의 폰에 전달하기, 별을 세고 이주의 하이라이트를 고르기, 같은 사람이 별을 여러 번 주거나 도배하는 것을 막기, 신고된 게시물을 숨기기, 설치·사용 현황을 파악해 앱을 개선하기.</p>
 
   <h2>3. 보유 기간과 파기</h2>
   <ul>
     <li>일반 게시물과 그에 딸린 별·신고 기록은 올린 주부터 8주가 지나면 자동으로 지웁니다.</li>
     <li>이주의 하이라이트에 오른 게시물은 지난 하이라이트를 보여 주려고 계속 보관하며, 요청하면 바로 지웁니다.</li>
     <li>익명 사용 통계 원본은 90일 뒤 지우고 날짜별 합계만 남깁니다. 설치 수는 날짜별 숫자만 보관합니다.</li>
+    <li>폰으로 보기의 연결 키 해시는 설정에서 끄면 바로, 90일 동안 쓰지 않으면 자동으로 지웁니다. 과수원 요약은 서버를 다시 켜면 사라지고, 하루 넘게 쓰지 않아도 지웁니다.</li>
     <li>지울 때는 데이터베이스에서 바로 삭제하고 되살리지 않습니다.</li>
   </ul>
 
   <h2>4. 이용자의 권리</h2>
-  <p>앱의 <b>설정 › 자랑 게시판 › 내 자랑 모두 지우기</b>로 언제든 내 게시물, 받은 별, 하이라이트 기록을 지울 수 있습니다. 앱을 지웠거나 Mac을 바꿔서 지울 수 없다면 게시물 주소(…/brag/?p=…)와 함께 <a href="mailto:beomseok.jang@hnine.com">beomseok.jang@hnine.com</a>로 알려 주세요. 열람, 정정, 처리 정지 요청도 같은 곳으로 받습니다. 익명 사용 통계는 설정에서 끄면 더 보내지 않고 설치 ID도 지웁니다(이미 보낸 원본은 90일 뒤 지워집니다).</p>
+  <p>앱의 <b>설정 › 자랑 게시판 › 내 자랑 모두 지우기</b>로 언제든 내 게시물, 받은 별, 하이라이트 기록을 지울 수 있습니다. 앱을 지웠거나 Mac을 바꿔서 지울 수 없다면 게시물 주소(…/brag/?p=…)와 함께 <a href="mailto:beomseok.jang@hnine.com">beomseok.jang@hnine.com</a>로 알려 주세요. 열람, 정정, 처리 정지 요청도 같은 곳으로 받습니다. 익명 사용 통계는 설정에서 끄면 더 보내지 않고 설치 ID도 지웁니다(이미 보낸 원본은 90일 뒤 지워집니다). 폰으로 보기는 설정에서 끄면 서버의 연결 정보가 바로 지워지고, "연결 끊기"를 누르면 지금까지 연결한 폰이 모두 끊깁니다.</p>
 
   <h2>5. 제3자 제공과 처리 위탁</h2>
   <p>정보를 팔거나 제3자에게 제공하지 않습니다. 서버는 우리 회사 인프라에서 돌고, 일부 전송과 보안에 Cloudflare를 씁니다.</p>
@@ -74,7 +76,7 @@
 
   <h1 id="en" lang="en">Lemon Desk Privacy Policy</h1>
   <div lang="en">
-  <p class="muted">Effective November 10, 2026 (install counts and anonymous usage statistics added)</p>
+  <p class="muted">Effective November 10, 2026 (Phone view added)</p>
   <p>HNINE ("we") handles only the minimum information needed to run the Lemon Desk app and its Orchard Board (lemondesk.interaction.hnine.com/brag/).</p>
 
   <h2>1. What we handle</h2>
@@ -84,22 +86,24 @@
     <li><b>When you give a star or report a post</b> on the board, we store a hash of a random ID made by your browser and a hash of your IP address to prevent abuse. We never store your raw IP address, and our server logs don't record it.</li>
     <li><b>Install counts</b>: once, at first launch, the app sends only its version, whether it's a new install or an update, the CPU type (Apple Silicon or Intel) and the macOS major version. Nothing that identifies a device or person is sent; we only keep daily totals.</li>
     <li><b>Anonymous usage statistics (optional)</b>: only if you agree, the app sends a random install ID it creates, daily usage (time the app was running, how often you opened the window, sales count, number of tree kinds unlocked), app and macOS version, language and CPU type a few times a day. We store only a hash of the install ID. The app asks the first time you open its window, and you can turn it off in Settings › Anonymous usage statistics.</li>
-    <li><b>We don't collect</b> real names, email addresses, phone numbers, accounts, location, advertising identifiers, or your orchard details.</li>
+    <li><b>Phone view (optional)</b>: only if you turn it on in Settings, the app sends an orchard summary for your phone screen (crate count and time until full, coins, tree, worker and crate levels and prices) through our server to your phone, and passes the sell and plant commands you tap on your phone back to your Mac. The summary and commands are held briefly in server memory and never stored. We store only a hash of a random connection key made by the app and when it was last used.</li>
+    <li><b>We don't collect</b> real names, email addresses, phone numbers, accounts, location, advertising identifiers, or your orchard details (Phone view relays them as described above without storing them).</li>
   </ul>
 
   <h2>2. Why</h2>
-  <p>To show orchards on the board, count stars and pick the Highlights of the week, stop repeated stars and spam, hide reported posts, and understand installs and usage to improve the app.</p>
+  <p>To show orchards on the board, relay your orchard to your own phone if you turn on Phone view, count stars and pick the Highlights of the week, stop repeated stars and spam, hide reported posts, and understand installs and usage to improve the app.</p>
 
   <h2>3. How long we keep it</h2>
   <ul>
     <li>Regular posts and their stars and reports are deleted automatically 8 weeks after the week they were posted.</li>
     <li>Posts that made the Highlights of the week are kept to show past highlights, and are deleted on request.</li>
     <li>Raw anonymous usage statistics are deleted after 90 days; only daily totals are kept. Install counts are kept as daily totals only.</li>
+    <li>The Phone view connection key hash is deleted as soon as you turn it off, or automatically after 90 days without use. Orchard summaries disappear when the server restarts and are also dropped after a day without use.</li>
     <li>Deleted data is removed from the database right away and is not recoverable.</li>
   </ul>
 
   <h2>4. Your choices</h2>
-  <p>In the app, <b>Settings › Orchard Board › Delete All My Posts</b> removes your posts, the stars they received, and your highlight entries at any time. If you can no longer do that (for example, you removed the app), email <a href="mailto:beomseok.jang@hnine.com">beomseok.jang@hnine.com</a> with the post link (…/brag/?p=…). Requests to access or correct your data go to the same address. Turning off anonymous usage statistics stops sending and deletes the install ID (raw data already sent is deleted after 90 days).</p>
+  <p>In the app, <b>Settings › Orchard Board › Delete All My Posts</b> removes your posts, the stars they received, and your highlight entries at any time. If you can no longer do that (for example, you removed the app), email <a href="mailto:beomseok.jang@hnine.com">beomseok.jang@hnine.com</a> with the post link (…/brag/?p=…). Requests to access or correct your data go to the same address. Turning off anonymous usage statistics stops sending and deletes the install ID (raw data already sent is deleted after 90 days). Turning off Phone view deletes its connection on our server right away, and "Disconnect" cuts off every phone connected so far.</p>
 
   <h2>5. Sharing</h2>
   <p>We don't sell or share your information. The server runs on our company infrastructure, and Cloudflare provides part of the network delivery and security.</p>

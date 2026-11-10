@@ -6,6 +6,7 @@
 - IP 는 hmac(salt, ip) 앞 16자만 저장한다(횟수 제한, 신고·별 중복 방지).
 - 한 소유자가 한 주(KST ISO 주)에 게시물 하나. 다시 올리면 내용만 바뀌고 별은 남는다.
 - 지난주 하이라이트(별 Top 10 + 재미 부문 3개)는 월요일에 스냅숏으로 영구 보관, 나머지 게시물은 8주 뒤 지운다.
+- 폰으로 보기(1.6, relay/…): Mac 앱과 폰 웹페이지(site/m/) 사이 중계. 페어링 키는 해시로만 DB 에, 과수원 상태·명령은 메모리에만.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -40,7 +41,9 @@ PAGE = 20
 MAX_BODY = 8 * 1024
 # 동작 → (횟수, 초). ponytail: 메모리에만 둔다(재시작하면 초기화). 가벼운 조작 방지면 충분하다.
 # 회사 사무실은 여러 사람이 같은 공인 IP 를 쓰므로 넉넉하게 둔다.
-LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping": (600, 3600), "install": (600, 3600)}
+LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping": (600, 3600), "install": (600, 3600),
+          # 폰으로 보기: pair 는 IP 당, 나머지는 기기(페어링)당
+          "pair": (30, 3600), "state": (1800, 3600), "wait": (1200, 3600), "view": (3600, 3600), "command": (600, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -53,6 +56,20 @@ ROLES = {"planter", "caretaker", "harvester"}
 THEMES = {"sunny", "blossom", "sunset", "moon"}
 # ponytail: 짧은 금칙어 목록. 공백을 지우고 소문자로 비교한다. 신고 3건 자동 숨김이 나머지를 맡는다.
 BANNED = ["시발", "씨발", "ㅅㅂ", "병신", "ㅂㅅ", "개새", "좆", "섹스", "fuck", "shit", "bitch", "sex", "porn", "nigger"]
+# 폰으로 보기(1.6)
+RELAY_STATE_MAX = 24 * 1024  # Mac 이 올리는 상태 크기(실제는 6KB 안팎)
+RELAY_WAIT = 25              # Mac 롱폴링 최대 초(앞단 프록시 시간 제한보다 짧게)
+RELAY_WAITERS = 2            # 한 기기가 동시에 열 수 있는 대기(잠자기에서 깨면 끊긴 대기가 하나 남아 있다)
+RELAY_WAITERS_ALL = 2000     # 서버 전체 동시 대기. 넘으면 기다리지 않고 바로 답한다(스레드 고갈 방지)
+RELAY_WATCH = 30             # 폰이 이 초 안에 봤으면 '보는 중'
+RELAY_ONLINE = 90            # Mac 이 이 초 안에 왔으면(또는 기다리는 중이면) 깨어 있음
+RELAY_FRESH = 3              # 폰이 처음 열 때 Mac 의 새 상태를 기다리는 초
+RELAY_CMD_TTL = 30           # 명령을 Mac 이 가져가지 않으면 버리는 초
+RELAY_QUEUE = 10
+RELAY_KEEP_DAYS = 90         # 쓰지 않는 페어링 보관
+ACTIONS = {"sell", "plant", "unlock", "hire", "crate"}
+CMD_ID = re.compile(r"[A-Za-z0-9-]{1,40}")
+KEY = re.compile(r"[0-9a-f]{64}")
 URLISH = re.compile(r"(https?:|www\.|\.(com|net|org|kr|io|me|xyz|club)\b|@)", re.I)
 
 
@@ -429,6 +446,11 @@ class Board:
     @locked
     def maintain(self, now):
         """지난 주를 닫아 하이라이트를 스냅숏하고, 8주 지난 일반 게시물을 지운다. 한 시간마다 부른다."""
+        # 횟수 제한 기록: 한 시간 넘게 안 쓴 키는 지운다(IP·기기가 많아져도 메모리가 늘기만 하지 않게)
+        t = now.timestamp()
+        for k, q in list(self.hits.items()):
+            if not q or q[-1] < t - 3600:
+                self.hits.pop(k, None)
         current = self.week(now)
         with self.lock:
             weeks = [r[0] for r in self.db.execute(
@@ -465,19 +487,216 @@ class Board:
                         (week, kind, rank, p["id"], owner, json.dumps(p, ensure_ascii=False)))
 
 
+class Relay:
+    """폰으로 보기 중계(1.6). 게임 상태의 주인은 Mac 앱이고 서버는 전달만 한다.
+    - Mac 은 macKey, 폰은 phoneKey(둘 다 앱이 만든 64 hex)로 `Authorization: Bearer` 인증한다. 서버는 sha256 만 저장한다.
+      phoneKey 해시는 Mac 이 보낸다(서버는 폰 키 원문을 Mac 에서 받지 않는다). Mac 이 키를 바꾸면 기존 폰이 한꺼번에 끊긴다.
+    - Mac: pair → (wait 롱폴링 → 명령 처리 → state) 반복. 폰: view(5초마다), command.
+    - 상태·명령은 메모리에만 둔다. 재시작하면 Mac 이 다시 올린다. 페어링은 90일 안 쓰면 지운다.
+    잠금은 하나, 깨우기는 기기별 조건 변수라 한 기기의 일로 다른 기기의 대기가 깨지 않는다."""
+
+    def __init__(self, board):
+        self.board = board
+        self.lock = threading.Lock()
+        self.live = {}
+        self.waiting = 0
+        with board.lock:
+            board.db.executescript("""
+                CREATE TABLE IF NOT EXISTS relay(device TEXT PRIMARY KEY, phone TEXT NOT NULL UNIQUE, created REAL NOT NULL, seen REAL NOT NULL);
+            """)
+
+    @staticmethod
+    def _hash(auth):
+        m = re.fullmatch(r"Bearer ([0-9a-f]{64})", auth or "")
+        if not m:
+            raise BadRequest("unauthorized")
+        return sha(m.group(1))
+
+    def _entry(self, device):
+        e = self.live.get(device)
+        if e is None:
+            e = self.live[device] = {"state": None, "state_at": 0.0, "mac_seen": 0.0, "waiting": 0, "viewer_seen": 0.0,
+                                     "wake": False, "commands": [], "saved": 0.0, "cond": threading.Condition(self.lock)}
+        return e
+
+    def _online(self, e, t):
+        return e["waiting"] > 0 or t - e["mac_seen"] < RELAY_ONLINE
+
+    def mac(self, auth):
+        device = self._hash(auth)
+        with self.board.lock:
+            if not self.board.db.execute("SELECT 1 FROM relay WHERE device=?", (device,)).fetchone():
+                raise BadRequest("unauthorized")
+        return device
+
+    def phone(self, auth):
+        h = self._hash(auth)
+        with self.board.lock:
+            r = self.board.db.execute("SELECT device FROM relay WHERE phone=?", (h,)).fetchone()
+        if not r:
+            raise BadRequest("unauthorized")
+        return r[0]
+
+    def pair(self, auth, body, ip, now):
+        device = self._hash(auth)
+        phone = body.get("phone") if isinstance(body, dict) else None
+        if not isinstance(phone, str) or not KEY.fullmatch(phone):
+            raise BadRequest()
+        self.board.limit("pair", self.board.ip(ip), now)
+        t = now.timestamp()
+        with self.board.lock:
+            try:
+                self.board.db.execute("INSERT INTO relay VALUES(?,?,?,?) ON CONFLICT(device) DO UPDATE SET phone=excluded.phone, seen=excluded.seen",
+                                      (device, phone, t, t))
+                self.board.db.commit()
+            except sqlite3.IntegrityError:  # 다른 기기가 쓰는 폰 키(남의 폰을 내 과수원으로 끌어오지 못하게)
+                self.board.db.rollback()
+                raise BadRequest("conflict")
+        with self.lock:  # 키를 바꾸면 그 전 폰이 남긴 명령은 버린다
+            self._entry(device)["commands"] = []
+        return {"ok": True}
+
+    def unpair(self, auth):
+        device = self.mac(auth)
+        with self.board.lock:
+            self.board.db.execute("DELETE FROM relay WHERE device=?", (device,))
+            self.board.db.commit()
+        with self.lock:
+            e = self.live.pop(device, None)
+            if e:
+                e["cond"].notify_all()
+        return {"ok": True}
+
+    def push(self, auth, body, now):
+        device = self.mac(auth)
+        self.board.limit("state", device, now)
+        if not isinstance(body, dict):
+            raise BadRequest()
+        t = now.timestamp()
+        with self.lock:
+            e = self._entry(device)
+            e["state"], e["state_at"], e["mac_seen"] = json.dumps(body, ensure_ascii=False), t, t
+            e["cond"].notify_all()
+            return {"ok": True, "watching": t - e["viewer_seen"] < RELAY_WATCH}
+
+    def wait(self, auth, timeout, now):
+        """명령이 들어오거나, 폰이 새로 보기 시작하거나, timeout 이 되면 돌아온다."""
+        device = self.mac(auth)
+        self.board.limit("wait", device, now)
+        with self.lock:
+            e = self._entry(device)
+            if e["waiting"] >= RELAY_WAITERS:
+                raise RateLimited()
+            if self.waiting >= RELAY_WAITERS_ALL:
+                timeout = 0
+            end = time.monotonic() + max(0, min(timeout, RELAY_WAIT))
+            e["waiting"] += 1
+            self.waiting += 1
+            e["mac_seen"] = time.time()
+            try:
+                while True:
+                    t = time.time()
+                    e["commands"] = [c for c in e["commands"] if t - c["at"] < RELAY_CMD_TTL]
+                    if e["commands"] or e["wake"] or device not in self.live:
+                        break
+                    left = end - time.monotonic()
+                    if left <= 0:
+                        break
+                    e["cond"].wait(left)
+                commands, woke, e["commands"], e["wake"] = e["commands"], e["wake"], [], False
+                # 마지막으로 본 때는 기다리기 시작할 때만 적는다(끊긴 연결이 대기를 마칠 때 적으면 잠든 Mac 이 깨어 있어 보인다)
+                t = time.time()
+                save = t - e["saved"] > 3600
+                if save:
+                    e["saved"] = t
+            finally:
+                e["waiting"] -= 1
+                self.waiting -= 1
+            # push: 폰이 막 열었거나 서버에 상태가 없으면(재시작 등) 지금 올려 달라
+            out = {"commands": [{k: v for k, v in c.items() if k != "at"} for c in commands], "push": woke or e["state"] is None,
+                   "watching": t - e["viewer_seen"] < RELAY_WATCH, "viewerSeen": e["viewer_seen"] or None}
+        if save:  # 마지막으로 쓴 때(90일 정리용)는 한 시간에 한 번만 적는다
+            with self.board.lock:
+                self.board.db.execute("UPDATE relay SET seen=? WHERE device=?", (t, device))
+                self.board.db.commit()
+        return out
+
+    def view(self, auth, now):
+        device = self.phone(auth)
+        self.board.limit("view", device, now)
+        with self.lock:
+            e = self._entry(device)
+            t = time.time()
+            started = t - e["viewer_seen"] >= RELAY_WATCH
+            e["viewer_seen"] = t
+            if started and self._online(e, t):  # 처음 열면 Mac 을 깨워 새 상태를 잠깐 기다린다
+                e["wake"] = True
+                e["cond"].notify_all()
+                end = time.monotonic() + RELAY_FRESH
+                while e["state_at"] < t and time.monotonic() < end:
+                    e["cond"].wait(end - time.monotonic())
+            t = time.time()
+            return {"state": json.loads(e["state"]) if e["state"] else None, "stateAt": e["state_at"] or None,
+                    "macSeen": t if e["waiting"] else (e["mac_seen"] or None), "online": self._online(e, t), "now": t}
+
+    def command(self, auth, body, now):
+        device = self.phone(auth)
+        self.board.limit("command", device, now)
+        if not isinstance(body, dict):
+            raise BadRequest()
+        cid, action = body.get("id"), body.get("action")
+        if not isinstance(cid, str) or not CMD_ID.fullmatch(cid) or action not in ACTIONS:
+            raise BadRequest()
+        cmd = {"id": cid, "action": action}
+        if action in ("plant", "unlock"):
+            if body.get("kind") not in KINDS:
+                raise BadRequest()
+            cmd["kind"] = body["kind"]
+        if action == "hire":
+            if body.get("role") not in ROLES:
+                raise BadRequest()
+            cmd["role"] = body["role"]
+        with self.lock:
+            e = self._entry(device)
+            t = time.time()
+            if not self._online(e, t):
+                raise BadRequest("mac_asleep")
+            e["commands"] = [c for c in e["commands"] if t - c["at"] < RELAY_CMD_TTL]
+            if len(e["commands"]) >= RELAY_QUEUE:
+                raise RateLimited()
+            cmd["at"] = t
+            e["commands"].append(cmd)
+            e["cond"].notify_all()
+        return {"ok": True}
+
+    def maintain(self, now):
+        t = now.timestamp()
+        with self.board.lock:
+            self.board.db.execute("DELETE FROM relay WHERE seen < ?", (t - RELAY_KEEP_DAYS * 86400,))
+            self.board.db.commit()
+        with self.lock:  # 하루 넘게 아무도 안 온 기기의 메모리 상태
+            for d in [d for d, e in self.live.items() if not e["waiting"] and max(e["mac_seen"], e["viewer_seen"], e["state_at"]) < t - 86400]:
+                del self.live[d]
+
+
 # HTTP
 
-def make_server(board, port=8891, host="127.0.0.1", static=None):
+def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
+    relay = relay or Relay(board)
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "lemondesk-brag"
+        timeout = 30  # 요청을 천천히 보내며 스레드를 붙잡는 연결을 끊는다(롱폴링 대기는 소켓 시간이 아니라 상관없다)
 
         def log_message(self, fmt, *args):  # 접속 기록에 IP 를 남기지 않는다
             sys.stderr.write("%s %s\n" % (self.command, self.path.split("?")[0]))
 
         def client_ip(self):
-            # Cloudflare 터널(집서버) → CF-Connecting-IP, Caddy(회사 인프라) → X-Forwarded-For 첫 번째
+            # Cloudflare 터널(집서버) → CF-Connecting-IP, Caddy(회사 인프라) → X-Forwarded-For 첫 번째.
+            # 회사 인프라 앞에는 Cloudflare 가 없어 CF 헤더를 누구나 지어 보낼 수 있으니 집서버 경로일 때만 믿는다.
             fwd = (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
-            return self.headers.get("CF-Connecting-IP") or fwd or self.client_address[0]
+            cf = self.headers.get("CF-Connecting-IP") if PREFIX == "/lemondesk/api/" else None
+            return cf or fwd or self.client_address[0]
 
         def cors(self):
             if CORS_ORIGIN and self.headers.get("Origin") == CORS_ORIGIN:
@@ -494,9 +713,9 @@ def make_server(board, port=8891, host="127.0.0.1", static=None):
             self.end_headers()
             self.wfile.write(body)
 
-        def body(self):
+        def body(self, limit=MAX_BODY):
             n = int(self.headers.get("Content-Length") or 0)
-            if n > MAX_BODY:
+            if not 0 <= n <= limit:
                 raise BadRequest("too_large")
             try:
                 return json.loads(self.rfile.read(n) or b"{}")
@@ -516,6 +735,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None):
             now = datetime.now(KST)
             owner = self.headers.get("X-Owner-Key")
             try:
+                if parts[:1] == ["relay"]:
+                    return self.relay(method, parts[1:], q, now)
                 if method == "GET" and parts == ["health"]:
                     return self.send(200, {"ok": True})
                 if method == "GET" and parts == ["posts"]:
@@ -552,13 +773,29 @@ def make_server(board, port=8891, host="127.0.0.1", static=None):
                     return self.send(200, {"deleted": board.delete_mine(owner)})
                 return self.send(404, {"error": "not_found"})
             except BadRequest as e:
-                return self.send(401 if e.code == "unauthorized" else 422, {"error": e.code})
+                return self.send({"unauthorized": 401, "mac_asleep": 409, "conflict": 409, "too_large": 413}.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
             except KeyError:
                 return self.send(404, {"error": "not_found"})
             except ValueError:
                 return self.send(422, {"error": "bad_data"})
+
+        def relay(self, method, parts, q, now):
+            auth = self.headers.get("Authorization")
+            if method == "POST" and parts == ["pair"]:
+                return self.send(200, relay.pair(auth, self.body(), self.client_ip(), now))
+            if method == "DELETE" and parts == []:
+                return self.send(200, relay.unpair(auth))
+            if method == "POST" and parts == ["state"]:
+                return self.send(200, relay.push(auth, self.body(RELAY_STATE_MAX), now))
+            if method == "GET" and parts == ["wait"]:
+                return self.send(200, relay.wait(auth, float(q.get("t") or RELAY_WAIT), now))
+            if method == "GET" and parts == ["view"]:
+                return self.send(200, relay.view(auth, now))
+            if method == "POST" and parts == ["command"]:
+                return self.send(200, relay.command(auth, self.body(), now))
+            return self.send(404, {"error": "not_found"})
 
         def serve_static(self, rel):
             root = os.path.abspath(static)
@@ -593,7 +830,9 @@ def make_server(board, port=8891, host="127.0.0.1", static=None):
             self.send_header("Content-Length", "0")
             self.end_headers()
 
-    return ThreadingHTTPServer((host, port), Handler)
+    srv = ThreadingHTTPServer((host, port), Handler)
+    srv.relay = relay
+    return srv
 
 
 def open_board(data_dir):
@@ -643,6 +882,7 @@ def main(argv):
         while True:
             try:
                 board.maintain(datetime.now(KST))
+                srv.relay.maintain(datetime.now(KST))
             except Exception as e:  # 정리가 실패해도 API 는 계속 돈다
                 sys.stderr.write("maintain failed: %r\n" % e)
             time.sleep(3600)

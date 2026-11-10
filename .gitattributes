@@ -1,0 +1,5 @@
+# 회사 인프라(Windows)가 받을 때도 줄바꿈을 LF 로 유지한다(appcast 등 배포 파일 비교).
+* text=auto eol=lf
+*.png binary
+*.webp binary
+*.jpg binary

@@ -1,0 +1,103 @@
+[
+  {
+    "version": "1.5.0",
+    "date": "2026-11-10",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.0/LemonDesk-1.5.0.dmg",
+    "notes": {
+      "ko": [
+        "Lemon Desk를 이제 에이치나인(HNINE)이 운영해요. 사이트와 자랑 게시판, 업데이트가 lemondesk.interaction.hnine.com으로 옮겨 갔어요",
+        "새 자랑 게시판은 이번 주부터 새로 시작해요. 예전 게시판에 올린 자랑은 다시 올려 주세요",
+        "과수원과 설정은 그대로 이어져요"
+      ],
+      "en": [
+        "Lemon Desk is now run by HNINE. The site, the Orchard Board and updates have moved to lemondesk.interaction.hnine.com",
+        "The new Orchard Board starts fresh this week. Please post your orchard again if you posted on the old board",
+        "Your orchard and settings carry over"
+      ]
+    }
+  },
+  {
+    "version": "1.4.0",
+    "date": "2026-11-10",
+    "url": "https://lemongrove.club/lemondesk/LemonDesk-1.4.0.dmg?v=5",
+    "notes": {
+      "ko": [
+        "자동 업데이트: 새 버전이 나오면 알아서 받아 설치하고 다시 켜요. 과수원은 그대로 이어지고, 설정에서 끌 수 있어요",
+        "이 버전부터는 다시 내려받아 설치하지 않아도 돼요"
+      ],
+      "en": [
+        "Automatic updates: new versions download, install and relaunch on their own. Your orchard carries over, and you can turn this off in Settings",
+        "From this version on, you won't need to download and install updates yourself"
+      ]
+    }
+  },
+  {
+    "version": "1.3.0",
+    "date": "2026-11-10",
+    "url": "https://lemongrove.club/lemondesk/LemonDesk-1.3.0.dmg?v=4",
+    "notes": {
+      "ko": [
+        "자랑 게시판: 기록 탭의 '자랑하기'로 이번 주 과수원을 올리고, 게시판에서 서로 별을 주고, 이주의 하이라이트를 볼 수 있어요",
+        "설정 > 띠 위치: 과수원 띠를 화면 왼쪽부터 오른쪽까지 원하는 곳에 둘 수 있어요",
+        "과수원 탭에서 '나무 심기'와 '새 종류 해금'을 나눠 헷갈리지 않게 했어요",
+        "개인정보 처리방침을 추가했어요"
+      ],
+      "en": [
+        "Orchard Board: post this week's orchard with Brag in the Journal tab, give each other stars, and see the Highlights of the week",
+        "Settings > Strip position: place the orchard strip anywhere from the left to the right of the screen",
+        "The Orchard tab now separates Plant trees from Unlock a new kind so they're easy to tell apart",
+        "Added a privacy policy"
+      ]
+    }
+  },
+  {
+    "version": "1.2.0",
+    "date": "2026-11-10",
+    "url": "https://lemongrove.club/lemondesk/LemonDesk-1.2.0.dmg?v=3",
+    "notes": {
+      "ko": [
+        "과수원 곳곳에 숨은 작은 이야기 열 가지와 도감의 '비밀 기록'",
+        "설정 > 띠 크기: 화면 해상도를 높여 띠가 작아 보이면 150%·200%로 키울 수 있어요",
+        "설정에서 업데이트를 확인하고 버전별 업데이트 내용을 볼 수 있어요",
+        "영어 화면에서 탭 막대가 접혀 보이던 문제를 고쳤어요"
+      ],
+      "en": [
+        "Ten little stories hidden around the orchard, collected in the book's Secrets",
+        "Settings > Strip size: make the strip 150% or 200% if a higher screen resolution makes it look small",
+        "Check for updates and read what's new for each version in Settings",
+        "Fixed the tab bar collapsing in English"
+      ]
+    }
+  },
+  {
+    "version": "1.1.0",
+    "date": "2026-11-10",
+    "url": "https://lemongrove.club/lemondesk/LemonDesk-1.1.0.dmg?v=2",
+    "notes": {
+      "ko": [
+        "나무가 열두 가지로 늘고 심어 본 나무를 모으는 도감이 생겼어요",
+        "일꾼 레벨 5·10·15·20마다 장비가 바뀌어요",
+        "레벨 10부터 역할마다 생김새가 다른 일꾼을 한 명 더 고용할 수 있어요",
+        "햇살·봄빛·노을·달밤 테마, 옷 색 꾸미기, 시간대마다 바뀌는 빛과 밤의 랜턴·반딧불"
+      ],
+      "en": [
+        "Twelve kinds of trees and a collection book of the ones you've planted",
+        "Worker gear changes at levels 5, 10, 15 and 20",
+        "From level 10, hire a second, different-looking worker for each role",
+        "Sunny, Blossom, Sunset and Moonlight themes, outfit colors, light that follows the time of day, and a lantern and fireflies at night"
+      ]
+    }
+  },
+  {
+    "version": "1.0.0",
+    "date": "2026-11-09",
+    "notes": {
+      "ko": [
+        "첫 베타: 화면 아래 띠에서 자라는 레몬 과수원, 세 일꾼, 계절 장식, 주간 카드"
+      ],
+      "en": [
+        "First beta: a lemon orchard growing along the bottom of your screen, three workers, seasons and a weekly card"
+      ]
+    }
+  }
+]

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Lemon Desk</title>
+    <item>
+      <title>1.5.0</title>
+      <pubDate>Tue, 10 Nov 2026 04:59:19 GMT</pubDate>
+      <sparkle:version>6</sparkle:version>
+      <sparkle:shortVersionString>1.5.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<ul><li>Lemon Desk를 이제 에이치나인(HNINE)이 운영해요. 사이트와 자랑 게시판, 업데이트가 lemondesk.interaction.hnine.com으로 옮겨 갔어요</li><li>새 자랑 게시판은 이번 주부터 새로 시작해요. 예전 게시판에 올린 자랑은 다시 올려 주세요</li><li>과수원과 설정은 그대로 이어져요</li></ul><ul><li>Lemon Desk is now run by HNINE. The site, the Orchard Board and updates have moved to lemondesk.interaction.hnine.com</li><li>The new Orchard Board starts fresh this week. Please post your orchard again if you posted on the old board</li><li>Your orchard and settings carry over</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.0/LemonDesk-1.5.0.dmg" type="application/octet-stream" sparkle:edSignature="H4hr/+cDKVo8irvCl3J5Zu2rvTafNJmxbxpNdrkaJP/RXM4kfiCWUt3UlRTU44mqR6CzgIT6bz9IXFMGREPpAg==" length="12108565"/>
+    </item>
+  </channel>
+</rss>

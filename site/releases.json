@@ -1,8 +1,24 @@
 [
   {
+    "version": "1.5.1",
+    "date": "2026-11-10",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.1/LemonDesk-1.5.1.dmg",
+    "notes": {
+      "ko": [
+        "설치 수와 익명 사용 통계를 더했어요. 사용 통계는 처음 한 번 묻고 허락할 때만 이름 없이 보내요(설정에서 끌 수 있어요)",
+        "자랑하기가 실패하면 인터넷 문제인지 게시판 서버 문제인지 구분해서 알려 줘요",
+        "스크린샷 도구가 떠 있을 때 전체 화면을 잘못 알아보던 문제를 고쳤어요"
+      ],
+      "en": [
+        "Added install counts and anonymous usage statistics. Usage statistics are asked for once and sent without your name only if you agree (you can turn them off in Settings)",
+        "When posting fails, the app now tells you whether it's your internet or the board server",
+        "Fixed full-screen detection getting confused while the screenshot tool is open"
+      ]
+    }
+  },
+  {
     "version": "1.5.0",
     "date": "2026-11-10",
-    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.0/LemonDesk-1.5.0.dmg",
     "notes": {
       "ko": [
         "Lemon Desk를 이제 에이치나인(HNINE)이 운영해요. 사이트와 자랑 게시판, 업데이트가 lemondesk.interaction.hnine.com으로 옮겨 갔어요",

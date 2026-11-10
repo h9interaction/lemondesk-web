@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.5.4</title>
-      <pubDate>Tue, 10 Nov 2026 07:11:25 GMT</pubDate>
-      <sparkle:version>10</sparkle:version>
-      <sparkle:shortVersionString>1.5.4</sparkle:shortVersionString>
+      <title>1.5.5</title>
+      <pubDate>Tue, 10 Nov 2026 07:49:32 GMT</pubDate>
+      <sparkle:version>11</sparkle:version>
+      <sparkle:shortVersionString>1.5.5</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>데스크톱 위젯의 &#x27;모두 팔기&#x27; 버튼 글씨가 다른 창을 쓰는 동안 보이지 않던 문제를 고쳤어요</li></ul><ul><li>Fixed the Sell All button text on the desktop widget being unreadable while you work in other windows</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.4/LemonDesk-1.5.4.dmg" type="application/octet-stream" sparkle:edSignature="cEcqoA2oJWG+ZVVtnzktV8pHDxHZa1FHNO1DdJxIFtR0q+h/okO3spg5z1oM1WkySw3lnCICR2ikNrdw0gReDQ==" length="12514732"/>
+      <description><![CDATA[<ul><li>위젯과 앱의 창고 숫자, 가득 찰 때까지 남은 시간이 똑같이 맞춰져요. 남은 시간은 위젯에서도 1초마다 줄어들어요</li><li>과수원 창의 창고 막대 아래에도 가득 찰 때까지 남은 시간이 보여요</li><li>앱에서 팔거나 심으면 위젯이 더 빨리 따라와요. 앱이 꺼져 있으면 위젯이 알려 줘요</li></ul><ul><li>The widget and the app now show exactly the same crate count and time until full. The countdown ticks every second on the widget too</li><li>The Orchard window shows the time until the crate is full under the crate bar</li><li>The widget catches up faster when you sell or plant in the app, and tells you when Lemon Desk isn&#x27;t running</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.5/LemonDesk-1.5.5.dmg" type="application/octet-stream" sparkle:edSignature="FkJq5azfXUjDYJduOyXpXXMlg9gwRXX1mMEoUW8/kGRcES4H8PvrJ5AlduN03DDm3RF3ymXuvNJbOU+WvMwYBg==" length="12559660"/>
     </item>
   </channel>
 </rss>

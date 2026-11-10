@@ -1,8 +1,24 @@
 [
   {
+    "version": "1.5.5",
+    "date": "2026-11-10",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.5/LemonDesk-1.5.5.dmg",
+    "notes": {
+      "ko": [
+        "위젯과 앱의 창고 숫자, 가득 찰 때까지 남은 시간이 똑같이 맞춰져요. 남은 시간은 위젯에서도 1초마다 줄어들어요",
+        "과수원 창의 창고 막대 아래에도 가득 찰 때까지 남은 시간이 보여요",
+        "앱에서 팔거나 심으면 위젯이 더 빨리 따라와요. 앱이 꺼져 있으면 위젯이 알려 줘요"
+      ],
+      "en": [
+        "The widget and the app now show exactly the same crate count and time until full. The countdown ticks every second on the widget too",
+        "The Orchard window shows the time until the crate is full under the crate bar",
+        "The widget catches up faster when you sell or plant in the app, and tells you when Lemon Desk isn't running"
+      ]
+    }
+  },
+  {
     "version": "1.5.4",
     "date": "2026-11-10",
-    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.4/LemonDesk-1.5.4.dmg",
     "notes": {
       "ko": [
         "데스크톱 위젯의 '모두 팔기' 버튼 글씨가 다른 창을 쓰는 동안 보이지 않던 문제를 고쳤어요"

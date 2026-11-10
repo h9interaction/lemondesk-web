@@ -1,0 +1,306 @@
+<!doctype html>
+<!-- ponytail: 정적 한 장 + 프레임워크 없는 JS. API 는 회사 인프라 lemondesk-api 앱(server/brag.py). 스프라이트는 앱 에셋을 복사한 것(sprites/). -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lemon Desk 자랑 게시판</title>
+<meta name="description" content="Lemon Desk 사용자들이 키운 레몬 과수원을 구경하고 별을 주세요. 별을 많이 받은 과수원은 이주의 하이라이트에 올라가요.">
+<link rel="canonical" href="https://lemondesk.interaction.hnine.com/brag/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Lemon Desk 자랑 게시판">
+<meta property="og:description" content="서로 키운 레몬 과수원을 구경하고 별을 주는 곳.">
+<meta property="og:image" content="https://lemondesk.interaction.hnine.com/og.jpg?v=1">
+<link rel="icon" href="../icon.png?v=1">
+<style>
+  :root {
+    --bg: #FFFBEC; --ink: #23511F; --text: #3E4A33; --muted: #6F7862; --card: #FFFFFF;
+    --line: #EDE6CC; --lemon: #F5CE2E; --lemon-soft: #FFF3C2; --sky: #DCEFF7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #14170F; --ink: #EEF3DF; --text: #C9CFBA; --muted: #959C85; --card: #1C2016; --line: #2A2F21; --lemon-soft: #2C2A14; --sky: #22303A; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+    word-break: keep-all; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3 { margin: 0; color: var(--ink); letter-spacing: -0.02em; }
+  h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.25; }
+  h2 { font-size: clamp(22px, 3vw, 28px); line-height: 1.3; }
+  p { margin: 0; }
+  a { color: var(--ink); text-underline-offset: 4px; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 6px; }
+  .muted { color: var(--muted); }
+  header.top { padding-top: 40px; padding-bottom: 8px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; margin-bottom: 28px; }
+  .brand img { width: 36px; height: 36px; border-radius: 8px; }
+  .lead { margin-top: 12px; max-width: 38em; }
+  section { margin-top: 56px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  select, .tabs button, .more, .star, .report {
+    font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 12px; min-height: 40px; cursor: pointer;
+  }
+  .tabs { display: inline-flex; gap: 6px; }
+  .tabs button[aria-pressed="true"] { background: var(--lemon); color: #23511F; border-color: var(--lemon); font-weight: 700; }
+
+  /* 하이라이트 */
+  .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+  .cat { background: var(--lemon-soft); border-radius: 12px; padding: 16px; }
+  .cat b { display: block; color: var(--ink); }
+  .cat .val { font-size: 14px; }
+  [hidden] { display: none !important; }
+  .ranks { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; counter-reset: rank; }
+  .ranks li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); counter-increment: rank; }
+  .ranks li::before { content: counter(rank); width: 28px; font-weight: 700; color: var(--ink); text-align: center; font-variant-numeric: tabular-nums; }
+  .ranks li.empty { display: block; grid-column: 1 / -1; padding: 24px; border: 1px dashed var(--line); border-radius: 12px; }
+  .ranks li.empty::before { content: none; }
+  .ranks li a { flex: 1; text-decoration: none; font-weight: 600; }
+  .ranks .stars { font-variant-numeric: tabular-nums; }
+  .empty { margin-top: 20px; padding: 24px; border: 1px dashed var(--line); border-radius: 12px; }
+
+  /* 게시물 */
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
+  .post { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .post.shared { border: 2px solid var(--lemon); }
+  .post header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .nick { font-weight: 700; color: var(--ink); font-size: 18px; overflow-wrap: anywhere; }
+  .star { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+  .star[aria-pressed="true"] { background: var(--lemon); color: #23511F; border-color: var(--lemon); font-weight: 700; }
+  .star svg { width: 16px; height: 16px; }
+  .strip { position: relative; height: 84px; background: var(--sky); border-radius: 10px; overflow: hidden; }
+  .strip .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 15px; background: url(sprites/ground.png) repeat-x left bottom / 217px 15px; image-rendering: pixelated; }
+  .strip img { position: absolute; bottom: 6px; image-rendering: pixelated; }
+  .strip img.worker { bottom: 3px; }
+  .stats { font-size: 14px; font-variant-numeric: tabular-nums; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; }
+  .badges span { background: var(--lemon-soft); color: var(--ink); border-radius: 999px; padding: 2px 10px; }
+  .report { align-self: flex-end; font-size: 13px; min-height: 32px; padding: 4px 10px; color: var(--muted); background: transparent; }
+  .more { margin: 24px auto 0; display: block; }
+  .note { font-size: 14px; margin-top: 8px; min-height: 1.6em; }
+  footer .foot { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-top: 96px; padding: 24px 0 40px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+  footer a { color: var(--muted); }
+  @media (max-width: 760px) {
+    .cats, .grid, .ranks { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="../"><img src="../icon.png?v=1" alt="" width="36" height="36">Lemon Desk</a>
+  <h1 data-t="title">자랑 게시판</h1>
+  <p class="lead" data-t="lead">Lemon Desk 사용자들이 키운 과수원이에요. 마음에 드는 과수원에 별을 주세요. 별을 많이 받은 과수원은 이주의 하이라이트에 올라가요.</p>
+</header>
+
+<main class="wrap">
+  <div id="shared"></div>
+
+  <section aria-labelledby="hl-title">
+    <div class="row">
+      <h2 id="hl-title" data-t="highlights">이주의 하이라이트</h2>
+      <label><span class="muted" data-t="week">주</span> <select id="week" aria-label="주 선택"></select></label>
+    </div>
+    <p class="muted" id="hl-note"></p>
+    <div class="cats" id="cats"></div>
+    <ol class="ranks" id="top"></ol>
+  </section>
+
+  <section aria-labelledby="list-title">
+    <div class="row">
+      <h2 id="list-title" data-t="thisWeek">이번 주 자랑</h2>
+      <div class="tabs" role="group" aria-label="정렬">
+        <button type="button" data-sort="new" aria-pressed="true" data-t="new">최신</button>
+        <button type="button" data-sort="stars" aria-pressed="false" data-t="byStars">별 많은 순</button>
+      </div>
+    </div>
+    <p class="note" id="note" role="status" aria-live="polite"></p>
+    <div class="grid" id="list"></div>
+    <button type="button" class="more" id="more" hidden data-t="more">더 보기</button>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="foot">
+    <span>© 2026 Lemon Desk</span>
+    <span><a href="../" data-t="home">Lemon Desk 소개</a> · <a href="../privacy.html" data-t="privacy">개인정보 처리방침</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const API = 'https://lemondesk-api.interaction.hnine.com/api/';
+  const en = (navigator.language || '').toLowerCase().startsWith('en');
+  const T = en ? {
+    title: 'Orchard Board', lead: 'Orchards grown by Lemon Desk players. Give a star to the ones you like. The most starred orchards make the Highlights of the week.',
+    highlights: 'Highlights of the week', week: 'Week', thisWeek: "This week's orchards", new: 'Newest', byStars: 'Most stars', more: 'Show more',
+    home: 'About Lemon Desk', privacy: 'Privacy Policy', harvest: 'Biggest harvest', secrets: 'Secret seeker', dex: 'Collector',
+    picked: n => `picked ${n}`, found: n => `${n} secrets found`, dexv: n => `${n}/12 trees`,
+    stats: c => `This week: picked ${c.harvested} · sold ${c.sold} · earned ${fmt(c.earned)} coins · planted ${c.planted}`,
+    dexBadge: n => `Collection ${n}/12`, secretBadge: n => `Secrets ${n}/10`, rainbow: 'Rainbow lemon',
+    crew: {planter: 'Planter', caretaker: 'Caretaker', harvester: 'Harvester'},
+    star: n => `Give a star, ${n} so far`, report: 'Report', reported: 'Reported', reportAsk: 'Report this orchard? Posts with several reports are hidden.',
+    noHighlights: 'No starred orchards yet this week. Be the first to give one!', noPosts: 'No orchards yet this week. Click "Brag" in the Journal tab of Lemon Desk to post the first one.',
+    loadFail: "Couldn't load the board. Please refresh in a moment.", slow: 'Too many clicks. Please try again in a bit.', final: 'Final results', live: 'Updating live this week',
+    shared: 'Shared orchard', weekOf: d => `Week of ${d.toLocaleDateString('en', {month: 'short', day: 'numeric'})}`,
+  } : {
+    harvest: '이번 주 가장 많이 딴 과수원', secrets: '비밀 탐험가', dex: '도감 수집가',
+    picked: n => `딴 레몬 ${n}개`, found: n => `비밀 ${n}개 찾음`, dexv: n => `도감 ${n}/12`,
+    stats: c => `이번 주 딴 레몬 ${c.harvested} · 판 레몬 ${c.sold} · 번 코인 ${fmt(c.earned)} · 심은 나무 ${c.planted}`,
+    dexBadge: n => `도감 ${n}/12`, secretBadge: n => `비밀 기록 ${n}/10`, rainbow: '무지개 레몬',
+    crew: {planter: '심기', caretaker: '돌보기', harvester: '수확'},
+    star: n => `별 주기, 지금 ${n}개`, report: '신고', reported: '신고했어요', reportAsk: '이 과수원을 신고할까요? 신고가 여러 번 쌓이면 숨겨져요.',
+    noHighlights: '이번 주에는 아직 별을 받은 과수원이 없어요. 첫 별을 줘 보세요.', noPosts: '이번 주 자랑이 아직 없어요. Lemon Desk의 기록 탭에서 "자랑하기"를 눌러 첫 번째로 올려 보세요.',
+    loadFail: '게시판을 불러오지 못했어요. 잠시 뒤에 새로고침해 주세요.', slow: '너무 자주 눌렀어요. 잠시 뒤에 다시 해 주세요.', final: '확정된 결과', live: '이번 주는 실시간으로 바뀌어요',
+    shared: '공유된 자랑', weekOf: d => `${d.getMonth() + 1}월 ${d.getDate()}일 주`,
+  };
+  if (en) {
+    document.documentElement.lang = 'en';
+    document.title = 'Lemon Desk Orchard Board';
+    document.querySelectorAll('[data-t]').forEach(el => { if (typeof T[el.dataset.t] === 'string') el.textContent = T[el.dataset.t]; });
+  }
+  const fmt = n => new Intl.NumberFormat(en ? 'en' : 'ko', {notation: 'compact', maximumFractionDigits: 1}).format(n);
+  const voter = localStorage.getItem('ld-voter') || (() => { const v = crypto.randomUUID().replace(/-/g, ''); localStorage.setItem('ld-voter', v); return v; })();
+  const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const api = async (path, opt) => {
+    const r = await fetch(API + path, {headers: {'Content-Type': 'application/json'}, ...opt});
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(body.error || r.status), {status: r.status});
+    return body;
+  };
+  const tier = level => [5, 10, 15, 20].filter(l => level >= l).length;
+  const weekStart = key => { // "2026-W46" → 그 주 월요일
+    const [y, w] = key.split('-W').map(Number);
+    const jan4 = new Date(Date.UTC(y, 0, 4));
+    const monday = new Date(jan4); monday.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() + 6) % 7) + (w - 1) * 7);
+    return new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate());
+  };
+  const sprite = (name, cls, left) => {
+    const img = el('img', cls); img.alt = ''; img.src = `sprites/${name}.png`; img.style.left = left;
+    img.onload = () => { img.style.width = img.naturalWidth / 2 + 'px'; }; // 앱처럼 아트 픽셀 1개 = 0.5pt
+    return img;
+  };
+
+  function strip(o) {
+    const s = el('div', 'strip'); s.setAttribute('aria-hidden', 'true');
+    s.append(el('div', 'ground'));
+    o.trees.forEach((t, i) => s.append(sprite(`tree-${t}`, 'tree', `calc(${i} * 9.2% - 4px)`)));
+    let k = 0;
+    for (const role of ['planter', 'caretaker', 'harvester']) {
+      const w = o.workers[role]; if (!w) continue;
+      w.looks.forEach(look => {
+        const t = tier(w.level);
+        s.append(sprite(`${role}${look.variant ? 'b' : ''}${t ? '-t' + t : ''}-idle-0`, 'worker', `calc(${8 + k * 15}% )`)); k++;
+      });
+    }
+    return s;
+  }
+
+  function card(p, {shared = false, readonly = false} = {}) {
+    const a = el('article', 'post' + (shared ? ' shared' : '')); a.id = 'p-' + p.id;
+    const h = el('header');
+    h.append(el('span', 'nick', p.nickname));
+    if (!readonly) h.append(starButton(p)); else h.append(el('span', 'muted', '★ ' + p.stars));
+    a.append(h, strip(p.orchard), el('p', 'stats', T.stats(p.card)));
+    const b = el('p', 'badges');
+    b.append(el('span', null, T.dexBadge(p.orchard.dex)), el('span', null, T.secretBadge(p.orchard.secrets)));
+    if (p.orchard.rainbow) b.append(el('span', null, T.rainbow));
+    const crew = ['planter', 'caretaker', 'harvester'].filter(r => p.orchard.workers[r]).map(r => `${T.crew[r]} ${p.orchard.workers[r].level}`);
+    if (crew.length) b.append(el('span', null, crew.join(' · ')));
+    a.append(b);
+    if (!readonly) {
+      const r = el('button', 'report', T.report); r.type = 'button';
+      r.onclick = async () => {
+        if (!confirm(T.reportAsk)) return;
+        try { await api(`posts/${p.id}/report`, {method: 'POST', body: '{}'}); r.textContent = T.reported; r.disabled = true; }
+        catch (e) { $('note').textContent = e.status === 429 ? T.slow : T.loadFail; }
+      };
+      a.append(r);
+    }
+    return a;
+  }
+
+  function starButton(p) {
+    const b = el('button', 'star'); b.type = 'button';
+    const set = (n, on) => {
+      b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.setAttribute('aria-label', T.star(n));
+      b.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.2l2 4.3 4.6.5-3.4 3.2.9 4.6L8 11.5l-4.1 2.3.9-4.6L1.4 6l4.6-.5z"/></svg>';
+      b.append(document.createTextNode(String(n)));
+    };
+    set(p.stars, p.starred);
+    b.onclick = async () => {
+      b.disabled = true;
+      try { const r = await api(`posts/${p.id}/star`, {method: 'POST', body: JSON.stringify({voter})}); p.stars = r.stars; set(r.stars, r.starred); }
+      catch (e) { $('note').textContent = e.status === 429 ? T.slow : T.loadFail; }
+      b.disabled = false;
+    };
+    return b;
+  }
+
+  // 하이라이트
+  let current = '';
+  async function loadHighlights(week) {
+    const h = await api('highlights?week=' + encodeURIComponent(week));
+    $('hl-note').textContent = h.final ? T.final : T.live;
+    const cats = $('cats'); cats.textContent = '';
+    for (const [key, val] of [['harvest', p => T.picked(p.card.harvested)], ['secrets', p => T.found(p.orchard.secrets)], ['dex', p => T.dexv(p.orchard.dex)]]) {
+      const p = h.categories[key]; if (!p) continue;
+      const c = el('div', 'cat'); c.append(el('span', 'muted', T[key]), el('b', null, p.nickname), el('span', 'val', val(p)));
+      cats.append(c);
+    }
+    const top = $('top'); top.textContent = '';
+    cats.hidden = !cats.children.length;
+    if (!h.top.length) { top.append(el('li', 'empty', T.noHighlights)); return; }
+    for (const p of h.top) {
+      const li = el('li'); const a = el('a', null, p.nickname); a.href = h.final ? '#' : '#p-' + p.id;
+      if (h.final) a.onclick = e => { e.preventDefault(); showShared(p, true); };
+      li.append(a, el('span', 'stars', '★ ' + p.stars)); top.append(li);
+    }
+  }
+
+  // 목록
+  let sort = 'new', page = 0;
+  async function loadList(reset) {
+    if (reset) { page = 0; $('list').textContent = ''; }
+    const r = await api(`posts?sort=${sort}&page=${page}&voter=${voter}`);
+    if (reset && !r.posts.length) $('list').append(el('p', 'empty', T.noPosts));
+    r.posts.forEach(p => $('list').append(card(p)));
+    $('more').hidden = r.posts.length < 20;
+  }
+  function showShared(p, readonly) {
+    const box = $('shared'); box.textContent = '';
+    const sec = document.createElement('section'); sec.append(el('h2', null, T.shared));
+    const g = el('div', 'grid'); g.append(card(p, {shared: true, readonly})); sec.append(g); box.append(sec);
+    box.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  }
+
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    sort = b.dataset.sort;
+    document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    loadList(true).catch(() => { $('note').textContent = T.loadFail; });
+  });
+  $('more').onclick = () => { page++; loadList(false).catch(() => { $('note').textContent = T.loadFail; }); };
+  $('week').onchange = e => loadHighlights(e.target.value).catch(() => { $('note').textContent = T.loadFail; });
+
+  (async () => {
+    try {
+      const w = await api('weeks');
+      current = w.current;
+      const sel = $('week');
+      for (const key of [current, ...w.weeks.filter(k => k !== current)]) {
+        const o = el('option', null, T.weekOf(weekStart(key))); o.value = key; sel.append(o);
+      }
+      await Promise.all([loadHighlights(current), loadList(true)]);
+      const id = new URLSearchParams(location.search).get('p');
+      if (id) { try { showShared(await api(`posts/${encodeURIComponent(id)}?voter=${voter}`), false); } catch (e) {} }
+    } catch (e) {
+      $('note').textContent = T.loadFail;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

@@ -1,8 +1,24 @@
 [
   {
+    "version": "1.7.1",
+    "date": "2026-11-11",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.7.1/LemonDesk-1.7.1.dmg",
+    "notes": {
+      "ko": [
+        "폰으로 보기 화면을 새로 만들었어요. 폰에서도 내 과수원의 나무와 일꾼이 그대로 보이고, 창고 숫자가 Mac과 같은 순간에 올라요",
+        "폰에서 누르면 바로 반응해요. 밭이 다 찼을 때 바꿔 심기, 두 번째 일꾼 고용도 폰에서 할 수 있어요",
+        "폰 화면에 이번 주 기록과 도감·비밀 기록 수가 보여요"
+      ],
+      "en": [
+        "Phone view has a brand-new look. Your phone shows your orchard's trees and workers just like your Mac, and the crate count ticks up at the same moment",
+        "Taps respond right away. You can now replant when the field is full and hire a second worker from your phone",
+        "Your phone also shows this week's record and your collection and secret counts"
+      ]
+    }
+  },
+  {
     "version": "1.7.0",
     "date": "2026-11-11",
-    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.7.0/LemonDesk-1.7.0.dmg",
     "notes": {
       "ko": [
         "새 나무 8종: 레드향, 천혜향, 베르가못, 포멜로와 규칙이 다른 특별한 나무 넷(밤에만 열리는 달빛 레몬, 겨울에 빠른 눈꽃 유자, 이웃 나무를 키우는 탱자, 쉴 새 없이 열리는 핑거라임). 도감이 20종이 됐어요",

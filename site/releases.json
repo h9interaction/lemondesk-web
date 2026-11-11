@@ -1,8 +1,26 @@
 [
   {
+    "version": "1.7.0",
+    "date": "2026-11-11",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.7.0/LemonDesk-1.7.0.dmg",
+    "notes": {
+      "ko": [
+        "새 나무 8종: 레드향, 천혜향, 베르가못, 포멜로와 규칙이 다른 특별한 나무 넷(밤에만 열리는 달빛 레몬, 겨울에 빠른 눈꽃 유자, 이웃 나무를 키우는 탱자, 쉴 새 없이 열리는 핑거라임). 도감이 20종이 됐어요",
+        "숨은 이스터에그 10개가 더 생겼어요. 월요일 아침, 퇴근 시각, 명절… 언제 무엇이 나올지 찾아보세요. 20개를 다 찾으면 비밀 정원 테마가 열려요",
+        "새 나무를 해금하거나 일꾼 장비가 바뀌면 축하 카드가 떠요(설정에서 끌 수 있어요)",
+        "일꾼들이 더 자연스럽게 움직여요. 걸을 때 튀던 문제를 고치고, 눈을 깜빡이고 숨 쉬며, 저마다의 버릇과 그림자가 생겼어요"
+      ],
+      "en": [
+        "8 new trees: Red-hyang, Cheonhyehyang, Bergamot, Pomelo, plus four special trees with their own rules (a moonlight lemon that fruits only at night, a snowflake yuja that loves winter, a trifoliate orange that helps its neighbours, and a finger lime that never stops). The collection now has 20 trees",
+        "10 more hidden easter eggs: Monday mornings, clock-out time, holidays and more. Find all 20 to unlock the Secret Garden theme",
+        "A celebration card pops up when you unlock a new tree or a worker gets new gear (you can turn it off in Settings)",
+        "Workers move more naturally: no more jumping while walking, they blink and breathe, and each has a little habit and a shadow"
+      ]
+    }
+  },
+  {
     "version": "1.6.0",
     "date": "2026-11-10",
-    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.6.0/LemonDesk-1.6.0.dmg",
     "notes": {
       "ko": [
         "폰으로 보기: 설정에서 켜고 QR을 한 번 찍으면 폰 브라우저에서 과수원을 보고 팔기·심기·고용·창고 넓히기를 할 수 있어요. 집 밖에서도 되고 앱 설치나 로그인은 필요 없어요",

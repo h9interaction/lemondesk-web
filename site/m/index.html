@@ -302,7 +302,7 @@
   }
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  if (!ios) { const l = el('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.append(l); } // Android: 저장소를 같이 써서 키가 이어진다
+  if (!ios) { const l = el('link'); l.rel = 'manifest'; l.href = 'manifest.json'; document.head.append(l); } // Android: 저장소를 같이 써서 키가 이어진다
   $('home-tip').textContent = standalone ? '' : T.homeTip;
   $('retry').textContent = T.retry; $('sheet-cancel').textContent = T.cancel;
 

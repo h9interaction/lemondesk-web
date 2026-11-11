@@ -92,6 +92,14 @@
   .gate h1 { font-size: 24px; margin: 16px 0 8px; }
   .gate img { width: 72px; height: 72px; border-radius: 16px; }
   .gate ol { text-align: left; display: inline-block; margin: 16px 0 0; padding-left: 1.3em; }
+  .party { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 10; }
+  .party .card2 { width: 220px; padding: 18px 16px 16px; text-align: center; border-radius: 18px; background: #FFF6DA; border: 3px solid #C98A2E;
+                  box-shadow: 0 10px 30px rgba(0,0,0,.25); color: #4A2E14; animation: pop 2.6s ease-out forwards; }
+  .party .card2 b { display: block; font-size: 16px; margin-bottom: 8px; color: #6B3F00; }
+  .party .card2 img { height: 110px; image-rendering: pixelated; }
+  .party .card2 span { display: block; margin-top: 8px; font-weight: 700; }
+  @keyframes pop { 0% { transform: translateY(40vh) scale(.3); opacity: 0 } 18% { transform: none; opacity: 1 } 80% { opacity: 1 } 100% { opacity: 0 } }
+  @media (prefers-reduced-motion: reduce) { .party .card2 { animation: fadeonly 2.6s forwards; } @keyframes fadeonly { 0%, 100% { opacity: 0 } 10%, 80% { opacity: 1 } } }
   footer { margin-top: 32px; font-size: 13px; color: var(--muted); text-align: center; }
   footer p + p { margin-top: 6px; }
   @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
@@ -158,13 +166,15 @@
   const SPRITES = '../brag/sprites/';
   const en = (navigator.language || '').toLowerCase().startsWith('en');
   const kindsKo = {eureka: '유레카 레몬', kumquat: '금귤', meyer: '마이어 레몬', calamansi: '깔라만시', lime: '라임', blood: '블러드 오렌지',
-    yuja: '유자', grapefruit: '자몽', pink: '핑크 레몬', hallabong: '한라봉', buddha: '불수감', golden: '황금 레몬', rainbow: '무지개 레몬'};
+    yuja: '유자', grapefruit: '자몽', pink: '핑크 레몬', hallabong: '한라봉', buddha: '불수감', golden: '황금 레몬', rainbow: '무지개 레몬',
+    redhyang: '레드향', cheonhye: '천혜향', bergamot: '베르가못', pomelo: '포멜로', fingerlime: '핑거라임', trifoliate: '탱자', snowyuja: '눈꽃 유자', moonlemon: '달빛 레몬'};
   const kindsEn = {eureka: 'Eureka lemon', kumquat: 'Kumquat', meyer: 'Meyer lemon', calamansi: 'Calamansi', lime: 'Lime', blood: 'Blood orange',
-    yuja: 'Yuja', grapefruit: 'Grapefruit', pink: 'Pink lemon', hallabong: 'Hallabong', buddha: "Buddha's hand", golden: 'Golden lemon', rainbow: 'Rainbow lemon'};
+    yuja: 'Yuja', grapefruit: 'Grapefruit', pink: 'Pink lemon', hallabong: 'Hallabong', buddha: "Buddha's hand", golden: 'Golden lemon', rainbow: 'Rainbow lemon',
+    redhyang: 'Red-hyang', cheonhye: 'Cheonhyehyang', bergamot: 'Bergamot', pomelo: 'Pomelo', fingerlime: 'Finger lime', trifoliate: 'Trifoliate orange', snowyuja: 'Snowflake yuja', moonlemon: 'Moonlight lemon'};
   // 받침이 있으면 '을', 없으면 '를'
   const obj = s => { const c = s.charCodeAt(s.length - 1) - 0xAC00; return s + (c >= 0 && c < 11172 && c % 28 ? '을' : '를'); };
   const T = en ? {
-    crate: 'Crate', sell: 'Sell all', sellFor: v => `Sell all +${v}`, plant: 'Plant trees', unlock: 'Unlock a new kind',
+    newKind: 'A new tree is open!', crate: 'Crate', sell: 'Sell all', sellFor: v => `Sell all +${v}`, plant: 'Plant trees', unlock: 'Unlock a new kind',
     unlockNote: "Unlocking lets you plant that kind. It doesn't plant a tree by itself.", workers: 'Workers', crateUp: 'Bigger crate', privacy: 'Privacy Policy',
     fullIn: t => `Full in ${t}`, full: 'The crate is full', slow: 'Filling slowly', field: (n, m) => `Field ${n} / ${m}`,
     kinds: kindsEn, roles: {planter: 'Planter', caretaker: 'Caretaker', harvester: 'Harvester'},
@@ -184,7 +194,7 @@
     homeTip: 'Tip: add this page to your Home Screen to open it like an app.',
     ago: s => s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`,
   } : {
-    crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
+    newKind: '새 나무가 열렸어요', crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
     fullIn: t => `가득까지 ${t}`, full: '창고가 가득 찼어요', slow: '천천히 차는 중', field: (n, m) => `밭 ${n} / ${m}칸`,
     kinds: kindsKo, roles: {planter: '심기 일꾼', caretaker: '돌보기 일꾼', harvester: '수확 일꾼'},
     count: n => `${n}그루`, none: '아직 없음', level: (l, m) => `레벨 ${l} / ${m}`, crateLevel: (l, c) => `레벨 ${l} · ${c}개 보관`,
@@ -257,6 +267,16 @@
     const b = document.createElement('b'); b.textContent = name; const s = document.createElement('span'); s.textContent = sub;
     info.append(b, s); li.append(p, info, btn); return li;
   };
+  // 1.7 축하 카드: 폰에서 새 종류를 해금하면(Mac 에는 띄우지 않는다)
+  const party = (title, img, name) => {
+    const box = document.createElement('div'); box.className = 'party'; box.setAttribute('aria-hidden', 'true');
+    const c = document.createElement('div'); c.className = 'card2';
+    const b = document.createElement('b'); b.textContent = title;
+    const i = document.createElement('img'); i.src = img; i.alt = '';
+    const s = document.createElement('span'); s.textContent = name;
+    c.append(b, i, s); box.append(c); document.body.append(box);
+    setTimeout(() => box.remove(), 2700);
+  };
   // 버튼: 이름 + 가격(코인). cost 가 null 이면 못 함(reason), 코인이 모자라면 흐리게.
   const buyBtn = (label, cost, reason, run) => {
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'buy';
@@ -318,6 +338,7 @@
     for (const r of s?.results || []) {
       const p = pending.get(r.id); if (!p) continue;
       pending.delete(r.id);
+      if (r.ok && p.action === 'unlock') party(T.newKind, `${SPRITES}tree-${p.kind}.png`, T.kinds[p.kind] || p.kind);
       toast(!r.ok ? T[r.reason] || T.unavailable : p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind)
         : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : T.grown);
     }

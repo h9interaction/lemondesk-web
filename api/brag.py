@@ -51,9 +51,11 @@ VERSION_RE = re.compile(r"\d{1,3}(\.\d{1,3}){0,3}")
 LANG_RE = re.compile(r"[A-Za-z]{2,3}([-_][A-Za-z0-9]{2,8})?")
 
 KINDS = {"eureka", "kumquat", "meyer", "calamansi", "lime", "blood", "yuja", "grapefruit", "pink",
-         "hallabong", "buddha", "golden", "rainbow"}
+         "hallabong", "buddha", "golden", "rainbow",
+         # 1.7
+         "redhyang", "cheonhye", "bergamot", "pomelo", "fingerlime", "trifoliate", "snowyuja", "moonlemon"}
 ROLES = {"planter", "caretaker", "harvester"}
-THEMES = {"sunny", "blossom", "sunset", "moon"}
+THEMES = {"sunny", "blossom", "sunset", "moon", "garden"}
 # ponytail: 짧은 금칙어 목록. 공백을 지우고 소문자로 비교한다. 신고 3건 자동 숨김이 나머지를 맡는다.
 BANNED = ["시발", "씨발", "ㅅㅂ", "병신", "ㅂㅅ", "개새", "좆", "섹스", "fuck", "shit", "bitch", "sex", "porn", "nigger"]
 # 폰으로 보기(1.6)
@@ -169,8 +171,8 @@ def clean_post(body):
         "nickname": clean_nickname(body.get("nickname")),
         "card": {"harvested": _int(card.get("harvested"), 0, 10**8), "sold": _int(card.get("sold"), 0, 10**8),
                  "earned": _int(card.get("earned"), 0, 10**13), "planted": _int(card.get("planted"), 0, 10**5)},
-        "orchard": {"trees": trees, "workers": crew, "dex": _int(orch.get("dex"), 0, 12),
-                    "secrets": _int(orch.get("secrets"), 0, 10), "rainbow": orch["rainbow"], "theme": orch["theme"]},
+        "orchard": {"trees": trees, "workers": crew, "dex": _int(orch.get("dex"), 0, 20),
+                    "secrets": _int(orch.get("secrets"), 0, 20), "rainbow": orch["rainbow"], "theme": orch["theme"]},
     }
 
 

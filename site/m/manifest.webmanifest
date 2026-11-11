@@ -1,0 +1,17 @@
+{
+  "name": "Lemon Desk",
+  "short_name": "Lemon Desk",
+  "description": "Mac의 레몬 과수원을 폰에서 보고 돌봐요",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF6D8",
+  "theme_color": "#FFF6D8",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -59,7 +59,7 @@ THEMES = {"sunny", "blossom", "sunset", "moon", "garden"}
 # ponytail: 짧은 금칙어 목록. 공백을 지우고 소문자로 비교한다. 신고 3건 자동 숨김이 나머지를 맡는다.
 BANNED = ["시발", "씨발", "ㅅㅂ", "병신", "ㅂㅅ", "개새", "좆", "섹스", "fuck", "shit", "bitch", "sex", "porn", "nigger"]
 # 폰으로 보기(1.6)
-RELAY_STATE_MAX = 24 * 1024  # Mac 이 올리는 상태 크기(실제는 6KB 안팎)
+RELAY_STATE_MAX = 24 * 1024  # Mac 이 올리는 상태 크기(v2 는 후반 과수원에서 15KB 안팎)
 RELAY_WAIT = 25              # Mac 롱폴링 최대 초(앞단 프록시 시간 제한보다 짧게)
 RELAY_WAITERS = 2            # 한 기기가 동시에 열 수 있는 대기(잠자기에서 깨면 끊긴 대기가 하나 남아 있다)
 RELAY_WAITERS_ALL = 2000     # 서버 전체 동시 대기. 넘으면 기다리지 않고 바로 답한다(스레드 고갈 방지)
@@ -69,7 +69,43 @@ RELAY_FRESH = 3              # 폰이 처음 열 때 Mac 의 새 상태를 기�
 RELAY_CMD_TTL = 30           # 명령을 Mac 이 가져가지 않으면 버리는 초
 RELAY_QUEUE = 10
 RELAY_KEEP_DAYS = 90         # 쓰지 않는 페어링 보관
-ACTIONS = {"sell", "plant", "unlock", "hire", "crate"}
+RELAY_RESULT = 3             # 폰 명령이 Mac 의 처리 결과를 기다리는 초(넘으면 폰이 다시 묻는다)
+RELAY_ASKERS = 4             # 한 기기에서 동시에 결과를 기다릴 수 있는 명령 수
+ACTIONS = {"sell", "plant", "unlock", "hire", "crate", "hire2", "replant"}  # hire2·replant: 1.7.1
+
+# 자랑 게시판 조작 방지(1.7.1): 올린 숫자가 게임에서 나올 수 있는 범위인지 본다. 앱 Balance.swift 와 같은 값(test_brag 가 대조한다).
+# 게임 저장은 서버로 옮기지 않는다. 가능한 최대치 바로 아래로 꾸민 숫자는 못 막고, 신고·관리 명령이 나머지를 맡는다.
+WEEK = 7 * 86400
+MAX_TREES = 10
+MIN_FRUIT_INTERVAL = 20      # 가장 빨리 열리는 나무(핑거라임)의 열매 간격(초)
+MAX_FRUIT_PRICE = 900        # 가장 비싼 열매(포멜로)
+GROW_PER_LEVEL = 0.15        # 돌보기 레벨당 성장 배율
+PRICE_PER_LEVEL = 0.12       # 심기 레벨당 판매가 배율
+CREW2 = 1.5                  # 두 번째 일꾼 효과
+SEASON_GROW, FENCE_GROW, SEASON_PRICE = 1.15, 1.4, 1.5  # 봄 성장, 탱자 양옆, 겨울 유자값
+MAX_CRATE = round(40 * 1.5 ** 12 * 1.25 ** 6)            # 창고 최대(레벨 18)
+SLACK = 1.2                  # 여유(시계 오차·주 경계)
+
+
+def plausible(post):
+    """올린 일꾼 레벨로 일주일에 나올 수 있는 최대치 안인지. 레벨은 오르기만 하므로 지금 레벨이 그 주의 상한이다.
+    나무는 주중에 바꿔 심을 수 있어 가장 빠른 나무 10그루로 본다(손으로 따면 수확 일꾼 속도와 무관)."""
+    card, orch = post["card"], post["orchard"]
+
+    def boost(role, per):
+        w = orch["workers"].get(role)
+        return 1 + per * w["level"] * (CREW2 if len(w["looks"]) >= 2 else 1) if w else 1
+
+    harvest_max = WEEK * MAX_TREES * boost("caretaker", GROW_PER_LEVEL) * SEASON_GROW * FENCE_GROW / MIN_FRUIT_INTERVAL * SLACK + 500
+    if card["harvested"] > harvest_max or card["sold"] > card["harvested"] + MAX_CRATE:
+        return False
+    if card["earned"] > card["sold"] * MAX_FRUIT_PRICE * boost("planter", PRICE_PER_LEVEL) * SEASON_PRICE * SLACK:
+        return False
+    kinds = set(orch["trees"]) - {"rainbow"}
+    if len(kinds) > orch["dex"] or (orch["rainbow"] and orch["dex"] < 12) or ("rainbow" in orch["trees"] and not orch["rainbow"]):
+        return False
+    return True
+
 CMD_ID = re.compile(r"[A-Za-z0-9-]{1,40}")
 KEY = re.compile(r"[0-9a-f]{64}")
 URLISH = re.compile(r"(https?:|www\.|\.(com|net|org|kr|io|me|xyz|club)\b|@)", re.I)
@@ -167,13 +203,16 @@ def clean_post(body):
                                 for l in looks if isinstance(l, dict)]}
     if orch.get("theme") not in THEMES or not isinstance(orch.get("rainbow"), bool):
         raise BadRequest()
-    return {
+    post = {
         "nickname": clean_nickname(body.get("nickname")),
         "card": {"harvested": _int(card.get("harvested"), 0, 10**8), "sold": _int(card.get("sold"), 0, 10**8),
                  "earned": _int(card.get("earned"), 0, 10**13), "planted": _int(card.get("planted"), 0, 10**5)},
         "orchard": {"trees": trees, "workers": crew, "dex": _int(orch.get("dex"), 0, 20),
                     "secrets": _int(orch.get("secrets"), 0, 20), "rainbow": orch["rainbow"], "theme": orch["theme"]},
     }
+    if not plausible(post):
+        raise BadRequest("implausible")
+    return post
 
 
 def sha(s):
@@ -419,8 +458,8 @@ class Board:
         posts = [self._row(r) for r in rows]
         top = sorted([p for p in posts if p["stars"] > 0], key=lambda p: (-p["stars"], p["created"]))[:TOP_N]
 
-        def best(value):
-            c = [p for p in posts if value(p) > 0]
+        def best(value):  # 1.7.1: 별을 하나라도 받은 게시물에서만(사람 눈을 한 번 거친다)
+            c = [p for p in posts if value(p) > 0 and p["stars"] > 0]
             return min(c, key=lambda p: (-value(p), -p["stars"], p["created"])) if c else None
 
         cats = {"harvest": best(lambda p: p["card"]["harvested"]),
@@ -518,7 +557,7 @@ class Relay:
         e = self.live.get(device)
         if e is None:
             e = self.live[device] = {"state": None, "state_at": 0.0, "mac_seen": 0.0, "waiting": 0, "viewer_seen": 0.0,
-                                     "wake": False, "commands": [], "saved": 0.0, "cond": threading.Condition(self.lock)}
+                                     "wake": False, "commands": [], "saved": 0.0, "cond": threading.Condition(self.lock), "results": {}, "asking": 0}
         return e
 
     def _online(self, e, t):
@@ -578,6 +617,8 @@ class Relay:
         with self.lock:
             e = self._entry(device)
             e["state"], e["state_at"], e["mac_seen"] = json.dumps(body, ensure_ascii=False), t, t
+            rs = body.get("results")
+            e["results"] = {r["id"]: r for r in rs if isinstance(r, dict) and isinstance(r.get("id"), str)} if isinstance(rs, list) else {}
             e["cond"].notify_all()
             return {"ok": True, "watching": t - e["viewer_seen"] < RELAY_WATCH}
 
@@ -623,6 +664,12 @@ class Relay:
                 self.board.db.commit()
         return out
 
+    def _seen(self, e):
+        """폰에 돌려주는 모양(잠근 채로 부른다)"""
+        t = time.time()
+        return {"state": json.loads(e["state"]) if e["state"] else None, "stateAt": e["state_at"] or None,
+                "macSeen": t if e["waiting"] else (e["mac_seen"] or None), "online": self._online(e, t), "now": t}
+
     def view(self, auth, now):
         device = self.phone(auth)
         self.board.limit("view", device, now)
@@ -637,9 +684,7 @@ class Relay:
                 end = time.monotonic() + RELAY_FRESH
                 while e["state_at"] < t and time.monotonic() < end:
                     e["cond"].wait(end - time.monotonic())
-            t = time.time()
-            return {"state": json.loads(e["state"]) if e["state"] else None, "stateAt": e["state_at"] or None,
-                    "macSeen": t if e["waiting"] else (e["mac_seen"] or None), "online": self._online(e, t), "now": t}
+            return self._seen(e)
 
     def command(self, auth, body, now):
         device = self.phone(auth)
@@ -654,10 +699,15 @@ class Relay:
             if body.get("kind") not in KINDS:
                 raise BadRequest()
             cmd["kind"] = body["kind"]
-        if action == "hire":
+        if action in ("hire", "hire2"):
             if body.get("role") not in ROLES:
                 raise BadRequest()
             cmd["role"] = body["role"]
+        if action == "replant":
+            plot = body.get("plot")
+            if body.get("kind") not in KINDS or isinstance(plot, bool) or not isinstance(plot, int) or not 0 <= plot < MAX_TREES:
+                raise BadRequest()
+            cmd["kind"], cmd["plot"] = body["kind"], plot
         with self.lock:
             e = self._entry(device)
             t = time.time()
@@ -669,7 +719,19 @@ class Relay:
             cmd["at"] = t
             e["commands"].append(cmd)
             e["cond"].notify_all()
-        return {"ok": True}
+            # 1.7.1: Mac 이 처리해 결과를 올릴 때까지 잠깐 기다렸다가 새 상태와 함께 돌려준다(폰이 한 번에 받는다)
+            # 기다리는 수에도 상한을 둔다(스레드 고갈 방지). 넘으면 결과 없이 바로 돌려주고 폰이 1초 뒤 다시 묻는다.
+            if e["asking"] < RELAY_ASKERS and self.waiting < RELAY_WAITERS_ALL:
+                e["asking"] += 1
+                self.waiting += 1
+                try:
+                    end = time.monotonic() + RELAY_RESULT
+                    while cid not in e["results"] and time.monotonic() < end:
+                        e["cond"].wait(end - time.monotonic())
+                finally:
+                    e["asking"] -= 1
+                    self.waiting -= 1
+            return {"ok": True, "result": e["results"].get(cid), **self._seen(e)}
 
     def maintain(self, now):
         t = now.timestamp()
@@ -775,7 +837,7 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                     return self.send(200, {"deleted": board.delete_mine(owner)})
                 return self.send(404, {"error": "not_found"})
             except BadRequest as e:
-                return self.send({"unauthorized": 401, "mac_asleep": 409, "conflict": 409, "too_large": 413}.get(e.code, 422), {"error": e.code})
+                return self.send({"unauthorized": 401, "mac_asleep": 409, "conflict": 409, "too_large": 413, "implausible": 422}.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
             except KeyError:

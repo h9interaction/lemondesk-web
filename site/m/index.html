@@ -1,7 +1,9 @@
 <!doctype html>
-<!-- 폰으로 보기(1.6). ponytail: 정적 한 장 + 프레임워크 없는 JS. Mac 앱(Remote.swift)이 중계 서버(server/brag.py relay/…)에 올린
-     상태를 5초마다 읽고, 버튼은 명령을 남긴다. 게임 규칙·가격은 Mac 이 계산해 보내므로 여기엔 없다.
-     키는 주소 # 뒤(k=)와 localStorage 에만 둔다. 홈 화면에 추가할 때 키가 따라가도록 주소에 남겨 둔다. -->
+<!-- 폰으로 보기(1.6, 1.7.1 개편). 정적 한 장 + 프레임워크 없는 JS. Mac 앱(Remote.swift)이 중계 서버(server/brag.py relay/…)에 올린
+     상태(RemoteState v2)를 읽어 Mac 띠와 같은 과수원을 그리고, 버튼은 명령을 보낸다. 게임 규칙·가격은 Mac 이 계산해 보낸다.
+     옛 앱(v1 상태)이면 과수원 그림·바꿔 심기 없이 숫자만 보인다.
+     키는 주소 # 뒤(k=)와 localStorage 에만 둔다. iOS 홈 화면 앱은 저장소가 따로라 주소에 키를 남겨 둔다(그래서 iOS 에는 manifest 를 걸지 않는다).
+     그림: sprites/(scripts/m-sprites.py), 글꼴: fonts/(scripts/m-font.py, 갈무리11 SIL OFL). 문구를 바꾸면 m-font.py 를 다시 돌린다. -->
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -12,144 +14,193 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lemon Desk">
-<meta name="theme-color" content="#FFFBEC" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14170F" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFF6D8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="../icon.png?v=1">
-<link rel="icon" href="../icon.png?v=1">
+<link rel="icon" href="sprites/icon-64.png">
+<link rel="preload" href="fonts/galmuri11-bold.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root {
-    --bg: #FFFBEC; --ink: #23511F; --text: #3E4A33; --muted: #646D57; --card: #FFFFFF; --line: #EDE6CC;
-    --lemon: #F5CE2E; --lemon-soft: #FFF3C2; --leaf: #2E7D32; --on-leaf: #FFFFFF; --track: #EFE8CF; --warn: #8A5A00; --warn-bg: #FFF1CC;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #14170F; --ink: #EEF3DF; --text: #C9CFBA; --muted: #A2A991; --card: #1C2016; --line: #2D3324;
-            --lemon-soft: #2C2A14; --track: #2D3324; --warn: #F2D27A; --warn-bg: #2E2711; }
-  }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2) format("woff2"); font-display: swap; }
+  :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
-    word-break: keep-all; -webkit-font-smoothing: antialiased;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-  .wrap { max-width: 520px; margin: 0 auto; padding: 0 16px 32px; }
-  h1, h2 { margin: 0; color: var(--ink); letter-spacing: -0.02em; }
-  h2 { font-size: 18px; }
-  p { margin: 0; }
-  a { color: var(--ink); text-underline-offset: 3px; }
-  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 8px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+         word-break: keep-all; padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
   [hidden] { display: none !important; }
-  .muted { color: var(--muted); }
+  p, h1, h2, h3 { margin: 0; }
+  img, .panel, .btn, .tabs, .spr { image-rendering: pixelated; }
+  .px { font-family: "Galmuri", -apple-system, "Apple SD Gothic Neo", sans-serif; font-weight: 700; letter-spacing: 0; }
   .num { font-variant-numeric: tabular-nums; }
-  img.px { image-rendering: pixelated; }
+  :focus-visible { outline: 3px solid #2F6FD0; outline-offset: 2px; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 12px calc(96px + env(safe-area-inset-bottom)); }
 
-  header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0 12px; }
-  .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); font-size: 17px; }
-  .brand img { width: 28px; height: 28px; border-radius: 7px; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); padding: 4px 10px;
-          border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
-  .chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-  .chip.on { color: var(--ink); }
-  .chip.on::before { background: #3FA34D; }
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 2px 8px; color: var(--page-ink); }
+  .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 16.5px; }
+  .brand img { width: 26px; height: 26px; border-radius: 6px; image-rendering: auto; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--page-soft); }
+  .chip::before { content: ""; width: 8px; height: 8px; background: #A89A78; }
+  .chip.on::before { background: #58B02C; }
 
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
-  .hero .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-  .hero .label { font-weight: 600; color: var(--ink); }
-  .hero .count { font-size: 28px; font-weight: 700; color: var(--ink); }
-  .bar { height: 10px; border-radius: 999px; background: var(--track); overflow: hidden; margin: 10px 0 8px; }
-  .bar i { display: block; height: 100%; min-width: 10px; border-radius: 999px; background: var(--leaf); transition: width .4s ease-out; }
-  .hero .full { font-size: 14px; }
-  .coins { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--ink); font-size: 18px; margin-top: 12px; }
-  .coins img { width: 18px; height: 16px; }
-  button { font: inherit; cursor: pointer; touch-action: manipulation; }
-  .primary { width: 100%; min-height: 52px; margin-top: 14px; border: 0; border-radius: 14px; background: var(--leaf); color: var(--on-leaf);
-             font-size: 17px; font-weight: 700; }
-  .primary:active:not(:disabled) { opacity: .85; }
-  button:disabled { opacity: .45; cursor: default; }
+  /* 과수원 장면: Mac 띠와 같은 그림(아트 픽셀 1칸 = 1px). 옆으로 밀어 본다. */
+  .scene { position: relative; height: 172px; overflow-x: auto; overflow-y: hidden; border: 3px solid #5B3A1A; scrollbar-width: none;
+           background: linear-gradient(#BFE3F2 0 62%, #DDF1F8 62% 100%); -webkit-overflow-scrolling: touch; }
+  .scene::-webkit-scrollbar { display: none; }
+  .scene.dawn { background: linear-gradient(#F7CDB8 0 62%, #FCE6D6 62% 100%); }
+  .scene.dusk { background: linear-gradient(#F3B57E 0 62%, #FADBB0 62% 100%); }
+  .scene.night { background: linear-gradient(#141B36 0 62%, #222D55 62% 100%); }
+  .world { position: relative; height: 100%; min-width: 100%; }
+  .scene.night .world > * { filter: brightness(.72) saturate(.85); }
+  .scene.night .world > .lit { filter: none; }
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background: url(sprites/ground-0.png) repeat-x left bottom; }
+  .world img { position: absolute; transform: translateX(-50%); }
+  .w { position: absolute; bottom: 4px; transform: translateX(-50%); transition: left linear; }
+  .w .spr { background-repeat: no-repeat; animation: play var(--dur, 1.5s) steps(var(--n, 8)) infinite; }
+  .w .sh { position: absolute; left: 50%; bottom: -3px; width: 34px; height: 10px; margin-left: -17px; background: url(sprites/fx-shadow-0.png); opacity: .35; }
+  .w .zzz { position: absolute; left: 60%; bottom: 100%; width: 44px; height: 24px; background: url(sprites/fx-zzz.png); animation: zz 1.6s steps(4) infinite; }
+  @keyframes play { to { background-position-x: var(--end); } }
+  @keyframes zz { to { background-position-x: -176px; } }
+  .hint { margin: 6px 2px 0; font-size: 14px; color: var(--page-soft); }
 
-  .banner { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--warn); font-size: 14px; }
-  .toast { min-height: 1.5em; margin: 12px 4px 0; font-size: 15px; color: var(--ink); font-weight: 600; }
+  /* 픽셀 UI 틀(9-slice) */
+  .panel { border: 9px solid transparent; border-image: url(sprites/ui-panel.png) 9 fill / 9px stretch; padding: 8px 10px; color: var(--ink); }
+  .btn { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; min-height: 48px; padding: 0 6px;
+         border: solid transparent; border-width: 9px 10px 11px; border-image: url(sprites/ui-btn-green.png) 9 10 11 fill / 9px 10px 11px stretch;
+         background: none; color: #1F3A0A; font-size: 16.5px; line-height: 1.15; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .btn.y { border-image-source: url(sprites/ui-btn-yellow.png); color: #5A3A00; }
+  .btn:active:not(:disabled), .btn[aria-busy="true"] { border-width: 9px 10px 9px; border-image: url(sprites/ui-btn-green-down.png) 9 10 9 fill / 9px 10px 9px stretch; transform: translateY(2px); }
+  .btn:disabled { border-width: 9px 10px; border-image: url(sprites/ui-btn-off.png) 9 10 fill / 9px 10px stretch; color: #4F4034; cursor: default; }
+  .btn small { display: inline-flex; align-items: center; gap: 3px; font-size: 14px; }
+  .btn small img { width: 14px; height: 13px; }
 
-  section.list { margin-top: 20px; }
-  section.list > p { font-size: 14px; margin-top: 2px; }
-  ul.rows { list-style: none; margin: 10px 0 0; padding: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
-  ul.rows li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 64px; }
-  ul.rows li + li { border-top: 1px solid var(--line); }
-  .pic { width: 48px; height: 44px; display: flex; align-items: flex-end; justify-content: center; flex: none; }
-  .pic img { max-width: 48px; max-height: 44px; }
-  .info { flex: 1; min-width: 0; }
-  .info b { display: block; color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
-  .info span { font-size: 13px; color: var(--muted); }
-  .buy { flex: none; min-width: 88px; min-height: 44px; padding: 6px 12px; border-radius: 12px; border: 1px solid var(--line);
-         background: var(--lemon-soft); color: var(--ink); font-weight: 600; font-size: 15px; display: inline-flex; flex-direction: column;
-         align-items: center; justify-content: center; line-height: 1.2; }
-  .buy small { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 500; }
-  .buy small img { width: 12px; height: 11px; }
-  .buy:active:not(:disabled) { opacity: .8; }
+  .hud { margin-top: 10px; display: grid; grid-template-columns: 104px 1fr; gap: 4px 14px; align-items: center; }
+  .hud .crate { width: 104px; height: 100px; }
+  .hud .label { font-size: 16.5px; color: var(--soft); }
+  .hud .count { font-size: 33px; line-height: 1.1; }
+  .bar { height: 12px; border: 2px solid #5B3A1A; background: var(--track); margin: 6px 0 4px; }
+  .bar i { display: block; height: 100%; background: var(--leaf); }
+  .hud .full { font-size: 15px; color: var(--soft); }
+  .hud .top2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .coins { display: inline-flex; align-items: center; gap: 5px; font-size: 16.5px; }
+  .hud .btn { grid-column: 1 / -1; min-height: 56px; font-size: 22px; margin-top: 6px; flex-direction: row; }
+  /* 결과 안내: 어느 탭에서나 보이게 아래 탭 위에 띄운다 */
+  .toast { position: fixed; left: 50%; bottom: calc(78px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 6; width: max-content; max-width: calc(100% - 24px);
+           margin: 0; padding: 8px 14px; font-size: 15px; font-weight: 600; text-align: center; color: #FFF6D8; background: #4A2E14; border: 2px solid #C98A2E; pointer-events: none; }
+  .toast:empty { display: none; }
+  .banner { margin-top: 10px; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+  .banner p { flex: 1; }
+  .week { margin-top: 10px; }
+  .week h2, .sec { font-size: 16.5px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+  .stats b { display: block; font-size: 22px; font-weight: 700; }
+  .stats span, .week .more { font-size: 14px; color: var(--soft); }
+  .week .more { margin-top: 6px; }
+  .dim { opacity: .55; }
 
-  .gate { margin-top: 24px; text-align: center; }
-  .gate h1 { font-size: 24px; margin: 16px 0 8px; }
-  .gate img { width: 72px; height: 72px; border-radius: 16px; }
-  .gate ol { text-align: left; display: inline-block; margin: 16px 0 0; padding-left: 1.3em; }
-  .party { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 10; }
-  .party .card2 { width: 220px; padding: 18px 16px 16px; text-align: center; border-radius: 18px; background: #FFF6DA; border: 3px solid #C98A2E;
-                  box-shadow: 0 10px 30px rgba(0,0,0,.25); color: #4A2E14; animation: pop 2.6s ease-out forwards; }
-  .party .card2 b { display: block; font-size: 16px; margin-bottom: 8px; color: #6B3F00; }
-  .party .card2 img { height: 110px; image-rendering: pixelated; }
-  .party .card2 span { display: block; margin-top: 8px; font-weight: 700; }
+  .sec { margin: 14px 2px 8px; color: var(--page-ink); }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tile { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+  .tile .pic { height: 96px; display: flex; align-items: flex-end; justify-content: center; }
+  .tile .pic img { max-height: 96px; }
+  .tile.locked .pic img { filter: brightness(0); opacity: .3; }
+  .tile b { font-size: 16.5px; font-weight: 700; overflow-wrap: anywhere; }
+  .tile .sub, .card .sub { font-size: 14px; color: var(--soft); }
+  .tile .trait { font-size: 14px; color: #3F6B0A; }
+  .tile .btn { width: 100%; margin-top: auto; }
+  .tile .sub { margin-bottom: 6px; }
+  .why { font-size: 14px; color: #8A3B12; min-height: 0; }
+  .card { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; margin-bottom: 10px; }
+  .card .who { display: flex; align-items: flex-end; min-width: 60px; justify-content: center; }
+  .card .who .spr { background-repeat: no-repeat; animation: play 1.5s steps(8) infinite; }
+  .card b { font-size: 16.5px; }
+  .card .acts { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 6px; }
+  .card .acts .btn { flex: 1; }
+
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; justify-content: center; padding: 0 8px env(safe-area-inset-bottom);
+          border: solid transparent; border-width: 6px 8px; border-image: url(sprites/ui-plank.png) 6 8 fill / 6px 8px stretch; }
+  .tabs button { flex: 1; max-width: 160px; min-height: 56px; background: none; border: 0; color: #FFE9B8; font-size: 16.5px; display: flex; flex-direction: column;
+                 align-items: center; justify-content: center; gap: 2px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .tabs button img { height: 25px; }
+  .tabs button[aria-selected="true"] { color: #FFD84A; box-shadow: inset 0 -4px 0 #FFD84A; }
+
+  dialog.sheet { margin: auto auto 0; padding: 0; border: 0; background: none; width: 100%; max-width: 480px; }
+  dialog.sheet::backdrop { background: rgba(20, 14, 6, .55); }
+  .sheet .panel { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .plots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; }
+  .plots button { background: none; border: 2px solid #C9A56B; padding: 2px 0 0; min-height: 76px; font-size: 14px; color: var(--ink); cursor: pointer; }
+  .plots button img { width: 62px; height: 55px; display: block; margin: 0 auto; }
+  .plots button:disabled { opacity: .4; }
+
+  .party { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 20; }
+  .party .panel { width: 220px; text-align: center; animation: pop 2.6s ease-out forwards; }
+  .party b { display: block; font-size: 16.5px; margin-bottom: 6px; }
+  .party span { display: block; margin-top: 6px; font-size: 16.5px; }
   @keyframes pop { 0% { transform: translateY(40vh) scale(.3); opacity: 0 } 18% { transform: none; opacity: 1 } 80% { opacity: 1 } 100% { opacity: 0 } }
-  @media (prefers-reduced-motion: reduce) { .party .card2 { animation: fadeonly 2.6s forwards; } @keyframes fadeonly { 0%, 100% { opacity: 0 } 10%, 80% { opacity: 1 } } }
-  footer { margin-top: 32px; font-size: 13px; color: var(--muted); text-align: center; }
-  footer p + p { margin-top: 6px; }
-  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+  .fly { position: fixed; z-index: 15; width: 18px; height: 16px; pointer-events: none; }
+
+  .gate { margin-top: 12px; text-align: center; }
+  .gate h1 { font-size: 22px; margin: 6px 0; }
+  .gate ol { text-align: left; margin: 10px 0 0; padding-left: 1.3em; }
+  footer { margin-top: 20px; font-size: 14px; color: var(--page-soft); text-align: center; }
+  footer a { color: inherit; }
+  @media (prefers-reduced-motion: reduce) {
+    .w .spr, .card .who .spr, .w .zzz { animation: none; }
+    .party .panel { animation: fadeonly 2.6s forwards; }
+    @keyframes fadeonly { 0%, 100% { opacity: 0 } 10%, 80% { opacity: 1 } }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <span class="brand"><img src="../icon.png?v=1" alt="" width="28" height="28">Lemon Desk</span>
+    <span class="brand px"><img src="sprites/icon-64.png" alt="" width="26" height="26">Lemon Desk</span>
     <span class="chip" id="chip" hidden></span>
   </header>
 
   <main id="app" hidden>
-    <section class="card hero" aria-labelledby="crate-label">
-      <div class="row">
-        <span class="label" id="crate-label" data-t="crate">창고</span>
-        <span class="count num" id="count">0 / 0</span>
+    <section id="tab-orchard" role="tabpanel" aria-labelledby="t-orchard">
+      <div class="scene" id="scene" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div></div></div>
+      <p class="hint" id="hint" hidden></p>
+      <div class="panel hud">
+        <img class="crate" id="crate-pic" src="sprites/crate-0.png" alt="" width="104" height="100">
+        <div>
+          <div class="top2"><span class="label px" data-t="crate">창고</span>
+            <span class="coins px num"><img src="sprites/coin.png" alt="" width="18" height="16"><span id="coins">0</span></span></div>
+          <div class="count px num" id="count">0 / 0</div>
+          <div class="bar" aria-hidden="true"><i id="bar" style="width:0"></i></div>
+          <div class="full num" id="full"></div>
+        </div>
+        <button class="btn px" id="sell" type="button" data-t="sell">모두 팔기</button>
       </div>
-      <div class="bar" aria-hidden="true"><i id="bar" style="width:0"></i></div>
-      <p class="full muted num" id="full"></p>
-      <button class="primary" id="sell" type="button" data-t="sell">모두 팔기</button>
-      <div class="coins"><img class="px" src="../brag/sprites/coin.png" alt="" width="18" height="16"><span class="num" id="coins">0</span></div>
+      <div class="panel banner" id="banner" hidden><p id="banner-text"></p><button class="btn y px" id="retry" type="button" hidden></button></div>
+      <div class="panel week" id="week" hidden>
+        <h2 class="px" data-t="week">이번 주</h2>
+        <div class="stats">
+          <div><b class="px num" id="w-h">0</b><span data-t="picked">딴 레몬</span></div>
+          <div><b class="px num" id="w-s">0</b><span data-t="soldN">판 레몬</span></div>
+          <div><b class="px num" id="w-e">0</b><span data-t="earned">번 코인</span></div>
+        </div>
+        <p class="more num" id="w-more"></p>
+      </div>
     </section>
-    <p class="banner" id="asleep" hidden></p>
-    <p class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></p>
 
-    <section class="list" aria-labelledby="plant-h">
-      <h2 id="plant-h" data-t="plant">나무 심기</h2>
-      <p class="muted num" id="field"></p>
-      <ul class="rows" id="kinds"></ul>
+    <section id="tab-plant" role="tabpanel" aria-labelledby="t-plant" hidden>
+      <h2 class="sec px" id="field"></h2>
+      <div class="grid" id="kinds"></div>
     </section>
-    <section class="list" id="unlock-sec" aria-labelledby="unlock-h" hidden>
-      <h2 id="unlock-h" data-t="unlock">새 종류 해금</h2>
-      <p class="muted" data-t="unlockNote">해금하면 그 종류를 심을 수 있어요. 해금만으로는 나무가 생기지 않아요.</p>
-      <ul class="rows" id="unlock"></ul>
-    </section>
-    <section class="list" aria-labelledby="workers-h">
-      <h2 id="workers-h" data-t="workers">일꾼</h2>
-      <ul class="rows" id="workers"></ul>
-    </section>
-    <section class="list" aria-labelledby="crate-h">
-      <h2 id="crate-h" data-t="crateUp">창고 넓히기</h2>
-      <ul class="rows" id="crate"></ul>
+
+    <section id="tab-crew" role="tabpanel" aria-labelledby="t-crew" hidden>
+      <h2 class="sec px" data-t="crew">일꾼</h2>
+      <div id="crew"></div>
+      <h2 class="sec px" data-t="crateUp">창고 넓히기</h2>
+      <div id="crate"></div>
     </section>
   </main>
 
-  <section class="gate" id="gate" hidden>
-    <img src="../icon.png?v=1" alt="" width="72" height="72">
-    <h1 id="gate-title"></h1>
-    <p class="muted" id="gate-text"></p>
+  <section class="gate panel" id="gate" hidden>
+    <img id="gate-pic" src="sprites/m-pair.png" alt="">
+    <h1 class="px" id="gate-title"></h1>
+    <p id="gate-text"></p>
     <ol id="gate-steps"></ol>
   </section>
 
@@ -159,54 +210,81 @@
   </footer>
 </div>
 
+<p class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></p>
+<nav class="tabs px" id="tabs" role="tablist" hidden>
+  <button type="button" role="tab" id="t-orchard" aria-controls="tab-orchard" aria-selected="true"><img src="sprites/icon-orchard.png" alt=""><span data-t="tOrchard">과수원</span></button>
+  <button type="button" role="tab" id="t-plant" aria-controls="tab-plant" aria-selected="false"><img src="sprites/icon-plant.png" alt=""><span data-t="tPlant">심기</span></button>
+  <button type="button" role="tab" id="t-crew" aria-controls="tab-crew" aria-selected="false"><img src="sprites/icon-crew.png" alt=""><span data-t="tCrew">일꾼</span></button>
+</nav>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+  <div class="panel">
+    <b class="px" id="sheet-title"></b>
+    <div class="plots" id="plots"></div>
+    <button class="btn y px" id="sheet-cancel" type="button" style="width:100%"></button>
+  </div>
+</dialog>
+
 <script>
 (() => {
   const LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
   const API = LOCAL ? location.origin + '/lemondesk/api/relay/' : 'https://lemondesk-api.interaction.hnine.com/api/relay/';
-  const SPRITES = '../brag/sprites/';
+  const S = 'sprites/';
   const en = (navigator.language || '').toLowerCase().startsWith('en');
-  const kindsKo = {eureka: '유레카 레몬', kumquat: '금귤', meyer: '마이어 레몬', calamansi: '깔라만시', lime: '라임', blood: '블러드 오렌지',
-    yuja: '유자', grapefruit: '자몽', pink: '핑크 레몬', hallabong: '한라봉', buddha: '불수감', golden: '황금 레몬', rainbow: '무지개 레몬',
-    redhyang: '레드향', cheonhye: '천혜향', bergamot: '베르가못', pomelo: '포멜로', fingerlime: '핑거라임', trifoliate: '탱자', snowyuja: '눈꽃 유자', moonlemon: '달빛 레몬'};
-  const kindsEn = {eureka: 'Eureka lemon', kumquat: 'Kumquat', meyer: 'Meyer lemon', calamansi: 'Calamansi', lime: 'Lime', blood: 'Blood orange',
-    yuja: 'Yuja', grapefruit: 'Grapefruit', pink: 'Pink lemon', hallabong: 'Hallabong', buddha: "Buddha's hand", golden: 'Golden lemon', rainbow: 'Rainbow lemon',
-    redhyang: 'Red-hyang', cheonhye: 'Cheonhyehyang', bergamot: 'Bergamot', pomelo: 'Pomelo', fingerlime: 'Finger lime', trifoliate: 'Trifoliate orange', snowyuja: 'Snowflake yuja', moonlemon: 'Moonlight lemon'};
-  // 받침이 있으면 '을', 없으면 '를'
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ro = s => { const c = s.charCodeAt(s.length - 1) - 0xAC00, f = c >= 0 && c < 11172 ? c % 28 : 0; return s + (f && f !== 8 ? '으로' : '로'); }; // ㄹ 받침은 '로'
   const obj = s => { const c = s.charCodeAt(s.length - 1) - 0xAC00; return s + (c >= 0 && c < 11172 && c % 28 ? '을' : '를'); };
   const T = en ? {
-    newKind: 'A new tree is open!', crate: 'Crate', sell: 'Sell all', sellFor: v => `Sell all +${v}`, plant: 'Plant trees', unlock: 'Unlock a new kind',
-    unlockNote: "Unlocking lets you plant that kind. It doesn't plant a tree by itself.", workers: 'Workers', crateUp: 'Bigger crate', privacy: 'Privacy Policy',
-    fullIn: t => `Full in ${t}`, full: 'The crate is full', slow: 'Filling slowly', field: (n, m) => `Field ${n} / ${m}`,
-    kinds: kindsEn, roles: {planter: 'Planter', caretaker: 'Caretaker', harvester: 'Harvester'},
-    count: n => `${n} planted`, none: 'None yet', level: (l, m) => `Level ${l} / ${m}`, crateLevel: (l, c) => `Level ${l} · holds ${c}`,
-    plantBtn: 'Plant', unlockBtn: 'Unlock', hireBtn: 'Hire', upBtn: 'Level up', growBtn: 'Expand', fieldFull: 'Field full', maxed: 'Max level',
-    more: n => `${n} more kinds after this.`,
-    online: 'Mac connected', asleepChip: 'Mac asleep', offline: "Can't connect",
-    asleep: ago => `Your Mac is asleep${ago ? ` (last seen ${ago})` : ''}, so you can only look for now. Wake it to sell and plant again.`,
-    noState: 'Wake your Mac to see your orchard.',
-    sold: e => e > 0 ? `Sold! +${fmt(e)} coins` : 'No lemons to sell yet', planted: k => `Planted a ${T.kinds[k]}`,
-    unlocked: k => `Unlocked ${T.kinds[k]}. You can plant it now`, hired: r => `${T.roles[r]} leveled up`, grown: 'Crate expanded',
-    poor: 'Not enough coins', unavailable: "That can't be done right now", noAnswer: "Your Mac didn't answer. Try again in a moment.",
-    tooMany: 'Too many taps. Try again in a moment.', failed: "Couldn't send. Check your connection.",
+    crate: 'Crate', sell: 'Sell all', sellFor: v => `Sell all +${v}`, week: 'This week', picked: 'picked', soldN: 'sold', earned: 'coins earned',
+    crew: 'Workers', crateUp: 'Bigger crate', privacy: 'Privacy Policy', tOrchard: 'Orchard', tPlant: 'Plant', tCrew: 'Workers',
+    fullIn: t => `Full in ${t}`, full: 'The crate is full', slow: 'Filling slowly', field: (n, m) => `Field ${n} / ${m}`, fieldFull: (n, m) => `Field ${n} / ${m} · full, so you can replant`,
+    kinds: {eureka: 'Eureka lemon', kumquat: 'Kumquat', meyer: 'Meyer lemon', calamansi: 'Calamansi', lime: 'Lime', blood: 'Blood orange', yuja: 'Yuja',
+      grapefruit: 'Grapefruit', pink: 'Pink lemon', hallabong: 'Hallabong', buddha: "Buddha's hand", golden: 'Golden lemon', rainbow: 'Rainbow lemon',
+      redhyang: 'Red-hyang', cheonhye: 'Cheonhyehyang', bergamot: 'Bergamot', pomelo: 'Pomelo', fingerlime: 'Finger lime', trifoliate: 'Trifoliate orange',
+      snowyuja: 'Snowflake yuja', moonlemon: 'Moonlight lemon'},
+    traits: {moonlemon: 'Fruits only at night', snowyuja: 'Twice as fast in winter', trifoliate: 'Neighbours grow faster', fingerlime: 'Tiny fruit, very quickly', pomelo: 'Few but big and pricey'},
+    roles: {planter: 'Planter', caretaker: 'Caretaker', harvester: 'Harvester'},
+    jobs: {planter: 'Raises lemon prices', caretaker: 'Makes trees grow faster', harvester: 'Picks fruit into the crate'},
+    seasons: {spring: 'Spring · trees grow faster', summer: 'Summer · lemons sell for more', autumn: 'Autumn · faster harvest', winter: 'Winter · yuja sells for more'},
+    owned: (n, e) => `${n} planted · ${e} coins each`, ownedOld: n => `${n} planted`, level: (l, m) => `Level ${l} / ${m}`, none: 'Not hired yet',
+    crateLevel: (l, c) => `Level ${l} · holds ${c}`, plantBtn: 'Plant', swapBtn: 'Replant', unlockBtn: 'Unlock', hireBtn: 'Hire', upBtn: 'Level up', hire2Btn: 'Hire one more',
+    growBtn: 'Expand', maxed: 'Max level', poor: 'Not enough coins', fieldIsFull: 'Field is full', more: n => `${n} more kinds after this`,
+    swapTitle: k => `Replace which tree with ${k}?`, cancel: 'Cancel', plot: n => `Plot ${n}`,
+    connecting: 'Connecting…', online: 'Mac connected', asleepChip: 'Mac asleep', offline: "Can't connect", staleChip: ago => `As of ${ago}`,
+    asleep: ago => `Your Mac is asleep${ago ? ` (last seen ${ago})` : ''}. You can only look for now.`, noState: 'Wake your Mac to see your orchard.',
+    offlineText: "Can't reach the server. Showing the last orchard you saw.", retry: 'Retry', pan: 'Swipe the orchard sideways to look around.',
+    upgrade: 'Update Lemon Desk on your Mac to 1.7.1 to see your orchard here.', dex: (d, s) => `Collection ${d}/20 · Secrets ${s}/20`,
+    sold: e => e > 0 ? `Sold! +${fmt(e)} coins` : 'No lemons to sell yet', planted: k => `Planted a ${T.kinds[k]}`, swapped: k => `Replanted with a ${T.kinds[k]}`,
+    unlocked: k => `Unlocked ${T.kinds[k]}. You can plant it now`, hired: r => `${T.roles[r]} leveled up`, hired2: r => `One more ${T.roles[r].toLowerCase()} joined`, grown: 'Crate expanded',
+    unavailable: "That can't be done right now", noAnswer: "Your Mac didn't answer. Try again in a moment.", tooMany: 'Too many taps. Try again in a moment.',
+    failed: "Couldn't send. Check your connection.", newKind: 'A new tree is open!',
     welcome: 'Open Lemon Desk on your Mac', welcomeText: 'This page shows your Mac orchard on your phone.',
     steps: ['On your Mac, click the lemon in the menu bar › Open Orchard… › Settings, and turn on Phone view.', 'Scan the QR code with your phone camera.'],
     lost: 'Disconnected', lostText: 'The connection was reset on your Mac. Scan the new QR code in Settings › Phone view.',
     homeTip: 'Tip: add this page to your Home Screen to open it like an app.',
     ago: s => s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`,
   } : {
-    newKind: '새 나무가 열렸어요', crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
-    fullIn: t => `가득까지 ${t}`, full: '창고가 가득 찼어요', slow: '천천히 차는 중', field: (n, m) => `밭 ${n} / ${m}칸`,
-    kinds: kindsKo, roles: {planter: '심기 일꾼', caretaker: '돌보기 일꾼', harvester: '수확 일꾼'},
-    count: n => `${n}그루`, none: '아직 없음', level: (l, m) => `레벨 ${l} / ${m}`, crateLevel: (l, c) => `레벨 ${l} · ${c}개 보관`,
-    plantBtn: '심기', unlockBtn: '해금', hireBtn: '고용', upBtn: '레벨업', growBtn: '넓히기', fieldFull: '밭이 다 찼어요', maxed: '최고 레벨',
-    more: n => `그 뒤로 ${n}종이 더 있어요.`,
-    online: 'Mac 연결됨', asleepChip: 'Mac 잠자는 중', offline: '연결할 수 없어요',
-    asleep: ago => `Mac이 잠자는 중이라${ago ? `(마지막 연결 ${ago})` : ''} 지금은 보기만 돼요. Mac을 깨우면 다시 팔고 심을 수 있어요.`,
-    noState: 'Mac을 깨우면 과수원이 보여요.',
-    sold: e => e > 0 ? `팔았어요 · +${fmt(e)} 코인` : '아직 팔 레몬이 없어요', planted: k => `${obj(T.kinds[k])} 심었어요`,
-    unlocked: k => `${obj(T.kinds[k])} 해금했어요. 이제 심을 수 있어요`, hired: r => `${T.roles[r]} 레벨이 올랐어요`, grown: '창고를 넓혔어요',
-    poor: '코인이 모자라요', unavailable: '지금은 할 수 없어요', noAnswer: 'Mac이 답하지 않아요. 잠시 뒤에 다시 해 주세요.',
-    tooMany: '너무 자주 눌렀어요. 잠시 뒤에 다시 해 주세요.', failed: '보내지 못했어요. 인터넷 연결을 확인해 주세요.',
+    crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
+    fullIn: t => `가득까지 ${t}`, full: '창고가 가득 찼어요', slow: '천천히 차는 중', field: (n, m) => `밭 ${n} / ${m}칸`, fieldFull: (n, m) => `밭 ${n} / ${m}칸 · 다 차서 바꿔 심을 수 있어요`,
+    kinds: {eureka: '유레카 레몬', kumquat: '금귤', meyer: '마이어 레몬', calamansi: '깔라만시', lime: '라임', blood: '블러드 오렌지', yuja: '유자',
+      grapefruit: '자몽', pink: '핑크 레몬', hallabong: '한라봉', buddha: '불수감', golden: '황금 레몬', rainbow: '무지개 레몬',
+      redhyang: '레드향', cheonhye: '천혜향', bergamot: '베르가못', pomelo: '포멜로', fingerlime: '핑거라임', trifoliate: '탱자', snowyuja: '눈꽃 유자', moonlemon: '달빛 레몬'},
+    traits: {moonlemon: '밤에만 열매를 맺어요', snowyuja: '겨울엔 두 배로 빨라요', trifoliate: '옆 나무가 빨리 자라요', fingerlime: '작은 열매가 아주 빨리', pomelo: '적지만 크고 비싸요'},
+    roles: {planter: '심기 일꾼', caretaker: '돌보기 일꾼', harvester: '수확 일꾼'},
+    jobs: {planter: '레몬 값을 올려요', caretaker: '나무를 빨리 키워요', harvester: '열매를 따서 창고에 담아요'},
+    seasons: {spring: '봄 · 나무가 빨리 자라요', summer: '여름 · 레몬 값이 올라요', autumn: '가을 · 수확이 빨라요', winter: '겨울 · 유자 값이 올라요'},
+    owned: (n, e) => `${n}그루 · 한 개 ${e}코인`, ownedOld: n => `${n}그루`, level: (l, m) => `레벨 ${l} / ${m}`, none: '아직 고용 전',
+    crateLevel: (l, c) => `레벨 ${l} · ${c}개 보관`, plantBtn: '심기', swapBtn: '바꿔 심기', unlockBtn: '해금', hireBtn: '고용', upBtn: '레벨업', hire2Btn: '한 명 더 고용',
+    growBtn: '넓히기', maxed: '최고 레벨', poor: '코인이 모자라요', fieldIsFull: '밭이 다 찼어요', more: n => `그 뒤로 ${n}종이 더 있어요`,
+    swapTitle: k => `어느 나무를 ${ro(k)} 바꿀까요?`, cancel: '취소', plot: n => `${n}번 밭`,
+    connecting: '연결하는 중…', online: 'Mac 연결됨', asleepChip: 'Mac 잠자는 중', offline: '연결할 수 없어요', staleChip: ago => `${ago} 모습`,
+    asleep: ago => `Mac이 잠자는 중이에요${ago ? `(마지막 연결 ${ago})` : ''}. 지금은 보기만 돼요.`, noState: 'Mac을 깨우면 과수원이 보여요.',
+    offlineText: '서버에 닿지 못했어요. 마지막으로 본 과수원이에요.', retry: '다시 시도', pan: '과수원을 옆으로 밀어서 둘러보세요.',
+    upgrade: 'Mac의 Lemon Desk를 1.7.1로 올리면 여기에 과수원이 보여요.', dex: (d, s) => `도감 ${d}/20 · 비밀 ${s}/20`,
+    sold: e => e > 0 ? `팔았어요 · +${fmt(e)} 코인` : '아직 팔 레몬이 없어요', planted: k => `${obj(T.kinds[k])} 심었어요`, swapped: k => `${ro(T.kinds[k])} 바꿔 심었어요`,
+    unlocked: k => `${obj(T.kinds[k])} 해금했어요. 이제 심을 수 있어요`, hired: r => `${T.roles[r]} 레벨이 올랐어요`, hired2: r => `${T.roles[r]}이 한 명 더 왔어요`, grown: '창고를 넓혔어요',
+    unavailable: '지금은 할 수 없어요', noAnswer: 'Mac이 답하지 않아요. 잠시 뒤에 다시 해 주세요.', tooMany: '너무 자주 눌렀어요. 잠시 뒤에 다시 해 주세요.',
+    failed: '보내지 못했어요. 인터넷 연결을 확인해 주세요.', newKind: '새 나무가 열렸어요',
     welcome: 'Mac에서 Lemon Desk를 열어 주세요', welcomeText: '이 페이지는 Mac의 과수원을 폰에서 보여 줘요.',
     steps: ['Mac 메뉴바의 레몬 › 과수원 관리… › 설정에서 폰으로 보기를 켜요.', '폰 카메라로 QR을 찍어요.'],
     lost: '연결이 끊겼어요', lostText: 'Mac에서 연결을 끊었어요. 설정 › 폰으로 보기의 새 QR을 다시 찍어 주세요.',
@@ -214,23 +292,33 @@
     ago: s => s < 60 ? '방금' : s < 3600 ? `${Math.round(s / 60)}분 전` : `${Math.round(s / 3600)}시간 전`,
   };
   const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const fmt = n => new Intl.NumberFormat(en ? 'en' : 'ko').format(n);
+  const short = n => n < 100000 ? fmt(n) : new Intl.NumberFormat(en ? 'en' : 'ko', {notation: 'compact', maximumFractionDigits: 1}).format(n);
   if (en) {
     document.documentElement.lang = 'en';
-    document.querySelectorAll('[data-t]').forEach(el => { if (typeof T[el.dataset.t] === 'string') el.textContent = T[el.dataset.t]; });
+    document.querySelectorAll('[data-t]').forEach(e => { if (typeof T[e.dataset.t] === 'string') e.textContent = T[e.dataset.t]; });
+    $('scene').setAttribute('aria-label', 'Orchard');
   }
-  $('home-tip').textContent = T.homeTip;
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (!ios) { const l = el('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.append(l); } // Android: 저장소를 같이 써서 키가 이어진다
+  $('home-tip').textContent = standalone ? '' : T.homeTip;
+  $('retry').textContent = T.retry; $('sheet-cancel').textContent = T.cancel;
 
-  // 키: QR 주소의 # 뒤 → localStorage. 저장된 키로 열었으면 주소에 다시 붙여 홈 화면에 추가할 때 따라가게 한다.
+  // 키: QR 주소의 # 뒤 → localStorage. 저장된 키로 열었으면 주소에 다시 붙여 iOS 홈 화면에 추가할 때 따라가게 한다.
   const hashKey = new URLSearchParams(location.hash.slice(1)).get('k');
-  if (hashKey && /^[0-9a-f]{64}$/.test(hashKey)) localStorage.setItem('ld-remote', hashKey);
-  let key = localStorage.getItem('ld-remote');
+  if (hashKey && /^[0-9a-f]{64}$/.test(hashKey) && hashKey !== localStorage.getItem('ld-remote')) {
+    localStorage.setItem('ld-remote', hashKey); localStorage.removeItem('ld-remote-last'); // 다른 Mac 의 QR: 이전 과수원 캐시는 버린다
+  }
+  const key = localStorage.getItem('ld-remote');
   if (key && hashKey !== key) history.replaceState(null, '', location.pathname + location.search + '#k=' + key);
 
-  const gate = (title, text, steps) => {
-    $('app').hidden = true; $('chip').hidden = true; $('gate').hidden = false;
+  const gate = (title, text, steps, pic) => {
+    $('app').hidden = true; $('tabs').hidden = true; $('chip').hidden = true; $('gate').hidden = false;
+    $('gate-pic').src = S + (pic || 'm-pair') + '.png';
     $('gate-title').textContent = title; $('gate-text').textContent = text;
-    $('gate-steps').replaceChildren(...(steps || []).map(s => { const li = document.createElement('li'); li.textContent = s; return li; }));
+    $('gate-steps').replaceChildren(...(steps || []).map(s => el('li', '', s)));
   };
   if (!key) { gate(T.welcome, T.welcomeText, T.steps); return; }
 
@@ -241,143 +329,298 @@
     return body;
   };
 
-  let data = null, offset = 0, failed = false;
-  const pending = new Map(); // 명령 id → {action, kind, role, at}
+  let data = null, offset = 0, failed = false, stale = false, seenAt = 0;
+  let override = null; // 누르자마자 보여 줄 값 {crate, coins, until}
+  const pending = new Map();
   const nowSec = () => (Date.now() + offset) / 1000;
   const state = () => data && data.state;
-  const moment = () => {
-    const tl = state()?.timeline || [];
-    let m = tl[0];
-    for (const x of tl) { if (x.t <= nowSec()) m = x; else break; }
-    return m;
-  };
-  const canAct = () => !!(data && data.online && state() && !failed);
+  const moment = () => { const tl = state()?.timeline || []; let m = tl[0]; for (const x of tl) { if (x.t <= nowSec()) m = x; else break; } return m || {crate: 0, value: 0}; };
+  const canAct = () => !!(data && data.online && state() && !failed && !stale);
   const toast = msg => { $('toast').textContent = msg; clearTimeout(toast.t); toast.t = setTimeout(() => { $('toast').textContent = ''; }, 5000); };
-  const clock = s => {
-    s = Math.max(0, Math.ceil(s));
-    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = String(s % 60).padStart(2, '0');
-    return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
-  };
+  const clock = s => { s = Math.max(0, Math.ceil(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
+  const coin = (w = 14, h = 13) => { const i = el('img'); i.src = S + 'coin.png'; i.alt = ''; i.width = w; i.height = h; return i; };
 
-  const img = (src, w, h) => { const i = document.createElement('img'); i.className = 'px'; i.src = src; i.alt = ''; if (w) i.width = w; if (h) i.height = h; return i; };
-  const row = (pic, name, sub, btn) => {
-    const li = document.createElement('li');
-    const p = document.createElement('span'); p.className = 'pic'; if (pic) p.append(pic);
-    const info = document.createElement('span'); info.className = 'info';
-    const b = document.createElement('b'); b.textContent = name; const s = document.createElement('span'); s.textContent = sub;
-    info.append(b, s); li.append(p, info, btn); return li;
-  };
-  // 1.7 축하 카드: 폰에서 새 종류를 해금하면(Mac 에는 띄우지 않는다)
-  const party = (title, img, name) => {
-    const box = document.createElement('div'); box.className = 'party'; box.setAttribute('aria-hidden', 'true');
-    const c = document.createElement('div'); c.className = 'card2';
-    const b = document.createElement('b'); b.textContent = title;
-    const i = document.createElement('img'); i.src = img; i.alt = '';
-    const s = document.createElement('span'); s.textContent = name;
-    c.append(b, i, s); box.append(c); document.body.append(box);
-    setTimeout(() => box.remove(), 2700);
-  };
-  // 버튼: 이름 + 가격(코인). cost 가 null 이면 못 함(reason), 코인이 모자라면 흐리게.
-  const buyBtn = (label, cost, reason, run) => {
-    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'buy';
-    btn.append(document.createTextNode(cost == null ? reason : label));
-    if (cost != null) {
-      const sm = document.createElement('small'); sm.append(img(SPRITES + 'coin.png', 12, 11), document.createTextNode(fmt(cost)));
-      btn.append(sm);
-      btn.setAttribute('aria-label', `${label}, ${fmt(cost)} ${en ? 'coins' : '코인'}`);
+  // ── 과수원 장면 ─────────────────────────────────────────
+  const world = $('world'), trees = [], crew = new Map(), sizes = new Map();
+  const plotX = i => 190 + i * 116;
+  const sheetSize = url => sizes.get(url) || sizes.set(url, new Promise(res => { const i = new Image(); i.onload = () => res([i.naturalWidth / 8, i.naturalHeight]); i.onerror = () => res([44, 64]); i.src = url; })).get(url);
+  const sheetURL = (role, variant, tier, anim) => `${S}w-${role}${variant ? 'b' : ''}-${tier}-${anim}.png`;
+  async function setAnim(spr, url, dur) {
+    if (spr.dataset.url === url) return;
+    spr.dataset.url = url;
+    const [fw, fh] = await sheetSize(url);
+    if (spr.dataset.url !== url) return;
+    Object.assign(spr.style, {width: fw + 'px', height: fh + 'px', backgroundImage: `url(${url})`});
+    spr.style.setProperty('--end', -fw * 8 + 'px'); spr.style.setProperty('--dur', dur + 's');
+    spr.style.animation = 'none'; void spr.offsetWidth; spr.style.animation = '';
+  }
+  const sceneCrate = el('img'); sceneCrate.alt = ''; sceneCrate.style.cssText = 'left:56px;bottom:8px'; world.append(sceneCrate);
+  const lantern = el('img', 'lit'); lantern.alt = ''; lantern.src = S + 'lantern-0.png'; lantern.style.cssText = 'left:118px;bottom:8px'; lantern.hidden = true; world.append(lantern);
+  let quiet = false; // Mac 이 잠들었거나 화면이 안 보이면 일꾼도 쉰다
+  function wander(w) {
+    clearTimeout(w.timer);
+    const n = trees.length;
+    if (quiet || calm || document.visibilityState !== 'visible' || !n) { setAnim(w.spr, sheetURL(w.role, w.variant, w.tier, 'idle'), 1.5); w.timer = setTimeout(() => wander(w), 3000); return; }
+    const target = w.role === 'harvester' && Math.random() < .3 ? 96 : plotX(Math.floor(Math.random() * n)) - 30 + Math.round(Math.random() * 12);
+    const dist = Math.abs(target - w.x), secs = dist / 36;
+    w.spr.style.transform = `scaleX(${target >= w.x ? 1 : -1})`;
+    setAnim(w.spr, sheetURL(w.role, w.variant, w.tier, 'walk'), .68);
+    w.el.style.transitionDuration = secs + 's'; w.el.style.left = target + 'px'; w.x = target;
+    w.timer = setTimeout(() => { setAnim(w.spr, sheetURL(w.role, w.variant, w.tier, 'idle'), 1.5); w.timer = setTimeout(() => wander(w), 2500 + Math.random() * 4500); }, secs * 1000);
+  }
+  function renderScene() {
+    const s = state(), has = !!(s && s.plots);
+    $('scene').hidden = !has;
+    $('hint').hidden = !(s && (!has || s.plots.length > 2));
+    if (s) $('hint').textContent = has ? T.pan : T.upgrade;
+    if (!has) return;
+    const h = s.hour ?? new Date().getHours();
+    quiet = !data.online;
+    $('scene').className = 'scene ' + (quiet ? 'night' : h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 17 ? 'day' : h >= 17 && h < 20 ? 'dusk' : 'night');
+    lantern.hidden = !$('scene').classList.contains('night');
+    world.style.width = Math.max(plotX(Math.max(0, s.plots.length - 1)) + 90, 0) + 'px';
+    while (trees.length > s.plots.length) trees.pop().remove();
+    s.plots.forEach((p, i) => {
+      let t = trees[i];
+      if (!t) { t = el('img'); t.alt = ''; t.style.cssText = `left:${plotX(i)}px;bottom:12px`; world.insertBefore(t, sceneCrate); trees[i] = t; }
+      const src = `${S}tree-${p.kind}-${Math.min(7, Math.max(0, p.stage))}.png`;
+      if (t.dataset.src !== src) { t.dataset.src = src; t.src = src; }
+    });
+    const want = new Map();
+    for (const wk of s.workers) for (let slot = 0; slot < (wk.crew || 0); slot++) want.set(`${wk.role}-${slot}`, {role: wk.role, variant: (wk.looks || [])[slot] || 0, tier: wk.tier || 0});
+    for (const [k, w] of crew) if (!want.has(k)) { clearTimeout(w.timer); w.el.remove(); crew.delete(k); }
+    let n = 0;
+    for (const [k, v] of want) {
+      let w = crew.get(k);
+      if (!w) {
+        w = {...v, x: 150 + n * 70, el: el('div', 'w'), spr: el('div', 'spr')};
+        w.el.append(el('div', 'sh'), w.spr); w.el.style.left = w.x + 'px'; world.append(w.el); crew.set(k, w);
+        w.timer = setTimeout(() => wander(w), 600 + n * 500);
+      } else if (w.variant !== v.variant || w.tier !== v.tier) { Object.assign(w, v); w.spr.dataset.url = ''; }
+      if (!w.spr.dataset.url) setAnim(w.spr, sheetURL(w.role, w.variant, w.tier, 'idle'), 1.5);
+      const z = w.el.querySelector('.zzz');
+      if (quiet && !z) w.el.append(el('div', 'zzz lit')); else if (!quiet && z) z.remove();
+      n++;
     }
-    btn.disabled = cost == null || cost > state().coins || !canAct();
-    btn.onclick = () => run(btn);
-    return btn;
-  };
-  const tier = l => [5, 10, 15, 20].filter(x => l >= x).length;
-
-  function renderLists() {
-    const s = state(); if (!s) return;
-    $('field').textContent = T.field(s.trees, s.maxTrees);
-    $('kinds').replaceChildren(...s.kinds.map(k => row(img(`${SPRITES}tree-${k.kind}.png`), T.kinds[k.kind] || k.kind, T.count(k.count),
-      buyBtn(T.plantBtn, k.cost, T.fieldFull, b => send({action: 'plant', kind: k.kind}, b)))));
-    $('unlock-sec').hidden = !s.unlock;
-    if (s.unlock) {
-      const u = s.unlock;
-      $('unlock').replaceChildren(row(img(`${SPRITES}tree-${u.kind}.png`), T.kinds[u.kind] || u.kind, u.more ? T.more(u.more) : '',
-        buyBtn(T.unlockBtn, u.cost, '', b => send({action: 'unlock', kind: u.kind}, b))));
-    }
-    $('workers').replaceChildren(...s.workers.map(w => {
-      const t = tier(Math.max(1, w.level));
-      return row(img(`${SPRITES}${w.role}${t ? '-t' + t : ''}-idle-0.png`), T.roles[w.role] || w.role, w.level ? T.level(w.level, w.max) : T.none,
-        buyBtn(w.level ? T.upBtn : T.hireBtn, w.cost, T.maxed, b => send({action: 'hire', role: w.role}, b)));
-    }));
-    $('crate').replaceChildren(row(img('crate.png'), T.crate, T.crateLevel(s.crate.level, fmt(s.crate.capacity)),
-      buyBtn(T.growBtn, s.crate.cost, T.maxed, b => send({action: 'crate'}, b))));
   }
 
-  // 매초: 시간에 따라 바뀌는 것(창고 숫자·남은 시간·판매 금액). 숫자는 Mac 이 계산해 보낸 타임라인에서 고른다.
+  // ── 창고·코인(매초) ─────────────────────────────────────
+  let shownCoins = null;
+  function setCoins(v, animate) {
+    if (shownCoins === v) return;
+    const from = shownCoins ?? v; shownCoins = v;
+    if (!animate || calm) { $('coins').textContent = fmt(v); return; }
+    const t0 = performance.now();
+    const step = t => { const k = Math.min(1, (t - t0) / 600); $('coins').textContent = fmt(Math.round(from + (v - from) * k)); if (k < 1 && shownCoins === v) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
   function tick() {
     const s = state();
     if (!s) { $('sell').disabled = true; return; }
-    const m = moment() || {crate: 0, value: 0};
-    const cap = s.crate.capacity;
+    if (override && Date.now() > override.until) override = null;
+    const m = override ? {crate: override.crate, value: 0} : moment();
+    const cap = s.crate.capacity, ratio = m.crate / Math.max(1, cap);
     $('count').textContent = `${fmt(m.crate)} / ${fmt(cap)}`;
-    $('bar').style.width = `${Math.min(100, m.crate / Math.max(1, cap) * 100)}%`;
+    $('bar').style.width = `${Math.min(100, ratio * 100)}%`;
+    const pic = `${S}crate-${m.crate === 0 ? 0 : ratio < .7 ? 1 : 2}.png`;
+    if ($('crate-pic').dataset.src !== pic) { $('crate-pic').dataset.src = pic; $('crate-pic').src = pic; sceneCrate.src = pic; }
     const left = s.fullAt == null ? null : s.fullAt - nowSec();
-    $('full').textContent = m.crate >= cap || (left != null && left <= 0) ? T.full : left == null ? T.slow : T.fullIn(clock(left));
-    $('sell').textContent = m.value > 0 ? T.sellFor(fmt(m.value)) : T.sell;
-    $('sell').disabled = !canAct() || m.crate === 0;
+    $('full').textContent = m.crate >= cap || (!override && left != null && left <= 0) ? T.full : left == null ? T.slow : T.fullIn(clock(left));
+    $('sell').textContent = m.value > 0 ? T.sellFor(short(m.value)) : T.sell;
+    $('sell').disabled = !canAct() || m.crate === 0 || $('sell').getAttribute('aria-busy') === 'true';
+    setCoins(override ? override.coins : s.coins, true);
+  }
+  function flyCoins() {
+    if (calm) return;
+    const a = $('sell').getBoundingClientRect(), b = $('coins').getBoundingClientRect();
+    for (let i = 0; i < 6; i++) {
+      const c = coin(18, 16); c.className = 'fly'; document.body.append(c);
+      const x0 = a.left + a.width * (.2 + Math.random() * .6), y0 = a.top + a.height / 2;
+      c.animate([{transform: `translate(${x0}px, ${y0}px)`, opacity: 1}, {transform: `translate(${b.left + 4}px, ${b.top}px)`, opacity: .2}],
+        {duration: 450 + i * 70, easing: 'ease-in', delay: i * 40, fill: 'both'}).onfinish = () => c.remove();
+    }
   }
 
-  function render() {
-    $('gate').hidden = true; $('app').hidden = false; $('chip').hidden = false;
+  // ── 심기·일꾼 탭: 구성이 그대로면 숫자·버튼 상태만 고친다(5초마다 통째로 다시 만들지 않는다) ──
+  const buy = (label, cls, run) => { const b = el('button', 'btn px ' + (cls || '')); b.type = 'button'; b.label = el('span', '', label); b.price = el('small'); b.append(b.label, b.price); b.onclick = () => run(b); return b; };
+  // cost 가 null 이면 못 함(why), 코인이 모자라면 눌리지 않고 이유를 적는다
+  function setBuy(b, why, label, cost, off) {
+    const s = state(), poor = cost != null && cost > s.coins;
+    b.label.textContent = cost == null ? off : label;
+    b.price.replaceChildren(...(cost == null ? [] : [coin(), document.createTextNode(short(cost))]));
+    b.setAttribute('aria-label', cost == null ? off : `${label}, ${fmt(cost)} ${en ? 'coins' : '코인'}`);
+    if (b.getAttribute('aria-busy') !== 'true') b.disabled = cost == null || poor || !canAct();
+    if (why) why.textContent = poor ? T.poor : '';
+  }
+  let plantSig = '', crewSig = '';
+  const plantRefs = [], crewRefs = [];
+  function renderPlant() {
+    const s = state(); if (!s) return;
+    const full = s.trees >= s.maxTrees, v2 = !!s.plots;
+    $('field').textContent = full && v2 ? T.fieldFull(s.trees, s.maxTrees) : T.field(s.trees, s.maxTrees);
+    const sig = s.kinds.map(k => k.kind).join() + '|' + (s.unlock ? s.unlock.kind : '') + '|' + full + v2;
+    if (sig !== plantSig) {
+      plantSig = sig; plantRefs.length = 0;
+      const tiles = s.kinds.map(k => {
+        const t = el('div', 'panel tile'), pic = el('div', 'pic'), i = el('img'); i.src = `${S}tree-${k.kind}-6.png`; i.alt = ''; i.loading = 'lazy'; pic.append(i);
+        const sub = el('span', 'sub num'), why = el('span', 'why');
+        const b = buy('', 'y', btn => full && v2 ? pickPlot(k.kind) : send({action: 'plant', kind: k.kind}, btn));
+        t.append(pic, el('b', 'px', T.kinds[k.kind] || k.kind), sub);
+        if (T.traits[k.kind]) t.append(el('span', 'trait', T.traits[k.kind]));
+        t.append(b, why); plantRefs.push({kind: k.kind, sub, b, why});
+        return t;
+      });
+      if (s.unlock) {
+        const u = s.unlock, t = el('div', 'panel tile locked'), pic = el('div', 'pic'), i = el('img'); i.src = `${S}tree-${u.kind}-6.png`; i.alt = ''; i.loading = 'lazy'; pic.append(i);
+        const why = el('span', 'why'), b = buy('', '', btn => send({action: 'unlock', kind: u.kind}, btn));
+        t.append(pic, el('b', 'px', T.kinds[u.kind] || u.kind), el('span', 'sub', u.more ? T.more(u.more) : ''));
+        if (T.traits[u.kind]) t.append(el('span', 'trait', T.traits[u.kind]));
+        t.append(b, why); plantRefs.push({unlock: true, b, why}); tiles.push(t);
+      }
+      $('kinds').replaceChildren(...tiles);
+    }
+    for (const r of plantRefs) {
+      if (r.unlock) { setBuy(r.b, r.why, T.unlockBtn, s.unlock.cost, ''); continue; }
+      const k = s.kinds.find(x => x.kind === r.kind); if (!k) continue;
+      r.sub.textContent = k.each != null ? T.owned(k.count, k.each) : T.ownedOld(k.count);
+      if (full && v2) setBuy(r.b, r.why, T.swapBtn, k.price ?? null, T.fieldIsFull); else setBuy(r.b, r.why, T.plantBtn, k.cost, T.fieldIsFull);
+    }
+  }
+  function renderCrew() {
+    const s = state(); if (!s) return;
+    const sig = s.workers.map(w => `${w.role}${w.crew}${w.tier}${(w.looks || []).join('')}${w.second != null}${!!w.level}`).join() + '|' + s.crate.level;
+    if (sig !== crewSig) {
+      crewSig = sig; crewRefs.length = 0;
+      $('crew').replaceChildren(...s.workers.map(w => {
+        const c = el('div', 'panel card'), who = el('div', 'who');
+        const looks = w.looks && w.looks.length ? w.looks : [0];
+        looks.forEach(v => { const sp = el('div', 'spr'); who.append(sp); setAnim(sp, sheetURL(w.role, v, w.tier ?? [5, 10, 15, 20].filter(l => w.level >= l).length, 'idle'), 1.5); });
+        if (!w.level) who.style.opacity = .35;
+        const info = el('div'), lv = el('div', 'sub num'), acts = el('div', 'acts'), why = el('span', 'why');
+        info.append(el('b', 'px', T.roles[w.role] || w.role), lv, el('div', 'sub', T.jobs[w.role] || ''));
+        const up = buy('', '', btn => send({action: 'hire', role: w.role}, btn)); acts.append(up);
+        let b2 = null;
+        if (w.second != null) { b2 = buy('', 'y', btn => send({action: 'hire2', role: w.role}, btn)); acts.append(b2); }
+        c.append(who, info, acts, why); crewRefs.push({role: w.role, lv, up, b2, why});
+        return c;
+      }));
+      const c = el('div', 'panel card'), who = el('div', 'who'), i = el('img'); i.src = S + 'crate-2.png'; i.alt = ''; who.append(i);
+      const info = el('div'), lv = el('div', 'sub num'), acts = el('div', 'acts'), why = el('span', 'why');
+      info.append(el('b', 'px', T.crate), lv);
+      const up = buy('', '', btn => send({action: 'crate'}, btn)); acts.append(up);
+      c.append(who, info, acts, why); $('crate').replaceChildren(c); crewRefs.push({crate: true, lv, up, why});
+    }
+    for (const r of crewRefs) {
+      if (r.crate) { r.lv.textContent = T.crateLevel(s.crate.level, fmt(s.crate.capacity)); setBuy(r.up, r.why, T.growBtn, s.crate.cost, T.maxed); continue; }
+      const w = s.workers.find(x => x.role === r.role); if (!w) continue;
+      r.lv.textContent = w.level ? T.level(w.level, w.max) : T.none;
+      setBuy(r.up, r.why, w.level ? T.upBtn : T.hireBtn, w.cost, T.maxed);
+      if (r.b2) { setBuy(r.b2, null, T.hire2Btn, w.second, ''); if (w.second != null && w.second > s.coins) r.why.textContent = T.poor; }
+    }
+  }
+  // 바꿔 심기: 어느 밭과 바꿀지 고른다
+  function pickPlot(kind) {
     const s = state();
-    const ago = data && data.macSeen ? T.ago(nowSec() - data.macSeen) : '';
+    $('sheet-title').textContent = T.swapTitle(T.kinds[kind] || kind);
+    $('plots').replaceChildren(...s.plots.map((p, i) => {
+      const b = el('button'); b.type = 'button'; b.disabled = p.kind === kind;
+      const im = el('img'); im.src = `${S}tree-${p.kind}-${Math.min(7, p.stage)}.png`; im.alt = '';
+      b.append(im, document.createTextNode(String(i + 1))); b.setAttribute('aria-label', `${T.plot(i + 1)}, ${T.kinds[p.kind] || p.kind}`);
+      b.onclick = () => { closeSheet(); send({action: 'replant', kind, plot: i}); };
+      return b;
+    }));
+    $('sheet').showModal(); $('sheet-cancel').focus();
+  }
+  const closeSheet = () => $('sheet').close(); // 포커스는 브라우저가 눌렀던 버튼으로 되돌린다
+  $('sheet-cancel').onclick = closeSheet;
+  $('sheet').onclick = e => { if (e.target === $('sheet')) closeSheet(); }; // 바깥(배경)을 누르면 닫는다
+
+  const party = (title, img, name) => {
+    const box = el('div', 'party'); box.setAttribute('aria-hidden', 'true');
+    const c = el('div', 'panel'), i = el('img'); i.src = img; i.alt = '';
+    c.append(el('b', 'px', title), i, el('span', 'px', name)); box.append(c); document.body.append(box);
+    setTimeout(() => box.remove(), 2700);
+  };
+
+  function render() {
+    $('gate').hidden = true; $('app').hidden = false; $('tabs').hidden = false; $('chip').hidden = false;
+    const s = state();
+    const ago = data && data.macSeen ? T.ago(Math.max(0, nowSec() - data.macSeen)) : '';
     $('chip').className = 'chip' + (canAct() ? ' on' : '');
-    $('chip').textContent = failed ? T.offline : data.online ? T.online : T.asleepChip;
-    $('asleep').hidden = !data || data.online || failed;
-    $('asleep').textContent = s ? T.asleep(ago) : T.noState;
-    $('coins').textContent = s ? fmt(s.coins) : '–';
+    $('chip').textContent = stale && !failed ? T.staleChip(T.ago((Date.now() - seenAt) / 1000)) : failed ? T.offline : data.online ? T.online : T.asleepChip;
+    const note = failed ? T.offlineText : !s ? T.noState : !data.online && !stale ? T.asleep(ago) : '';
+    $('banner').hidden = !note; $('banner-text').textContent = note; $('retry').hidden = !failed;
+    document.querySelector('.hud').classList.toggle('dim', failed);
     for (const r of s?.results || []) {
       const p = pending.get(r.id); if (!p) continue;
-      pending.delete(r.id);
-      if (r.ok && p.action === 'unlock') party(T.newKind, `${SPRITES}tree-${p.kind}.png`, T.kinds[p.kind] || p.kind);
-      toast(!r.ok ? T[r.reason] || T.unavailable : p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind)
-        : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : T.grown);
+      pending.delete(r.id); override = null;
+      if (r.ok && p.action === 'unlock') party(T.newKind, `${S}tree-${p.kind}-6.png`, T.kinds[p.kind] || p.kind);
+      toast(!r.ok ? T[r.reason] || T.unavailable : p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
+        : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : T.grown);
     }
-    for (const [id, p] of pending) if (Date.now() - p.at > 8000) { pending.delete(id); toast(T.noAnswer); }
-    renderLists();
-    tick();
+    for (const [id, p] of pending) if (Date.now() - p.at > 8000) { pending.delete(id); override = null; toast(T.noAnswer); }
+    document.querySelectorAll('.btn[aria-busy="true"]').forEach(b => { if (!pending.size) b.removeAttribute('aria-busy'); });
+    $('week').hidden = !(s && s.week);
+    if (s && s.week) {
+      $('w-h').textContent = short(s.week.harvested); $('w-s').textContent = short(s.week.sold); $('w-e').textContent = short(s.week.earned);
+      $('w-more').textContent = [T.seasons[s.season], s.dex != null && s.secrets != null ? T.dex(s.dex, s.secrets) : ''].filter(Boolean).join(' · ');
+    }
+    renderScene(); renderPlant(); renderCrew(); tick();
   }
 
   let timer;
+  function accept(d) {
+    offset = d.now * 1000 - Date.now(); data = d; failed = false; stale = false; seenAt = Date.now();
+    if (d.state) try { localStorage.setItem('ld-remote-last', JSON.stringify({d, at: seenAt})); } catch (e) {}
+  }
   async function refresh() {
     clearTimeout(timer);
-    try {
-      const d = await api('view');
-      offset = d.now * 1000 - Date.now();
-      data = d; failed = false;
-    } catch (e) {
-      if (e.status === 401) { localStorage.removeItem('ld-remote'); history.replaceState(null, '', location.pathname); gate(T.lost, T.lostText); return; }
+    try { accept(await api('view')); } catch (e) {
+      if (e.status === 401) { localStorage.removeItem('ld-remote'); localStorage.removeItem('ld-remote-last'); history.replaceState(null, '', location.pathname); gate(T.lost, T.lostText, null, 'prop-sign-0'); return; }
       failed = true;
     }
-    if (data) render(); else { $('app').hidden = false; $('chip').hidden = false; $('chip').textContent = T.offline; }
-    // 명령 결과를 기다리는 동안은 1초마다, 평소엔 5초마다(화면이 보일 때만)
+    if (data) render(); else { $('app').hidden = false; $('chip').hidden = false; $('chip').textContent = T.offline; $('banner').hidden = false; $('banner-text').textContent = T.offlineText; $('retry').hidden = false; }
     if (document.visibilityState === 'visible') timer = setTimeout(refresh, pending.size ? 1000 : 5000);
   }
-
+  // 명령: 서버가 Mac 의 처리 결과를 최대 3초 기다렸다가 새 상태와 함께 돌려준다. 그 전에 화면은 먼저 바꿔 둔다.
   async function send(cmd, btn) {
     const id = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(16) + Math.random().toString(16).slice(2)).slice(0, 40);
-    btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+    if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+    if (navigator.vibrate) navigator.vibrate(12);
+    pending.set(id, {...cmd, at: Date.now()});
     try {
-      await api('command', {method: 'POST', body: JSON.stringify({id, ...cmd})});
-      pending.set(id, {...cmd, at: Date.now()});
+      const d = await api('command', {method: 'POST', body: JSON.stringify({id, ...cmd})});
+      if (d.now) accept(d);
     } catch (e) {
+      pending.delete(id); override = null;
       toast(e.status === 409 ? T.asleep('') : e.status === 429 ? T.tooMany : T.failed);
     }
-    btn.removeAttribute('aria-busy');
-    refresh();
+    if (data) render(); // 결과를 받은 버튼은 render 가 다시 풀어 준다
+    clearTimeout(timer); timer = setTimeout(refresh, pending.size ? 1000 : 5000);
   }
+  $('sell').onclick = () => {
+    const s = state(), m = moment();
+    override = {crate: 0, coins: s.coins + m.value, until: Date.now() + 5000};
+    flyCoins(); tick();
+    send({action: 'sell'}, $('sell'));
+  };
+  $('retry').onclick = refresh;
 
-  $('sell').onclick = () => send({action: 'sell'}, $('sell'));
+  // 탭
+  const tabs = ['orchard', 'plant', 'crew'];
+  const show = name => tabs.forEach(t => { $('tab-' + t).hidden = t !== name; $('t-' + t).setAttribute('aria-selected', t === name); });
+  tabs.forEach(t => { $('t-' + t).onclick = () => { show(t); scrollTo(0, 0); }; });
+  const startTab = new URLSearchParams(location.search).get('tab'); // 확인·캡처용 ?tab=plant|crew
+  if (tabs.includes(startTab)) show(startTab);
+
+  // 마지막으로 본 과수원을 바로 그린다(서버가 Mac 을 기다리는 동안 빈 화면이 없게). 타임라인이 있어 숫자는 계속 흐른다.
+  try {
+    const last = JSON.parse(localStorage.getItem('ld-remote-last') || 'null');
+    if (last && last.d && last.d.state) { data = last.d; seenAt = last.at; stale = true; offset = 0; render(); }
+  } catch (e) {}
+  if (!data) { $('app').hidden = false; $('tabs').hidden = false; $('chip').hidden = false; $('chip').textContent = T.connecting; tick(); }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
+  addEventListener('online', refresh);
   setInterval(() => { if (document.visibilityState === 'visible') tick(); }, 1000);
   refresh();
 })();

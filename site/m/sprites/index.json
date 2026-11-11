@@ -1,0 +1,1242 @@
+{
+"crate-0": [
+52,
+50,
+1
+],
+"crate-1": [
+52,
+50,
+1
+],
+"crate-2": [
+52,
+50,
+1
+],
+"fx-coin": [
+22,
+18,
+6
+],
+"fx-shadow-0": [
+34,
+10,
+1
+],
+"fx-sparkle": [
+28,
+24,
+4
+],
+"fx-zzz": [
+44,
+24,
+4
+],
+"ground-0": [
+434,
+30,
+1
+],
+"icon-crew": [
+36,
+60,
+1
+],
+"icon-orchard": [
+90,
+108,
+1
+],
+"icon-plant": [
+23,
+24,
+1
+],
+"lantern-0": [
+58,
+60,
+1
+],
+"m-pair": [
+87,
+148,
+1
+],
+"prop-sign-0": [
+62,
+64,
+1
+],
+"tree-bergamot-0": [
+126,
+114,
+1
+],
+"tree-bergamot-1": [
+126,
+114,
+1
+],
+"tree-bergamot-2": [
+126,
+114,
+1
+],
+"tree-bergamot-3": [
+126,
+114,
+1
+],
+"tree-bergamot-4": [
+126,
+114,
+1
+],
+"tree-bergamot-5": [
+126,
+114,
+1
+],
+"tree-bergamot-6": [
+126,
+114,
+1
+],
+"tree-bergamot-7": [
+126,
+114,
+1
+],
+"tree-blood-0": [
+122,
+110,
+1
+],
+"tree-blood-1": [
+122,
+110,
+1
+],
+"tree-blood-2": [
+122,
+110,
+1
+],
+"tree-blood-3": [
+122,
+110,
+1
+],
+"tree-blood-4": [
+122,
+110,
+1
+],
+"tree-blood-5": [
+122,
+110,
+1
+],
+"tree-blood-6": [
+122,
+110,
+1
+],
+"tree-blood-7": [
+122,
+110,
+1
+],
+"tree-buddha-0": [
+122,
+112,
+1
+],
+"tree-buddha-1": [
+122,
+112,
+1
+],
+"tree-buddha-2": [
+122,
+112,
+1
+],
+"tree-buddha-3": [
+122,
+112,
+1
+],
+"tree-buddha-4": [
+122,
+112,
+1
+],
+"tree-buddha-5": [
+122,
+112,
+1
+],
+"tree-buddha-6": [
+122,
+112,
+1
+],
+"tree-buddha-7": [
+122,
+112,
+1
+],
+"tree-calamansi-0": [
+122,
+110,
+1
+],
+"tree-calamansi-1": [
+122,
+110,
+1
+],
+"tree-calamansi-2": [
+122,
+110,
+1
+],
+"tree-calamansi-3": [
+122,
+110,
+1
+],
+"tree-calamansi-4": [
+122,
+110,
+1
+],
+"tree-calamansi-5": [
+122,
+110,
+1
+],
+"tree-calamansi-6": [
+122,
+110,
+1
+],
+"tree-calamansi-7": [
+122,
+110,
+1
+],
+"tree-cheonhye-0": [
+126,
+114,
+1
+],
+"tree-cheonhye-1": [
+126,
+114,
+1
+],
+"tree-cheonhye-2": [
+126,
+114,
+1
+],
+"tree-cheonhye-3": [
+126,
+114,
+1
+],
+"tree-cheonhye-4": [
+126,
+114,
+1
+],
+"tree-cheonhye-5": [
+126,
+114,
+1
+],
+"tree-cheonhye-6": [
+126,
+114,
+1
+],
+"tree-cheonhye-7": [
+126,
+114,
+1
+],
+"tree-eureka-0": [
+124,
+110,
+1
+],
+"tree-eureka-1": [
+124,
+110,
+1
+],
+"tree-eureka-2": [
+124,
+110,
+1
+],
+"tree-eureka-3": [
+124,
+110,
+1
+],
+"tree-eureka-4": [
+124,
+110,
+1
+],
+"tree-eureka-5": [
+124,
+110,
+1
+],
+"tree-eureka-6": [
+124,
+110,
+1
+],
+"tree-eureka-7": [
+124,
+110,
+1
+],
+"tree-fingerlime-0": [
+122,
+114,
+1
+],
+"tree-fingerlime-1": [
+122,
+114,
+1
+],
+"tree-fingerlime-2": [
+122,
+114,
+1
+],
+"tree-fingerlime-3": [
+122,
+114,
+1
+],
+"tree-fingerlime-4": [
+122,
+114,
+1
+],
+"tree-fingerlime-5": [
+122,
+114,
+1
+],
+"tree-fingerlime-6": [
+122,
+114,
+1
+],
+"tree-fingerlime-7": [
+122,
+114,
+1
+],
+"tree-golden-0": [
+122,
+110,
+1
+],
+"tree-golden-1": [
+122,
+110,
+1
+],
+"tree-golden-2": [
+122,
+110,
+1
+],
+"tree-golden-3": [
+122,
+110,
+1
+],
+"tree-golden-4": [
+122,
+110,
+1
+],
+"tree-golden-5": [
+122,
+110,
+1
+],
+"tree-golden-6": [
+122,
+110,
+1
+],
+"tree-golden-7": [
+122,
+110,
+1
+],
+"tree-grapefruit-0": [
+130,
+114,
+1
+],
+"tree-grapefruit-1": [
+130,
+114,
+1
+],
+"tree-grapefruit-2": [
+130,
+114,
+1
+],
+"tree-grapefruit-3": [
+130,
+114,
+1
+],
+"tree-grapefruit-4": [
+130,
+114,
+1
+],
+"tree-grapefruit-5": [
+130,
+114,
+1
+],
+"tree-grapefruit-6": [
+130,
+114,
+1
+],
+"tree-grapefruit-7": [
+130,
+114,
+1
+],
+"tree-hallabong-0": [
+124,
+110,
+1
+],
+"tree-hallabong-1": [
+124,
+110,
+1
+],
+"tree-hallabong-2": [
+124,
+110,
+1
+],
+"tree-hallabong-3": [
+124,
+110,
+1
+],
+"tree-hallabong-4": [
+124,
+110,
+1
+],
+"tree-hallabong-5": [
+124,
+110,
+1
+],
+"tree-hallabong-6": [
+124,
+110,
+1
+],
+"tree-hallabong-7": [
+124,
+110,
+1
+],
+"tree-kumquat-0": [
+124,
+110,
+1
+],
+"tree-kumquat-1": [
+124,
+110,
+1
+],
+"tree-kumquat-2": [
+124,
+110,
+1
+],
+"tree-kumquat-3": [
+124,
+110,
+1
+],
+"tree-kumquat-4": [
+124,
+110,
+1
+],
+"tree-kumquat-5": [
+124,
+110,
+1
+],
+"tree-kumquat-6": [
+124,
+110,
+1
+],
+"tree-kumquat-7": [
+124,
+110,
+1
+],
+"tree-lime-0": [
+108,
+112,
+1
+],
+"tree-lime-1": [
+108,
+112,
+1
+],
+"tree-lime-2": [
+108,
+112,
+1
+],
+"tree-lime-3": [
+108,
+112,
+1
+],
+"tree-lime-4": [
+108,
+112,
+1
+],
+"tree-lime-5": [
+108,
+112,
+1
+],
+"tree-lime-6": [
+108,
+112,
+1
+],
+"tree-lime-7": [
+108,
+112,
+1
+],
+"tree-meyer-0": [
+128,
+114,
+1
+],
+"tree-meyer-1": [
+128,
+114,
+1
+],
+"tree-meyer-2": [
+128,
+114,
+1
+],
+"tree-meyer-3": [
+128,
+114,
+1
+],
+"tree-meyer-4": [
+128,
+114,
+1
+],
+"tree-meyer-5": [
+128,
+114,
+1
+],
+"tree-meyer-6": [
+128,
+114,
+1
+],
+"tree-meyer-7": [
+128,
+114,
+1
+],
+"tree-moonlemon-0": [
+126,
+114,
+1
+],
+"tree-moonlemon-1": [
+126,
+114,
+1
+],
+"tree-moonlemon-2": [
+126,
+114,
+1
+],
+"tree-moonlemon-3": [
+126,
+114,
+1
+],
+"tree-moonlemon-4": [
+126,
+114,
+1
+],
+"tree-moonlemon-5": [
+126,
+114,
+1
+],
+"tree-moonlemon-6": [
+126,
+114,
+1
+],
+"tree-moonlemon-7": [
+126,
+114,
+1
+],
+"tree-pink-0": [
+124,
+110,
+1
+],
+"tree-pink-1": [
+124,
+110,
+1
+],
+"tree-pink-2": [
+124,
+110,
+1
+],
+"tree-pink-3": [
+124,
+110,
+1
+],
+"tree-pink-4": [
+124,
+110,
+1
+],
+"tree-pink-5": [
+124,
+110,
+1
+],
+"tree-pink-6": [
+124,
+110,
+1
+],
+"tree-pink-7": [
+124,
+110,
+1
+],
+"tree-pomelo-0": [
+124,
+114,
+1
+],
+"tree-pomelo-1": [
+124,
+114,
+1
+],
+"tree-pomelo-2": [
+124,
+114,
+1
+],
+"tree-pomelo-3": [
+124,
+114,
+1
+],
+"tree-pomelo-4": [
+124,
+114,
+1
+],
+"tree-pomelo-5": [
+124,
+114,
+1
+],
+"tree-pomelo-6": [
+124,
+114,
+1
+],
+"tree-pomelo-7": [
+124,
+114,
+1
+],
+"tree-rainbow-0": [
+124,
+110,
+1
+],
+"tree-rainbow-1": [
+124,
+110,
+1
+],
+"tree-rainbow-2": [
+124,
+110,
+1
+],
+"tree-rainbow-3": [
+124,
+110,
+1
+],
+"tree-rainbow-4": [
+124,
+110,
+1
+],
+"tree-rainbow-5": [
+124,
+110,
+1
+],
+"tree-rainbow-6": [
+124,
+110,
+1
+],
+"tree-rainbow-7": [
+124,
+110,
+1
+],
+"tree-redhyang-0": [
+128,
+114,
+1
+],
+"tree-redhyang-1": [
+128,
+114,
+1
+],
+"tree-redhyang-2": [
+128,
+114,
+1
+],
+"tree-redhyang-3": [
+128,
+114,
+1
+],
+"tree-redhyang-4": [
+128,
+114,
+1
+],
+"tree-redhyang-5": [
+128,
+114,
+1
+],
+"tree-redhyang-6": [
+128,
+114,
+1
+],
+"tree-redhyang-7": [
+128,
+114,
+1
+],
+"tree-snowyuja-0": [
+124,
+114,
+1
+],
+"tree-snowyuja-1": [
+124,
+114,
+1
+],
+"tree-snowyuja-2": [
+124,
+114,
+1
+],
+"tree-snowyuja-3": [
+124,
+114,
+1
+],
+"tree-snowyuja-4": [
+124,
+114,
+1
+],
+"tree-snowyuja-5": [
+124,
+114,
+1
+],
+"tree-snowyuja-6": [
+124,
+114,
+1
+],
+"tree-snowyuja-7": [
+124,
+114,
+1
+],
+"tree-trifoliate-0": [
+124,
+114,
+1
+],
+"tree-trifoliate-1": [
+124,
+114,
+1
+],
+"tree-trifoliate-2": [
+124,
+114,
+1
+],
+"tree-trifoliate-3": [
+124,
+114,
+1
+],
+"tree-trifoliate-4": [
+124,
+114,
+1
+],
+"tree-trifoliate-5": [
+124,
+114,
+1
+],
+"tree-trifoliate-6": [
+124,
+114,
+1
+],
+"tree-trifoliate-7": [
+124,
+114,
+1
+],
+"tree-yuja-0": [
+120,
+112,
+1
+],
+"tree-yuja-1": [
+120,
+112,
+1
+],
+"tree-yuja-2": [
+120,
+112,
+1
+],
+"tree-yuja-3": [
+120,
+112,
+1
+],
+"tree-yuja-4": [
+120,
+112,
+1
+],
+"tree-yuja-5": [
+120,
+112,
+1
+],
+"tree-yuja-6": [
+120,
+112,
+1
+],
+"tree-yuja-7": [
+120,
+112,
+1
+],
+"ui-btn-green": [
+71,
+28,
+1
+],
+"ui-btn-green-down": [
+71,
+26,
+1
+],
+"ui-btn-off": [
+71,
+27,
+1
+],
+"ui-btn-yellow": [
+71,
+28,
+1
+],
+"ui-panel": [
+72,
+72,
+1
+],
+"ui-plank": [
+56,
+28,
+1
+],
+"w-caretaker-0-idle": [
+46,
+64,
+8
+],
+"w-caretaker-0-walk": [
+50,
+64,
+8
+],
+"w-caretaker-1-idle": [
+46,
+64,
+8
+],
+"w-caretaker-1-walk": [
+48,
+64,
+8
+],
+"w-caretaker-2-idle": [
+52,
+64,
+8
+],
+"w-caretaker-2-walk": [
+52,
+64,
+8
+],
+"w-caretaker-3-idle": [
+46,
+64,
+8
+],
+"w-caretaker-3-walk": [
+50,
+64,
+8
+],
+"w-caretaker-4-idle": [
+46,
+64,
+8
+],
+"w-caretaker-4-walk": [
+46,
+64,
+8
+],
+"w-caretakerb-0-idle": [
+50,
+64,
+8
+],
+"w-caretakerb-0-walk": [
+44,
+64,
+8
+],
+"w-caretakerb-1-idle": [
+52,
+64,
+8
+],
+"w-caretakerb-1-walk": [
+46,
+64,
+8
+],
+"w-caretakerb-2-idle": [
+52,
+64,
+8
+],
+"w-caretakerb-2-walk": [
+48,
+64,
+8
+],
+"w-caretakerb-3-idle": [
+48,
+64,
+8
+],
+"w-caretakerb-3-walk": [
+46,
+64,
+8
+],
+"w-caretakerb-4-idle": [
+50,
+64,
+8
+],
+"w-caretakerb-4-walk": [
+48,
+64,
+8
+],
+"w-harvester-0-idle": [
+48,
+64,
+8
+],
+"w-harvester-0-walk": [
+44,
+64,
+8
+],
+"w-harvester-1-idle": [
+50,
+64,
+8
+],
+"w-harvester-1-walk": [
+46,
+64,
+8
+],
+"w-harvester-2-idle": [
+48,
+64,
+8
+],
+"w-harvester-2-walk": [
+46,
+64,
+8
+],
+"w-harvester-3-idle": [
+48,
+64,
+8
+],
+"w-harvester-3-walk": [
+44,
+64,
+8
+],
+"w-harvester-4-idle": [
+46,
+64,
+8
+],
+"w-harvester-4-walk": [
+44,
+64,
+8
+],
+"w-harvesterb-0-idle": [
+42,
+64,
+8
+],
+"w-harvesterb-0-walk": [
+42,
+64,
+8
+],
+"w-harvesterb-1-idle": [
+48,
+64,
+8
+],
+"w-harvesterb-1-walk": [
+46,
+64,
+8
+],
+"w-harvesterb-2-idle": [
+44,
+64,
+8
+],
+"w-harvesterb-2-walk": [
+42,
+64,
+8
+],
+"w-harvesterb-3-idle": [
+44,
+64,
+8
+],
+"w-harvesterb-3-walk": [
+44,
+64,
+8
+],
+"w-harvesterb-4-idle": [
+42,
+64,
+8
+],
+"w-harvesterb-4-walk": [
+42,
+64,
+8
+],
+"w-planter-0-idle": [
+42,
+64,
+8
+],
+"w-planter-0-walk": [
+44,
+64,
+8
+],
+"w-planter-1-idle": [
+44,
+64,
+8
+],
+"w-planter-1-walk": [
+46,
+64,
+8
+],
+"w-planter-2-idle": [
+42,
+64,
+8
+],
+"w-planter-2-walk": [
+46,
+64,
+8
+],
+"w-planter-3-idle": [
+42,
+64,
+8
+],
+"w-planter-3-walk": [
+44,
+64,
+8
+],
+"w-planter-4-idle": [
+40,
+64,
+8
+],
+"w-planter-4-walk": [
+44,
+64,
+8
+],
+"w-planterb-0-idle": [
+42,
+64,
+8
+],
+"w-planterb-0-walk": [
+46,
+64,
+8
+],
+"w-planterb-1-idle": [
+44,
+64,
+8
+],
+"w-planterb-1-walk": [
+46,
+64,
+8
+],
+"w-planterb-2-idle": [
+42,
+64,
+8
+],
+"w-planterb-2-walk": [
+46,
+64,
+8
+],
+"w-planterb-3-idle": [
+42,
+64,
+8
+],
+"w-planterb-3-walk": [
+46,
+64,
+8
+],
+"w-planterb-4-idle": [
+44,
+64,
+8
+],
+"w-planterb-4-walk": [
+48,
+64,
+8
+]
+}

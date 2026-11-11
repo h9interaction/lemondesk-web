@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.5.5</title>
-      <pubDate>Tue, 10 Nov 2026 07:49:32 GMT</pubDate>
-      <sparkle:version>11</sparkle:version>
-      <sparkle:shortVersionString>1.5.5</sparkle:shortVersionString>
+      <title>1.6.0</title>
+      <pubDate>Wed, 11 Nov 2026 00:06:02 GMT</pubDate>
+      <sparkle:version>12</sparkle:version>
+      <sparkle:shortVersionString>1.6.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>위젯과 앱의 창고 숫자, 가득 찰 때까지 남은 시간이 똑같이 맞춰져요. 남은 시간은 위젯에서도 1초마다 줄어들어요</li><li>과수원 창의 창고 막대 아래에도 가득 찰 때까지 남은 시간이 보여요</li><li>앱에서 팔거나 심으면 위젯이 더 빨리 따라와요. 앱이 꺼져 있으면 위젯이 알려 줘요</li></ul><ul><li>The widget and the app now show exactly the same crate count and time until full. The countdown ticks every second on the widget too</li><li>The Orchard window shows the time until the crate is full under the crate bar</li><li>The widget catches up faster when you sell or plant in the app, and tells you when Lemon Desk isn&#x27;t running</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.5/LemonDesk-1.5.5.dmg" type="application/octet-stream" sparkle:edSignature="FkJq5azfXUjDYJduOyXpXXMlg9gwRXX1mMEoUW8/kGRcES4H8PvrJ5AlduN03DDm3RF3ymXuvNJbOU+WvMwYBg==" length="12559660"/>
+      <description><![CDATA[<ul><li>폰으로 보기: 설정에서 켜고 QR을 한 번 찍으면 폰 브라우저에서 과수원을 보고 팔기·심기·고용·창고 넓히기를 할 수 있어요. 집 밖에서도 되고 앱 설치나 로그인은 필요 없어요</li><li>폰에도 창고 숫자와 가득 찰 때까지 남은 시간이 Mac과 똑같이 보여요. Mac이 잠든 동안은 보기만 돼요</li><li>설정 › 폰으로 보기 › 연결 끊기로 연결한 폰을 한 번에 끊을 수 있어요</li></ul><ul><li>Phone view: turn it on in Settings and scan the QR code once to see your orchard in your phone&#x27;s browser and sell, plant, hire and expand the crate. Works away from home, with no app or sign-in</li><li>Your phone shows the same crate count and time until full as your Mac. While your Mac sleeps, you can only look</li><li>Settings › Phone view › Disconnect cuts off every connected phone at once</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.6.0/LemonDesk-1.6.0.dmg" type="application/octet-stream" sparkle:edSignature="KBdb0z9xJ5wNe1k//i/gSkVEz6/3e7TZO+ohIiMlPfYSCvJcvS+3Ch40TIQDbBHcmvjeGf5FSwtzkg0Vfr74Cw==" length="12764186"/>
     </item>
   </channel>
 </rss>

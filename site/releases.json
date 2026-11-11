@@ -1,8 +1,24 @@
 [
   {
+    "version": "1.6.0",
+    "date": "2026-11-10",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.6.0/LemonDesk-1.6.0.dmg",
+    "notes": {
+      "ko": [
+        "폰으로 보기: 설정에서 켜고 QR을 한 번 찍으면 폰 브라우저에서 과수원을 보고 팔기·심기·고용·창고 넓히기를 할 수 있어요. 집 밖에서도 되고 앱 설치나 로그인은 필요 없어요",
+        "폰에도 창고 숫자와 가득 찰 때까지 남은 시간이 Mac과 똑같이 보여요. Mac이 잠든 동안은 보기만 돼요",
+        "설정 › 폰으로 보기 › 연결 끊기로 연결한 폰을 한 번에 끊을 수 있어요"
+      ],
+      "en": [
+        "Phone view: turn it on in Settings and scan the QR code once to see your orchard in your phone's browser and sell, plant, hire and expand the crate. Works away from home, with no app or sign-in",
+        "Your phone shows the same crate count and time until full as your Mac. While your Mac sleeps, you can only look",
+        "Settings › Phone view › Disconnect cuts off every connected phone at once"
+      ]
+    }
+  },
+  {
     "version": "1.5.5",
     "date": "2026-11-10",
-    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.5.5/LemonDesk-1.5.5.dmg",
     "notes": {
       "ko": [
         "위젯과 앱의 창고 숫자, 가득 찰 때까지 남은 시간이 똑같이 맞춰져요. 남은 시간은 위젯에서도 1초마다 줄어들어요",

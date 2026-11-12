@@ -163,7 +163,8 @@
       tb.append(tr);
     }
     dist('설치 버전 (누적)', i.versions); dist('설치 CPU (누적)', i.arch);
-    dist('활성 버전 (7일)', u.versions); dist('활성 macOS (7일)', u.os);
+    dist('설치 플랫폼 (누적)', i.platform || {}); dist('활성 플랫폼 (7일)', u.platform || {});
+    dist('활성 버전 (7일)', u.versions); dist('활성 OS (7일)', u.os);
     $('foot').textContent = `기준일 ${s.today} (한국 시간) · 이번 주 게시판: 게시물 ${n(s.board.posts_this_week)}개, 별 ${n(s.board.stars_this_week)}개`;
   }
 

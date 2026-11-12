@@ -54,6 +54,7 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
+PLATFORMS = {"mac", "win"}  # 윈도우판(2026-11-12). 옛 앱은 platform 을 안 보내므로 mac
 VERSION_RE = re.compile(r"\d{1,3}(\.\d{1,3}){0,3}")
 LANG_RE = re.compile(r"[A-Za-z]{2,3}([-_][A-Za-z0-9]{2,8})?")
 
@@ -130,11 +131,16 @@ VALUE_SHARE = 0.15           # 한 번에 가져오는 값 상한: 내 정원 ×
 RAID_PLANS = {"light": 300, "normal": 600, "deep": 1200}
 CARETAKER_FAST = 0.7
 CAUGHT_REST = 600            # 들키면 혹이 나서 10분 늦게 돌아온다
-MIN_FILL = 0.2               # 창고가 20% 이상 찬 과수원만
+# 베타(대표 결정, 2026-11-12): 테스트하려고 숨김 조건(창고 20%·초보 3일·창고 레벨 2·새 키 하루)을 끈다.
+# 정식 때 되돌릴 값: MIN_FILL 0.2, NEW_KEY 86400, NEWBIE 3 * 86400, MIN_LEVEL 2 (서버 테스트는 이 값으로 규칙을 확인한다)
+# 베타 2(대표 결정, 2026-11-12): 같은 곳 하루 한 번만 남기고 하루 3번·하루 손실 상한·당한 뒤 개 2시간도 끈다. 정식 때 False.
+BETA_OPEN = True
+MIN_FILL = 0                 # 창고가 이만큼 찬 과수원만
+MIN_LEVEL = 0                # 창고 레벨이 이 이상인 과수원만
 GUARD = 2 * 3600             # 당한 뒤 개가 짖는 시간
 TRACKS = 86400               # 발자국(되갚기)
-NEW_KEY = 86400              # 새 키는 하루 뒤부터 서리
-NEWBIE = 3 * 86400           # 설치 3일은 서리당하지 않는다
+NEW_KEY = 0                  # 새 키는 이만큼 뒤부터 서리
+NEWBIE = 0                   # 서버가 처음 본 뒤 이만큼은 서리당하지 않는다
 STALE = 14 * 86400           # 소식 없는 설치는 대상에서 뺀다
 RAID_TARGETS = 12
 RAID_ID = re.compile(r"[A-Za-z0-9_-]{8,24}")
@@ -263,20 +269,22 @@ def clean_ping(b, now):
         raise BadRequest()
     if abs((d - now.astimezone(KST).date()).days) > 2:  # 앱은 자기 시간대의 날짜를 보낸다
         raise BadRequest()
-    if b.get("arch") not in ARCHES:
+    if b.get("arch") not in ARCHES or b.get("platform", "mac") not in PLATFORMS:
         raise BadRequest()
     lang = b.get("lang") or ""
     return {"install": install, "day": day, "version": _match(b.get("version"), VERSION_RE), "os": _match(b.get("os"), VERSION_RE),
             "lang": _match(lang, LANG_RE) if lang else "", "arch": b["arch"],
             "minutes": _int(b.get("minutes"), 0, 1440), "opens": _int(b.get("opens"), 0, 10000),
-            "sales": _int(b.get("sales"), 0, 100000), "kinds": _int(b.get("kinds"), 0, 13)}
+            "sales": _int(b.get("sales"), 0, 100000), "kinds": _int(b.get("kinds"), 0, 13), "platform": b.get("platform", "mac")}
 
 
 def clean_install(b):
     """설치 신호(동의와 상관없이, 처음 실행 때 한 번). 식별자가 없다."""
-    if not isinstance(b, dict) or b.get("kind") not in ("new", "upgrade") or b.get("arch") not in ARCHES:
+    if (not isinstance(b, dict) or b.get("kind") not in ("new", "upgrade") or b.get("arch") not in ARCHES
+            or b.get("platform", "mac") not in PLATFORMS):
         raise BadRequest()
-    return {"version": _match(b.get("version"), VERSION_RE), "kind": b["kind"], "arch": b["arch"], "os": _match(b.get("os"), VERSION_RE)}
+    return {"version": _match(b.get("version"), VERSION_RE), "kind": b["kind"], "arch": b["arch"], "os": _match(b.get("os"), VERSION_RE),
+            "platform": b.get("platform", "mac")}
 
 
 def week_key(dt):
@@ -385,6 +393,11 @@ class Board:
             CREATE INDEX IF NOT EXISTS raids_raider ON raids(raider, end);
             CREATE INDEX IF NOT EXISTS raids_victim ON raids(victim, end);
         """)
+        # 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
+        for table in ("install_counts", "pings"):
+            if "platform" not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
+                self.db.execute("ALTER TABLE %s ADD COLUMN platform TEXT NOT NULL DEFAULT 'mac'" % table)
+        self.db.commit()
 
     def close(self):
         self.db.close()
@@ -518,9 +531,9 @@ class Board:
     def install(self, body, ip, now):
         p = clean_install(body)
         self.limit("install", self.ip(ip), now)
-        self.db.execute("INSERT INTO install_counts VALUES(?,?,?,?,?,1) "
+        self.db.execute("INSERT INTO install_counts(day, version, kind, arch, os, n, platform) VALUES(?,?,?,?,?,1,?) "
                         "ON CONFLICT(day, version, kind, arch, os) DO UPDATE SET n = n + 1",
-                        (day_key(now), p["version"], p["kind"], p["arch"], p["os"]))
+                        (day_key(now), p["version"], p["kind"], p["arch"], p["os"], p["platform"]))
         self.db.commit()
 
     @locked
@@ -530,12 +543,13 @@ class Board:
         inst = sha(p["install"])
         self.db.execute("INSERT INTO participants VALUES(?,?) "
                         "ON CONFLICT(install) DO UPDATE SET first_day = min(first_day, excluded.first_day)", (inst, p["day"]))
-        self.db.execute("INSERT INTO pings VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
-                        "version=excluded.version, os=excluded.os, lang=excluded.lang, arch=excluded.arch, "
+        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform) "
+                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
+                        "version=excluded.version, os=excluded.os, lang=excluded.lang, arch=excluded.arch, platform=excluded.platform, "
                         "minutes=max(minutes, excluded.minutes), opens=max(opens, excluded.opens), "
                         "sales=max(sales, excluded.sales), kinds=excluded.kinds, received=excluded.received",
                         (inst, p["day"], p["version"], p["os"], p["lang"], p["arch"], p["minutes"], p["opens"],
-                         p["sales"], p["kinds"], now.timestamp()))
+                         p["sales"], p["kinds"], now.timestamp(), p["platform"]))
         self.db.commit()
 
     @locked
@@ -559,7 +573,8 @@ class Board:
         kinds = by_installs("kind")
         installs = {"total": one("SELECT COALESCE(SUM(n), 0) FROM install_counts"), "new": kinds.get("new", 0),
                     "upgrade": kinds.get("upgrade", 0), "today": one("SELECT COALESCE(SUM(n), 0) FROM install_counts WHERE day = ?", today),
-                    "versions": by_installs("version"), "arch": by_installs("arch"), "os": by_installs("os")}
+                    "versions": by_installs("version"), "arch": by_installs("arch"), "os": by_installs("os"),
+                    "platform": by_installs("platform")}
         active = {k: one("SELECT COUNT(DISTINCT install) FROM pings WHERE day >= ? AND day <= ?", ago(n - 1), today)
                   for k, n in (("dau", 1), ("wau", 7), ("mau", 30))}
         cohort = [r[0] for r in self.db.execute("SELECT install FROM participants WHERE first_day BETWEEN ? AND ?", (ago(14), ago(8)))]
@@ -567,7 +582,8 @@ class Board:
         usage = {"participants": one("SELECT COUNT(*) FROM participants"),
                  "new_today": one("SELECT COUNT(*) FROM participants WHERE first_day = ?", today),
                  "active": active, "retention7": {"cohort": len(cohort), "retained": retained},
-                 "versions": by_usage("version"), "os": by_usage("os"), "arch": by_usage("arch"), "lang": by_usage("lang")}
+                 "versions": by_usage("version"), "os": by_usage("os"), "arch": by_usage("arch"), "lang": by_usage("lang"),
+                 "platform": by_usage("platform")}
         start = ago(days - 1)
         rows = {d: {"day": d, "installs": 0, "active": a, "new": nw, "avg_minutes": round(m / a) if a else 0, "opens": o, "sales": sl}
                 for d, a, nw, m, o, sl in self.db.execute("SELECT day, active, new, minutes, opens, sales FROM daily WHERE day >= ?", (start,))}
@@ -681,6 +697,8 @@ class Board:
         return raid_caught(loot) if caught else loot
 
     def _raids_left(self, me, day):
+        if BETA_OPEN:
+            return RAID_PER_DAY
         used = self.db.execute("SELECT COUNT(*) FROM raids WHERE raider=? AND day=? AND revenge=0", (me, day)).fetchone()[0]
         return max(0, RAID_PER_DAY - used)
 
@@ -743,10 +761,10 @@ class Board:
         t, day = now.timestamp(), day_key(now)
         done = {r[0] for r in self.db.execute("SELECT victim FROM raids WHERE raider=? AND day=? AND revenge=0", (me, day))}
         out = []
-        for r in self.db.execute(self.FARM + " WHERE owner<>? AND seen>? AND first<=? AND level>=2", (me, t - STALE, t - NEWBIE)):
+        for r in self.db.execute(self.FARM + " WHERE owner<>? AND seen>? AND first<=? AND level>=?", (me, t - STALE, t - NEWBIE, MIN_LEVEL)):
             f = self._farm_row(r)
             f["lost"] = f["lost"] if f["lost_day"] == day else 0
-            if f["owner"] in done or sum(f["crate"].values()) < f["cap"] * MIN_FILL or f["lost"] >= int(f["cap"] * DAILY_LOSS):
+            if f["owner"] in done or sum(f["crate"].values()) < f["cap"] * MIN_FILL or (not BETA_OPEN and f["lost"] >= int(f["cap"] * DAILY_LOSS)):
                 continue
             out.append(f)
         return out
@@ -805,9 +823,9 @@ class Board:
             victim = next((f for f in self._candidates(me, now) if self._target_id(me, f["owner"]) == tid), None)
             if victim is None:
                 raise KeyError(tid)
-            if victim["guard"] > t:
+            if victim["guard"] > t and not BETA_OPEN:
                 raise BadRequest("guarded")
-        loot = raid_loot(victim["crate"], victim["cap"], victim["fences"], victim["dogs"], victim["lost"], role, level, plan,
+        loot = raid_loot(victim["crate"], victim["cap"], victim["fences"], victim["dogs"], 0 if BETA_OPEN else victim["lost"], role, level, plan,
                          raid_budget(mine["cap"], mine["best"]), revenge is not None)
         if not loot:
             raise BadRequest("empty")
@@ -823,7 +841,7 @@ class Board:
         else:
             left = {k: n - loot.get(k, 0) for k, n in victim["crate"].items() if n - loot.get(k, 0) > 0}
             self.db.execute("UPDATE farms SET crate=?, lost_day=?, lost=?, guard=? WHERE owner=?",
-                            (json.dumps(left, sort_keys=True), day, victim["lost"] + sum(loot.values()), t + GUARD, victim["owner"]))
+                            (json.dumps(left, sort_keys=True), day, victim["lost"] + sum(loot.values()), t + (0 if BETA_OPEN else GUARD), victim["owner"]))
         self.db.commit()
         return {"id": rid, "role": role, "left": int(dur)}
 

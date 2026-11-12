@@ -1,8 +1,24 @@
 [
   {
+    "version": "1.8.1",
+    "date": "2026-11-12",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.1/LemonDesk-1.8.1.dmg",
+    "notes": {
+      "ko": [
+        "자리를 비운 사이 시작된 비밀 장면은 기다렸다가, 돌아오면 띠에서 다시 보여 줘요",
+        "도감의 찾은 비밀마다 \"띠에서 보기\"가 생겼어요. 놓친 장면을 언제든 다시 볼 수 있어요",
+        "새 비밀을 찾으면 메뉴바 레몬에 작은 반짝이가 붙고, 도감에 \"새로\" 표시가 생겨요"
+      ],
+      "en": [
+        "Secret scenes that start while you're away now wait and play on the strip when you're back",
+        "Every secret you've found in the Collection has \"Show on Strip\", so you can watch a missed scene anytime",
+        "Finding a new secret adds a small sparkle to the menu bar lemon and a \"New\" tag in the Collection"
+      ]
+    }
+  },
+  {
     "version": "1.8.0",
     "date": "2026-11-12",
-    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.0/LemonDesk-1.8.0.dmg",
     "notes": {
       "ko": [
         "서리가 생겼어요. 일꾼을 보내 다른 사람 과수원 창고에서 과일을 몰래 따 와요. 깊숙이 들어갈수록 비싼 과일을 들고 오지만, 주인에게 들키면 절반만 들고 도망쳐요",

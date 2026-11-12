@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.8.0</title>
-      <pubDate>Thu, 12 Nov 2026 02:46:37 GMT</pubDate>
-      <sparkle:version>15</sparkle:version>
-      <sparkle:shortVersionString>1.8.0</sparkle:shortVersionString>
+      <title>1.8.1</title>
+      <pubDate>Thu, 12 Nov 2026 04:21:07 GMT</pubDate>
+      <sparkle:version>16</sparkle:version>
+      <sparkle:shortVersionString>1.8.1</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>서리가 생겼어요. 일꾼을 보내 다른 사람 과수원 창고에서 과일을 몰래 따 와요. 깊숙이 들어갈수록 비싼 과일을 들고 오지만, 주인에게 들키면 절반만 들고 도망쳐요</li><li>내 창고에도 누군가 다녀갈 수 있어요. 발자국을 따라가 한 번 되갚고, 집 지키는 개를 들이면 덜 가져가요</li><li>서리 수첩: 가져와 본 과일을 모으면 띠에 허수아비·자루 더미·빨랫줄이 놓여요</li></ul><ul><li>Scrumping is here. Send a worker to sneak fruit from other people&#x27;s crates. Go deeper for pricier fruit, but if the owner catches you, you run off with only half</li><li>Someone may visit your crate too. Follow their footprints to pay them back once, and get guard dogs so they take less</li><li>Scrump notebook: collect the fruit you&#x27;ve brought home to put a scarecrow, a pile of sacks and a clothesline on your strip</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.0/LemonDesk-1.8.0.dmg" type="application/octet-stream" sparkle:edSignature="v9C9+jYAtL5YwUjMCtJhgxGBx9+wn3TY7R19DjkKebm/5sRH/PBQtn5b4X8pCZxFmlMyjluG3IkCh4+PG7WCCw==" length="14951783"/>
+      <description><![CDATA[<ul><li>자리를 비운 사이 시작된 비밀 장면은 기다렸다가, 돌아오면 띠에서 다시 보여 줘요</li><li>도감의 찾은 비밀마다 &quot;띠에서 보기&quot;가 생겼어요. 놓친 장면을 언제든 다시 볼 수 있어요</li><li>새 비밀을 찾으면 메뉴바 레몬에 작은 반짝이가 붙고, 도감에 &quot;새로&quot; 표시가 생겨요</li></ul><ul><li>Secret scenes that start while you&#x27;re away now wait and play on the strip when you&#x27;re back</li><li>Every secret you&#x27;ve found in the Collection has &quot;Show on Strip&quot;, so you can watch a missed scene anytime</li><li>Finding a new secret adds a small sparkle to the menu bar lemon and a &quot;New&quot; tag in the Collection</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.1/LemonDesk-1.8.1.dmg" type="application/octet-stream" sparkle:edSignature="eOuRQwpU9DfHLB+as2YS2BnCMOCq465ZlLBPrd5gLeT0S6iZsRWYpRd45JaUnHosyTTuat862OMT/ecpB2IuBw==" length="14996958"/>
     </item>
   </channel>
 </rss>

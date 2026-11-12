@@ -7,9 +7,12 @@
 - 한 소유자가 한 주(KST ISO 주)에 게시물 하나. 다시 올리면 내용만 바뀌고 별은 남는다.
 - 지난주 하이라이트(별 Top 10 + 재미 부문 3개)는 월요일에 스냅숏으로 영구 보관, 나머지 게시물은 8주 뒤 지운다.
 - 폰으로 보기(1.6, relay/…): Mac 앱과 폰 웹페이지(site/m/) 사이 중계. 페어링 키는 해시로만 DB 에, 과수원 상태·명령은 메모리에만.
+- 서리(1.8, raid/…): 1.8 이상 모든 설치가 창고 상태(정원·종류별 개수·탱자 수·창고 레벨)를 알리고, 남의 창고에서 과일을 조금 가져온다.
+  키는 자랑 소유 키(X-Owner-Key)와 같다. 한 사람은 늘 '누군가'로 숨기고, 기록은 8주 뒤 지운다.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
+  --raid-fast YES 는 로컬 확인용: 새 키·초보 보호·창고 20% 조건 없이 바로 서리하고, 작전이 6~10초, 개가 30초만 짖는다
   회사 인프라: python brag.py --host 0.0.0.0 --prefix /api/ --board https://lemondesk.interaction.hnine.com/brag/ --cors https://lemondesk.interaction.hnine.com
               (PORT, IX_DATA_DIR 은 인프라가 넣어 준다)
 관리: python3 brag.py admin list|hide ID|unhide ID|delete ID
@@ -43,7 +46,11 @@ MAX_BODY = 8 * 1024
 # 회사 사무실은 여러 사람이 같은 공인 IP 를 쓰므로 넉넉하게 둔다.
 LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping": (600, 3600), "install": (600, 3600),
           # 폰으로 보기: pair 는 IP 당, 나머지는 기기(페어링)당
-          "pair": (30, 3600), "state": (1800, 3600), "wait": (1200, 3600), "view": (3600, 3600), "command": (600, 3600)}
+          "pair": (30, 3600), "state": (1800, 3600), "wait": (1200, 3600), "view": (3600, 3600), "command": (600, 3600),
+          # 서리(1.8): 소유 키당, raid_ip·farm_new 는 IP 당(가짜 키를 많이 만들어 터는 것을 막는다)
+          "raid_status": (240, 3600), "raid_targets": (120, 3600), "raid": (30, 3600), "raid_ip": (120, 3600), "farm_new": (30, 3600),
+          # ponytail: 주인이 깨어 있다는 신호(팔기·관리 창)는 시간당 4번까지만 들킴으로 친다(늘 깨어 있는 척해 서리를 다 막지 못하게)
+          "raid_active": (4, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -105,6 +112,119 @@ def plausible(post):
     if len(kinds) > orch["dex"] or (orch["rainbow"] and orch["dex"] < 12) or ("rainbow" in orch["trees"] and not orch["rainbow"]):
         return False
     return True
+
+# 서리(1.8). 앱 Balance.Raid 와 같은 규칙(server/raid_cases.json 을 양쪽 테스트가 읽어 대조한다). 확률은 없다.
+FRUITS = [("eureka", 2), ("kumquat", 4), ("meyer", 7), ("calamansi", 12), ("lime", 20), ("fingerlime", 5), ("blood", 34),
+          ("trifoliate", 2), ("yuja", 55), ("snowyuja", 60), ("grapefruit", 90), ("redhyang", 115), ("moonlemon", 150),
+          ("pink", 150), ("cheonhye", 190), ("hallabong", 250), ("bergamot", 330), ("buddha", 420), ("pomelo", 900),
+          ("golden", 700), ("rainbow", 700)]  # 앱 TreeKind 순서와 열매 한 개 값
+PRICE = dict(FRUITS)
+ORDER = {k: i for i, (k, _) in enumerate(FRUITS)}
+RAID_PER_DAY = 3
+SACK_BASE, SACK_PER_LEVEL, HARVESTER_SACK = 6.0, 1.2, 1.25
+RAID_TAKE = 0.08             # 상대 창고에 든 개수의 8%
+DAILY_LOSS = 0.2             # 하루에 잃는 개수 상한: 창고 정원의 20%
+FENCE, FENCE_MAX = 0.2, 0.6  # 탱자 한 그루마다 −20%, 최대 −60%
+DOG, MAX_DOGS, GUARD_MAX = 0.15, 3, 0.75  # 집 지키는 개 한 마리마다 −15%(최대 3마리), 탱자와 합쳐 최대 −75%
+VALUE_SHARE = 0.15           # 한 번에 가져오는 값 상한: 내 정원 × 내가 연 가장 비싼 과일 값의 15%
+RAID_PLANS = {"light": 300, "normal": 600, "deep": 1200}
+CARETAKER_FAST = 0.7
+CAUGHT_REST = 600            # 들키면 혹이 나서 10분 늦게 돌아온다
+MIN_FILL = 0.2               # 창고가 20% 이상 찬 과수원만
+GUARD = 2 * 3600             # 당한 뒤 개가 짖는 시간
+TRACKS = 86400               # 발자국(되갚기)
+NEW_KEY = 86400              # 새 키는 하루 뒤부터 서리
+NEWBIE = 3 * 86400           # 설치 3일은 서리당하지 않는다
+STALE = 14 * 86400           # 소식 없는 설치는 대상에서 뺀다
+RAID_TARGETS = 12
+RAID_ID = re.compile(r"[A-Za-z0-9_-]{8,24}")
+
+
+def crate_capacity(level):
+    return int(40 * 1.5 ** min(level, 12) * 1.25 ** max(0, level - 12) + 0.5)  # 앱 .rounded() 와 같게(반올림)
+
+
+def raid_duration(role, plan):
+    return RAID_PLANS[plan] * (CARETAKER_FAST if role == "caretaker" else 1)
+
+
+def _size(k):
+    return 3 if PRICE[k] >= 400 else 2 if PRICE[k] >= 100 else 1
+
+
+def raid_budget(cap, best):
+    return int(cap * PRICE[best] * VALUE_SHARE)
+
+
+def raid_loot(crate, cap, fences, dogs, lost, role, level, plan, budget, revenge=False):
+    """한 번에 담아 오는 과일. 살짝은 값싼 것부터, 깊숙이는 비싼 것부터, 보통은 종류를 돌아가며 하나씩.
+    자루 칸·상대 창고의 8%·오늘 남은 손실 허용량 중 가장 작은 만큼, 한 종류는 든 개수의 절반까지, 값은 budget 까지."""
+    total = sum(crate.values())
+    if total <= 0:
+        return {}
+    walls = min(FENCE_MAX, FENCE * fences) * (0.5 if role == "planter" else 1.0)
+    guard = 1 - min(GUARD_MAX, walls + DOG * min(dogs, MAX_DOGS))
+    twice = 2.0 if revenge else 1.0
+    slots = int((SACK_BASE + SACK_PER_LEVEL * level) * (HARVESTER_SACK if role == "harvester" else 1.0) * twice * guard)
+    allow = max(0, int(cap * DAILY_LOSS) - lost)
+    limit = min(max(1, int(total * RAID_TAKE * twice * guard)), allow)
+    by_price = sorted((k for k, n in crate.items() if n > 0), key=lambda k: (PRICE[k], ORDER[k]))
+    money = int(budget * twice)
+    picked, state = {}, {"used": 0, "n": 0, "value": 0}
+
+    def add(k):
+        if (state["n"] >= limit or state["used"] + _size(k) > slots or state["value"] + PRICE[k] > money
+                or picked.get(k, 0) >= crate[k] // 2):
+            return False
+        picked[k] = picked.get(k, 0) + 1
+        state["used"] += _size(k)
+        state["n"] += 1
+        state["value"] += PRICE[k]
+        return True
+
+    if plan == "normal":
+        more = True
+        while more:
+            more = False
+            for k in by_price:
+                more = add(k) or more
+    else:
+        for k in (by_price if plan == "light" else reversed(by_price)):
+            while add(k):
+                pass
+    return picked
+
+
+def raid_caught(loot):
+    """들키면 담은 것의 절반만, 값싼 것부터"""
+    items = [k for k in sorted(loot, key=lambda k: (PRICE[k], ORDER[k])) for _ in range(loot[k])]
+    out = {}
+    for k in items[:len(items) // 2]:
+        out[k] = out.get(k, 0) + 1
+    return out
+
+
+def clean_farm(b):
+    """앱이 알리는 창고 상태(서리 대상 판단·양 계산에만 쓴다). 나무·일꾼·코인·닉네임은 받지 않는다."""
+    if not isinstance(b, dict):
+        raise BadRequest()
+    level = _int(b.get("level"), 0, 18)
+    cap = _int(b.get("cap"), 1, MAX_CRATE)
+    crate = b.get("crate")
+    if cap != crate_capacity(level) or not isinstance(crate, dict) or any(k not in PRICE for k in crate):
+        raise BadRequest()
+    crate = {k: n for k, n in ((k, _int(v, 0, cap)) for k, v in crate.items()) if n > 0}
+    if sum(crate.values()) > cap:
+        raise BadRequest("implausible")
+    ack = b.get("ack") or []
+    if not isinstance(ack, list) or len(ack) > 50:
+        raise BadRequest()
+    if b.get("best") not in PRICE:
+        raise BadRequest()
+    return {"cap": cap, "level": level, "crate": crate, "fences": _int(b.get("fences"), 0, MAX_TREES),
+            "dogs": _int(b.get("dogs", 0), 0, MAX_DOGS), "best": b["best"],
+            "active": b.get("active") is True, "ack": [_match(a, RAID_ID) for a in ack]}
+
 
 CMD_ID = re.compile(r"[A-Za-z0-9-]{1,40}")
 KEY = re.compile(r"[0-9a-f]{64}")
@@ -208,7 +328,8 @@ def clean_post(body):
         "card": {"harvested": _int(card.get("harvested"), 0, 10**8), "sold": _int(card.get("sold"), 0, 10**8),
                  "earned": _int(card.get("earned"), 0, 10**13), "planted": _int(card.get("planted"), 0, 10**5)},
         "orchard": {"trees": trees, "workers": crew, "dex": _int(orch.get("dex"), 0, 20),
-                    "secrets": _int(orch.get("secrets"), 0, 20), "rainbow": orch["rainbow"], "theme": orch["theme"]},
+                    "secrets": _int(orch.get("secrets"), 0, 20), "rainbow": orch["rainbow"], "theme": orch["theme"],
+                    "scrump": _int(orch.get("scrump", 0), 0, 20)},  # 1.8 서리 수첩
     }
     if not plausible(post):
         raise BadRequest("implausible")
@@ -253,6 +374,16 @@ class Board:
                 PRIMARY KEY(install, day));
             CREATE TABLE IF NOT EXISTS daily(day TEXT PRIMARY KEY, active INTEGER, new INTEGER, minutes INTEGER,
                 opens INTEGER, sales INTEGER);
+            CREATE TABLE IF NOT EXISTS farms(owner TEXT PRIMARY KEY, cap INTEGER NOT NULL, crate TEXT NOT NULL,
+                fences INTEGER NOT NULL, dogs INTEGER NOT NULL DEFAULT 0, best TEXT NOT NULL DEFAULT 'eureka',
+                level INTEGER NOT NULL, first REAL NOT NULL, seen REAL NOT NULL,
+                guard REAL NOT NULL DEFAULT 0, lost_day TEXT NOT NULL DEFAULT '', lost INTEGER NOT NULL DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS raids(id TEXT PRIMARY KEY, raider TEXT NOT NULL, victim TEXT NOT NULL, day TEXT NOT NULL,
+                role TEXT NOT NULL, plan TEXT NOT NULL, start REAL NOT NULL, end REAL NOT NULL, loot TEXT NOT NULL,
+                caught INTEGER NOT NULL DEFAULT 0, revenge INTEGER NOT NULL DEFAULT 0, avenged INTEGER NOT NULL DEFAULT 0,
+                raider_done INTEGER NOT NULL DEFAULT 0, victim_done INTEGER NOT NULL DEFAULT 0);
+            CREATE INDEX IF NOT EXISTS raids_raider ON raids(raider, end);
+            CREATE INDEX IF NOT EXISTS raids_victim ON raids(victim, end);
         """)
 
     def close(self):
@@ -375,6 +506,8 @@ class Board:
                 self.db.execute("DELETE FROM stars WHERE post=?", (pid,))
                 self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
             self.db.execute("DELETE FROM posts WHERE owner=?", (owner,))
+            self.db.execute("DELETE FROM farms WHERE owner=?", (owner,))  # 1.8 서리 참여·기록도 함께
+            self.db.execute("DELETE FROM raids WHERE raider=? OR victim=?", (owner, owner))
             self.db.execute("DELETE FROM highlights WHERE owner=?", (owner,))
             self.db.commit()
         return len(ids)
@@ -520,7 +653,179 @@ class Board:
                 nw = self.db.execute("SELECT COUNT(*) FROM participants WHERE first_day=?", (d,)).fetchone()[0]
                 self.db.execute("INSERT INTO daily VALUES(?,?,?,?,?,?)", (d, a, nw, m or 0, o or 0, sl or 0))
             self.db.execute("DELETE FROM pings WHERE day < ?", (stats_cut,))
+            # 서리: 8주 소식 없는 설치와 8주 지난 기록
+            self.db.execute("DELETE FROM farms WHERE seen < ?", (t - KEEP_WEEKS * WEEK,))
+            self.db.execute("DELETE FROM raids WHERE end < ?", (t - KEEP_WEEKS * WEEK,))
             self.db.commit()
+
+    # 서리 (1.8). 한 사람(raider)은 당한 쪽 응답 어디에도 넣지 않는다.
+
+    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best FROM farms"
+
+    @staticmethod
+    def _farm_row(r):
+        return {"owner": r[0], "cap": r[1], "crate": json.loads(r[2]), "fences": r[3], "level": r[4], "first": r[5],
+                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11]}
+
+    def _farm(self, owner):
+        r = self.db.execute(self.FARM + " WHERE owner=?", (owner,)).fetchone()
+        return self._farm_row(r) if r else None
+
+    def _target_id(self, me, owner):
+        """대상 id 는 요청한 사람에게만 통한다(키 해시를 내려 주지 않는다)"""
+        return hmac.new(self.salt, (me + "|" + owner).encode(), hashlib.sha256).hexdigest()[:16]
+
+    @staticmethod
+    def _final(loot, caught):
+        loot = json.loads(loot)
+        return raid_caught(loot) if caught else loot
+
+    def _raids_left(self, me, day):
+        used = self.db.execute("SELECT COUNT(*) FROM raids WHERE raider=? AND day=? AND revenge=0", (me, day)).fetchone()[0]
+        return max(0, RAID_PER_DAY - used)
+
+    def _raid_view(self, me, now):
+        t, day = now.timestamp(), day_key(now)
+        f = self._farm(me)
+        q = self.db.execute
+        return {
+            # 내가 당한 것(끝난 것만): 앱이 창고에서 빼고 ack 한다
+            "raided": [{"id": r[0], "loot": self._final(r[1], r[2]), "caught": bool(r[2])} for r in
+                       q("SELECT id, loot, caught FROM raids WHERE victim=? AND end<=? AND victim_done=0 ORDER BY end", (me, t))],
+            # 내가 보낸 일꾼이 들고 온 것
+            "back": [{"id": r[0], "role": r[1], "loot": self._final(r[2], r[3]), "caught": bool(r[3])} for r in
+                     q("SELECT id, role, loot, caught FROM raids WHERE raider=? AND end<=? AND raider_done=0 ORDER BY end", (me, t))],
+            # 아직 나가 있는 일꾼(들키면 10분 늘어난다)
+            "away": [{"id": r[0], "role": r[1], "left": int(r[2] - t + 0.999)} for r in
+                     q("SELECT id, role, end FROM raids WHERE raider=? AND end>?", (me, t))],
+            # 발자국: 24시간 동안 한 번 되갚을 수 있다(되갚기의 발자국은 남기지 않는다)
+            "tracks": [{"id": r[0], "left": int(r[1] + TRACKS - t)} for r in
+                       q("SELECT id, end FROM raids WHERE victim=? AND end<=? AND end>? AND revenge=0 AND avenged=0",
+                         (me, t, t - TRACKS))],
+            "left": self._raids_left(me, day),
+            "ready": int(max(0, f["first"] + NEW_KEY - t)) if f else NEW_KEY,
+            "guard": int(max(0, f["guard"] - t)) if f else 0,
+        }
+
+    @locked
+    def raid_status(self, owner_key, body, ip, now):
+        """창고 상태 알리기(앱이 켤 때·팔 때·관리 창을 열 때·20% 경계·30분마다, 일꾼이 나가 있으면 1분마다).
+        active: 주인이 방금 팔았거나 창을 열었다 → 지금 밭에 있는 서리꾼이 들킨다."""
+        me = self.owner(owner_key)
+        farm = clean_farm(body)
+        t = now.timestamp()
+        self.limit("raid_status", me, now)
+        crate = json.dumps(farm["crate"], sort_keys=True)
+        if self._farm(me) is None:
+            self.limit("farm_new", self.ip(ip), now)
+            self.db.execute("INSERT INTO farms(owner, cap, crate, fences, dogs, best, level, first, seen) VALUES(?,?,?,?,?,?,?,?,?)",
+                            (me, farm["cap"], crate, farm["fences"], farm["dogs"], farm["best"], farm["level"], t, t))
+        else:
+            self.db.execute("UPDATE farms SET cap=?, crate=?, fences=?, dogs=?, best=?, level=?, seen=? WHERE owner=?",
+                            (farm["cap"], crate, farm["fences"], farm["dogs"], farm["best"], farm["level"], t, me))
+        if farm["active"] and self.db.execute("SELECT 1 FROM raids WHERE victim=? AND start<=? AND end>? AND caught=0",
+                                              (me, t, t)).fetchone():
+            try:
+                self.limit("raid_active", me, now)
+                self.db.execute("UPDATE raids SET caught=1, end=end+? WHERE victim=? AND start<=? AND end>? AND caught=0",
+                                (CAUGHT_REST, me, t, t))
+            except RateLimited:
+                pass
+        for rid in farm["ack"]:
+            self.db.execute("UPDATE raids SET raider_done=1 WHERE id=? AND raider=? AND end<=?", (rid, me, t))
+            self.db.execute("UPDATE raids SET victim_done=1 WHERE id=? AND victim=? AND end<=?", (rid, me, t))
+        self.db.commit()
+        return self._raid_view(me, now)
+
+    def _candidates(self, me, now):
+        """서리할 수 있는 과수원(개가 짖는 곳도 보여 준다). 초보(설치 3일·창고 레벨 2 미만)·14일 소식 없음·20% 미만·
+        오늘 손실 상한·오늘 내가 이미 간 곳은 뺀다. ponytail: farms 를 다 훑는다. 참여자가 수만이 되면 seen·first 색인으로."""
+        t, day = now.timestamp(), day_key(now)
+        done = {r[0] for r in self.db.execute("SELECT victim FROM raids WHERE raider=? AND day=? AND revenge=0", (me, day))}
+        out = []
+        for r in self.db.execute(self.FARM + " WHERE owner<>? AND seen>? AND first<=? AND level>=2", (me, t - STALE, t - NEWBIE)):
+            f = self._farm_row(r)
+            f["lost"] = f["lost"] if f["lost_day"] == day else 0
+            if f["owner"] in done or sum(f["crate"].values()) < f["cap"] * MIN_FILL or f["lost"] >= int(f["cap"] * DAILY_LOSS):
+                continue
+            out.append(f)
+        return out
+
+    @locked
+    def raid_targets(self, owner_key, now):
+        me = self.owner(owner_key)
+        self.limit("raid_targets", me, now)
+        if self._farm(me) is None:
+            raise BadRequest("no_farm")
+        hour = now.astimezone(KST).strftime("%Y%m%d%H")  # 한 시간마다 다른 12곳
+        picks = sorted(self._candidates(me, now), key=lambda f: sha(me + hour + f["owner"]))[:RAID_TARGETS]
+        t = now.timestamp()
+        out = []
+        for f in picks:
+            nick = self.db.execute("SELECT nickname FROM posts WHERE owner=? AND hidden=0 ORDER BY created DESC LIMIT 1",
+                                   (f["owner"],)).fetchone()
+            n = sum(f["crate"].values())
+            kinds = sorted(f["crate"], key=lambda k: (-PRICE[k], ORDER[k]))
+            out.append({"id": self._target_id(me, f["owner"]), "name": nick[0] if nick else None,
+                        # 닉네임이 없으면 앱이 이 수로 이름을 짓는다("졸린 유자 과수원"). 같은 설치는 늘 같은 이름.
+                        "seed": int(hmac.new(self.salt, f["owner"].encode(), hashlib.sha256).hexdigest()[:8], 16),
+                        # 찬 정도는 10% 단위(작은 변화로 누가 누군지 맞춰 보지 못하게)
+                        "fill": round(n / f["cap"], 1), "kinds": [{"kind": k, "lots": f["crate"][k] >= 10} for k in kinds],
+                        "fences": f["fences"], "dogs": f["dogs"], "dog": f["guard"] > t})
+        view = self._raid_view(me, now)
+        return {"targets": out, "left": view["left"], "ready": view["ready"]}
+
+    @locked
+    def raid(self, owner_key, body, ip, now):
+        """일꾼을 보낸다. {target, role, level, plan} 또는 되갚기 {revenge: 발자국 id, role, level, plan}"""
+        me = self.owner(owner_key)
+        if not isinstance(body, dict) or body.get("role") not in ROLES or body.get("plan") not in RAID_PLANS:
+            raise BadRequest()
+        role, plan, level = body["role"], body["plan"], _int(body.get("level"), 1, 20)
+        self.limit("raid", me, now)
+        self.limit("raid_ip", self.ip(ip), now)
+        t, day = now.timestamp(), day_key(now)
+        mine = self._farm(me)
+        if mine is None or mine["first"] > t - NEW_KEY:
+            raise BadRequest("too_new")
+        if self.db.execute("SELECT 1 FROM raids WHERE raider=? AND role=? AND end>?", (me, role, t)).fetchone():
+            raise BadRequest("busy")
+        revenge = body.get("revenge")
+        if revenge is not None:
+            r = self.db.execute("SELECT raider FROM raids WHERE id=? AND victim=? AND revenge=0 AND avenged=0 AND end<=? AND end>?",
+                                (_match(revenge, RAID_ID), me, t, t - TRACKS)).fetchone()
+            victim = self._farm(r[0]) if r else None
+            if victim is None:
+                raise KeyError(revenge)
+            victim["lost"] = victim["lost"] if victim["lost_day"] == day else 0
+        else:
+            if self._raids_left(me, day) <= 0:
+                raise BadRequest("no_raids_left")
+            tid = _match(body.get("target"), re.compile(r"[0-9a-f]{16}"))
+            victim = next((f for f in self._candidates(me, now) if self._target_id(me, f["owner"]) == tid), None)
+            if victim is None:
+                raise KeyError(tid)
+            if victim["guard"] > t:
+                raise BadRequest("guarded")
+        loot = raid_loot(victim["crate"], victim["cap"], victim["fences"], victim["dogs"], victim["lost"], role, level, plan,
+                         raid_budget(mine["cap"], mine["best"]), revenge is not None)
+        if not loot:
+            raise BadRequest("empty")
+        rid = secrets.token_urlsafe(9)
+        dur = raid_duration(role, plan)
+        self.db.execute("INSERT INTO raids(id, raider, victim, day, role, plan, start, end, loot, revenge) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                        (rid, me, victim["owner"], day, role, plan, t, t + dur, json.dumps(loot, sort_keys=True), int(revenge is not None)))
+        if revenge is not None:
+            self.db.execute("UPDATE raids SET avenged=1 WHERE id=?", (revenge,))
+        if revenge is not None:
+            # 되갚기는 손실 상한만 센다. 개·창고를 바꾸면 되갚은 사람이 대상 목록 변화로 원래 서리꾼을 알아챌 수 있다.
+            self.db.execute("UPDATE farms SET lost_day=?, lost=? WHERE owner=?", (day, victim["lost"] + sum(loot.values()), victim["owner"]))
+        else:
+            left = {k: n - loot.get(k, 0) for k, n in victim["crate"].items() if n - loot.get(k, 0) > 0}
+            self.db.execute("UPDATE farms SET crate=?, lost_day=?, lost=?, guard=? WHERE owner=?",
+                            (json.dumps(left, sort_keys=True), day, victim["lost"] + sum(loot.values()), t + GUARD, victim["owner"]))
+        self.db.commit()
+        return {"id": rid, "role": role, "left": int(dur)}
 
     def _snap(self, week, kind, rank, p):
         owner = self.db.execute("SELECT owner FROM posts WHERE id=?", (p["id"],)).fetchone()[0]
@@ -831,13 +1136,18 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                     return self.send(200, board.highlights(q.get("week") or board.week(now), now))
                 if method == "GET" and parts == ["weeks"]:
                     return self.send(200, {"current": board.week(now), "weeks": board.weeks()})
+                if parts[:1] == ["raid"]:
+                    return self.raid(method, parts[1:], owner, now)
                 if method == "GET" and parts == ["me"]:
                     return self.send(200, board.me(owner, now))
                 if method == "DELETE" and parts == ["me"]:
                     return self.send(200, {"deleted": board.delete_mine(owner)})
                 return self.send(404, {"error": "not_found"})
             except BadRequest as e:
-                return self.send({"unauthorized": 401, "mac_asleep": 409, "conflict": 409, "too_large": 413, "implausible": 422}.get(e.code, 422), {"error": e.code})
+                return self.send({"unauthorized": 401, "mac_asleep": 409, "conflict": 409, "too_large": 413, "implausible": 422,
+                                  # 서리
+                                  "too_new": 409, "busy": 409, "no_raids_left": 409, "guarded": 409, "empty": 409, "no_farm": 409,
+                                  }.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
             except KeyError:
@@ -859,6 +1169,15 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, relay.view(auth, now))
             if method == "POST" and parts == ["command"]:
                 return self.send(200, relay.command(auth, self.body(), now))
+            return self.send(404, {"error": "not_found"})
+
+        def raid(self, method, parts, owner, now):
+            if method == "POST" and parts == ["status"]:
+                return self.send(200, board.raid_status(owner, self.body(), self.client_ip(), now))
+            if method == "GET" and parts == ["targets"]:
+                return self.send(200, board.raid_targets(owner, now))
+            if method == "POST" and parts == []:
+                return self.send(200, board.raid(owner, self.body(), self.client_ip(), now))
             return self.send(404, {"error": "not_found"})
 
         def serve_static(self, rel):
@@ -912,7 +1231,7 @@ def open_board(data_dir):
 
 
 def main(argv):
-    global PREFIX, BOARD_URL, CORS_ORIGIN, STATS_TOKEN
+    global PREFIX, BOARD_URL, CORS_ORIGIN, STATS_TOKEN, NEW_KEY, NEWBIE, GUARD, MIN_FILL
     STATS_TOKEN = os.environ.get("STATS_TOKEN", "")
     args = dict(zip(argv[1::2], argv[2::2])) if argv[1:2] != ["admin"] else {}
     # 회사 인프라는 Data dir 을 IX_DATA_DIR 로, 포트를 PORT 로 넣어 준다
@@ -920,6 +1239,9 @@ def main(argv):
     PREFIX = args.get("--prefix", PREFIX)
     BOARD_URL = args.get("--board", BOARD_URL)
     CORS_ORIGIN = args.get("--cors", CORS_ORIGIN)
+    if args.get("--raid-fast") == "YES":  # 로컬 확인 전용(자체 점검·캡처)
+        NEW_KEY, NEWBIE, GUARD, MIN_FILL = 0, 0, 30, 0
+        RAID_PLANS.update(light=6, normal=8, deep=10)
     board = open_board(data)
     if argv[1:2] == ["admin"]:
         cmd, pid = (argv[2:] + ["", ""])[:2]

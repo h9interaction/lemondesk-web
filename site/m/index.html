@@ -84,6 +84,7 @@
   .coins { display: inline-flex; align-items: center; gap: 5px; font-size: 16.5px; }
   .hud .btn { grid-column: 1 / -1; min-height: 56px; font-size: 22px; margin-top: 6px; flex-direction: row; }
   /* 결과 안내: 어느 탭에서나 보이게 아래 탭 위에 띄운다 */
+  .raid-note { margin: 8px 4px 0; padding: 8px 12px; font-size: 14px; font-weight: 600; color: var(--page-ink); background: rgba(201, 138, 46, .14); border-left: 4px solid #C98A2E; }
   .toast { position: fixed; left: 50%; bottom: calc(78px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 6; width: max-content; max-width: calc(100% - 24px);
            margin: 0; padding: 8px 14px; font-size: 15px; font-weight: 600; text-align: center; color: #FFF6D8; background: #4A2E14; border: 2px solid #C98A2E; pointer-events: none; }
   .toast:empty { display: none; }
@@ -172,6 +173,7 @@
         </div>
         <button class="btn px" id="sell" type="button" data-t="sell">모두 팔기</button>
       </div>
+      <p class="raid-note" id="raid-note" role="status" hidden></p>
       <div class="panel banner" id="banner" hidden><p id="banner-text"></p><button class="btn y px" id="retry" type="button" hidden></button></div>
       <div class="panel week" id="week" hidden>
         <h2 class="px" data-t="week">이번 주</h2>
@@ -263,6 +265,8 @@
     lost: 'Disconnected', lostText: 'The connection was reset on your Mac. Scan the new QR code in Settings › Phone view.',
     homeTip: 'Tip: add this page to your Home Screen to open it like an app.',
     ago: s => s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`,
+    away: t => ` · Out scrumping, back in ${t}`, raided: (n, ago) => `Someone scrumped ${n} lemons from your crate · ${ago}`,
+    chased: (n, ago) => `You chased off a scrumper. They only got ${n} · ${ago}`,
   } : {
     crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
     fullIn: t => `가득까지 ${t}`, full: '창고가 가득 찼어요', slow: '천천히 차는 중', field: (n, m) => `밭 ${n} / ${m}칸`, fieldFull: (n, m) => `밭 ${n} / ${m}칸 · 다 차서 바꿔 심을 수 있어요`,
@@ -290,6 +294,8 @@
     lost: '연결이 끊겼어요', lostText: 'Mac에서 연결을 끊었어요. 설정 › 폰으로 보기의 새 QR을 다시 찍어 주세요.',
     homeTip: '홈 화면에 추가하면 앱처럼 열 수 있어요.',
     ago: s => s < 60 ? '방금' : s < 3600 ? `${Math.round(s / 60)}분 전` : `${Math.round(s / 3600)}시간 전`,
+    away: t => ` · 서리 나감, ${t} 뒤 돌아와요`, raided: (n, ago) => `누군가 레몬 ${n}개를 서리해 갔어요 · ${ago}`,
+    chased: (n, ago) => `서리꾼을 쫓아냈어요. ${n}개만 가져갔어요 · ${ago}`,
   };
   const $ = id => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -338,6 +344,7 @@
   const canAct = () => !!(data && data.online && state() && !failed && !stale);
   const toast = msg => { $('toast').textContent = msg; clearTimeout(toast.t); toast.t = setTimeout(() => { $('toast').textContent = ''; }, 5000); };
   const clock = s => { s = Math.max(0, Math.ceil(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
+  const awayLeft = w => w.away ? state().sent + w.away - nowSec() : 0; // 1.8 서리 나간 일꾼
   const coin = (w = 14, h = 13) => { const i = el('img'); i.src = S + 'coin.png'; i.alt = ''; i.width = w; i.height = h; return i; };
 
   // ── 과수원 장면 ─────────────────────────────────────────
@@ -387,7 +394,7 @@
       if (t.dataset.src !== src) { t.dataset.src = src; t.src = src; }
     });
     const want = new Map();
-    for (const wk of s.workers) for (let slot = 0; slot < (wk.crew || 0); slot++) want.set(`${wk.role}-${slot}`, {role: wk.role, variant: (wk.looks || [])[slot] || 0, tier: wk.tier || 0});
+    for (const wk of s.workers) for (let slot = 0; slot < (wk.crew || 0) - (awayLeft(wk) > 0 ? 1 : 0); slot++) want.set(`${wk.role}-${slot}`, {role: wk.role, variant: (wk.looks || [])[slot] || 0, tier: wk.tier || 0});
     for (const [k, w] of crew) if (!want.has(k)) { clearTimeout(w.timer); w.el.remove(); crew.delete(k); }
     let n = 0;
     for (const [k, v] of want) {
@@ -424,6 +431,9 @@
     $('bar').style.width = `${Math.min(100, ratio * 100)}%`;
     const pic = `${S}crate-${m.crate === 0 ? 0 : ratio < .7 ? 1 : 2}.png`;
     if ($('crate-pic').dataset.src !== pic) { $('crate-pic').dataset.src = pic; $('crate-pic').src = pic; sceneCrate.src = pic; }
+    const rd = s.raided, since = rd ? nowSec() - rd.at : Infinity;
+    $('raid-note').hidden = !(since < 86400);
+    if (since < 86400) $('raid-note').textContent = (rd.caught ? T.chased : T.raided)(fmt(rd.count), T.ago(Math.max(0, since)));
     const left = s.fullAt == null ? null : s.fullAt - nowSec();
     $('full').textContent = m.crate >= cap || (!override && left != null && left <= 0) ? T.full : left == null ? T.slow : T.fullIn(clock(left));
     $('sell').textContent = m.value > 0 ? T.sellFor(short(m.value)) : T.sell;
@@ -513,7 +523,7 @@
     for (const r of crewRefs) {
       if (r.crate) { r.lv.textContent = T.crateLevel(s.crate.level, fmt(s.crate.capacity)); setBuy(r.up, r.why, T.growBtn, s.crate.cost, T.maxed); continue; }
       const w = s.workers.find(x => x.role === r.role); if (!w) continue;
-      r.lv.textContent = w.level ? T.level(w.level, w.max) : T.none;
+      r.lv.textContent = (w.level ? T.level(w.level, w.max) : T.none) + (awayLeft(w) > 0 ? T.away(clock(awayLeft(w))) : '');
       setBuy(r.up, r.why, w.level ? T.upBtn : T.hireBtn, w.cost, T.maxed);
       if (r.b2) { setBuy(r.b2, null, T.hire2Btn, w.second, ''); if (w.second != null && w.second > s.coins) r.why.textContent = T.poor; }
     }

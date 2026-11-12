@@ -139,7 +139,7 @@
     home: 'About Lemon Desk', privacy: 'Privacy Policy', harvest: 'Biggest harvest', secrets: 'Secret seeker', dex: 'Collector',
     picked: n => `picked ${n}`, found: n => `${n} secrets found`, dexv: n => `${n}/20 trees`,
     stats: c => `This week: picked ${c.harvested} · sold ${c.sold} · earned ${fmt(c.earned)} coins · planted ${c.planted}`,
-    dexBadge: n => `Collection ${n}/20`, secretBadge: n => `Secrets ${n}/20`, rainbow: 'Rainbow lemon',
+    dexBadge: n => `Collection ${n}/20`, secretBadge: n => `Secrets ${n}/20`, scrumpBadge: n => `Scrump notebook ${n}/20`, rainbow: 'Rainbow lemon',
     crew: {planter: 'Planter', caretaker: 'Caretaker', harvester: 'Harvester'},
     star: n => `Give a star, ${n} so far`, report: 'Report', reported: 'Reported', reportAsk: 'Report this orchard? Posts with several reports are hidden.',
     noHighlights: 'No starred orchards yet this week. Be the first to give one!', noPosts: 'No orchards yet this week. Click "Brag" in the Journal tab of Lemon Desk to post the first one.',
@@ -149,7 +149,7 @@
     harvest: '이번 주 가장 많이 딴 과수원', secrets: '비밀 탐험가', dex: '도감 수집가',
     picked: n => `딴 레몬 ${n}개`, found: n => `비밀 ${n}개 찾음`, dexv: n => `도감 ${n}/20`,
     stats: c => `이번 주 딴 레몬 ${c.harvested} · 판 레몬 ${c.sold} · 번 코인 ${fmt(c.earned)} · 심은 나무 ${c.planted}`,
-    dexBadge: n => `도감 ${n}/20`, secretBadge: n => `비밀 기록 ${n}/20`, rainbow: '무지개 레몬',
+    dexBadge: n => `도감 ${n}/20`, secretBadge: n => `비밀 기록 ${n}/20`, scrumpBadge: n => `서리 수첩 ${n}/20`, rainbow: '무지개 레몬',
     crew: {planter: '심기', caretaker: '돌보기', harvester: '수확'},
     star: n => `별 주기, 지금 ${n}개`, report: '신고', reported: '신고했어요', reportAsk: '이 과수원을 신고할까요? 신고가 여러 번 쌓이면 숨겨져요.',
     noHighlights: '이번 주에는 아직 별을 받은 과수원이 없어요. 첫 별을 줘 보세요.', noPosts: '이번 주 자랑이 아직 없어요. Lemon Desk의 기록 탭에서 "자랑하기"를 눌러 첫 번째로 올려 보세요.',
@@ -207,6 +207,7 @@
     a.append(h, strip(p.orchard), el('p', 'stats', T.stats(p.card)));
     const b = el('p', 'badges');
     b.append(el('span', null, T.dexBadge(p.orchard.dex)), el('span', null, T.secretBadge(p.orchard.secrets)));
+    if (p.orchard.scrump) b.append(el('span', null, T.scrumpBadge(p.orchard.scrump))); // 1.8
     if (p.orchard.rainbow) b.append(el('span', null, T.rainbow));
     const crew = ['planter', 'caretaker', 'harvester'].filter(r => p.orchard.workers[r]).map(r => `${T.crew[r]} ${p.orchard.workers[r].level}`);
     if (crew.length) b.append(el('span', null, crew.join(' · ')));

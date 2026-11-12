@@ -260,8 +260,8 @@
     unlocked: k => `Unlocked ${T.kinds[k]}. You can plant it now`, hired: r => `${T.roles[r]} leveled up`, hired2: r => `One more ${T.roles[r].toLowerCase()} joined`, grown: 'Crate expanded',
     unavailable: "That can't be done right now", noAnswer: "Your Mac didn't answer. Try again in a moment.", tooMany: 'Too many taps. Try again in a moment.',
     failed: "Couldn't send. Check your connection.", newKind: 'A new tree is open!',
-    welcome: 'Open Lemon Desk on your Mac', welcomeText: 'This page shows your Mac orchard on your phone.',
-    steps: ['On your Mac, click the lemon in the menu bar › Open Orchard… › Settings, and turn on Phone view.', 'Scan the QR code with your phone camera.'],
+    welcome: 'Open Lemon Desk on your computer', welcomeText: 'This page shows the orchard on your Mac or PC on your phone.',
+    steps: ['Click the lemon in the menu bar (on Windows, the notification area at the right of the taskbar) › Open Orchard… › Settings, and turn on Phone view.', 'Scan the QR code with your phone camera.'],
     lost: 'Disconnected', lostText: 'The connection was reset on your Mac. Scan the new QR code in Settings › Phone view.',
     homeTip: 'Tip: add this page to your Home Screen to open it like an app.',
     ago: s => s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`,
@@ -289,14 +289,22 @@
     unlocked: k => `${obj(T.kinds[k])} 해금했어요. 이제 심을 수 있어요`, hired: r => `${T.roles[r]} 레벨이 올랐어요`, hired2: r => `${T.roles[r]}이 한 명 더 왔어요`, grown: '창고를 넓혔어요',
     unavailable: '지금은 할 수 없어요', noAnswer: 'Mac이 답하지 않아요. 잠시 뒤에 다시 해 주세요.', tooMany: '너무 자주 눌렀어요. 잠시 뒤에 다시 해 주세요.',
     failed: '보내지 못했어요. 인터넷 연결을 확인해 주세요.', newKind: '새 나무가 열렸어요',
-    welcome: 'Mac에서 Lemon Desk를 열어 주세요', welcomeText: '이 페이지는 Mac의 과수원을 폰에서 보여 줘요.',
-    steps: ['Mac 메뉴바의 레몬 › 과수원 관리… › 설정에서 폰으로 보기를 켜요.', '폰 카메라로 QR을 찍어요.'],
+    welcome: '컴퓨터에서 Lemon Desk를 열어 주세요', welcomeText: '이 페이지는 Mac·PC의 과수원을 폰에서 보여 줘요.',
+    steps: ['메뉴바(Windows는 작업 표시줄 오른쪽 알림 영역)의 레몬 › 과수원 관리… › 설정에서 폰으로 보기를 켜요.', '폰 카메라로 QR을 찍어요.'],
     lost: '연결이 끊겼어요', lostText: 'Mac에서 연결을 끊었어요. 설정 › 폰으로 보기의 새 QR을 다시 찍어 주세요.',
     homeTip: '홈 화면에 추가하면 앱처럼 열 수 있어요.',
     ago: s => s < 60 ? '방금' : s < 3600 ? `${Math.round(s / 60)}분 전` : `${Math.round(s / 3600)}시간 전`,
     away: t => ` · 서리 나감, ${t} 뒤 돌아와요`, raided: (n, ago) => `누군가 레몬 ${n}개를 서리해 갔어요 · ${ago}`,
     chased: (n, ago) => `서리꾼을 쫓아냈어요. ${n}개만 가져갔어요 · ${ago}`,
   };
+  // 윈도우판(상태의 platform 이 win)이면 연결 뒤 문구의 'Mac' 을 'PC' 로. 맥 앱은 platform 을 보내지 않는다.
+  let pc = false;
+  const toPC = t => t.replace(/Mac이/g, 'PC가').replace(/Mac을/g, 'PC를').replace(/Mac/g, 'PC');
+  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText']) {
+    const v = T[k];
+    if (typeof v === 'function') T[k] = (...a) => pc ? toPC(v(...a)) : v(...a);
+    else Object.defineProperty(T, k, { get: () => pc ? toPC(v) : v });
+  }
   const $ = id => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const fmt = n => new Intl.NumberFormat(en ? 'en' : 'ko').format(n);
@@ -339,7 +347,7 @@
   let override = null; // 누르자마자 보여 줄 값 {crate, coins, until}
   const pending = new Map();
   const nowSec = () => (Date.now() + offset) / 1000;
-  const state = () => data && data.state;
+  const state = () => { const s = data && data.state; pc = !!(s && s.platform === 'win'); return s; };
   const moment = () => { const tl = state()?.timeline || []; let m = tl[0]; for (const x of tl) { if (x.t <= nowSec()) m = x; else break; } return m || {crate: 0, value: 0}; };
   const canAct = () => !!(data && data.online && state() && !failed && !stale);
   const toast = msg => { $('toast').textContent = msg; clearTimeout(toast.t); toast.t = setTimeout(() => { $('toast').textContent = ''; }, 5000); };

@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.8.1</title>
-      <pubDate>Thu, 12 Nov 2026 04:21:07 GMT</pubDate>
-      <sparkle:version>16</sparkle:version>
-      <sparkle:shortVersionString>1.8.1</sparkle:shortVersionString>
+      <title>1.8.2</title>
+      <pubDate>Fri, 13 Nov 2026 02:46:16 GMT</pubDate>
+      <sparkle:version>17</sparkle:version>
+      <sparkle:shortVersionString>1.8.2</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>자리를 비운 사이 시작된 비밀 장면은 기다렸다가, 돌아오면 띠에서 다시 보여 줘요</li><li>도감의 찾은 비밀마다 &quot;띠에서 보기&quot;가 생겼어요. 놓친 장면을 언제든 다시 볼 수 있어요</li><li>새 비밀을 찾으면 메뉴바 레몬에 작은 반짝이가 붙고, 도감에 &quot;새로&quot; 표시가 생겨요</li></ul><ul><li>Secret scenes that start while you&#x27;re away now wait and play on the strip when you&#x27;re back</li><li>Every secret you&#x27;ve found in the Collection has &quot;Show on Strip&quot;, so you can watch a missed scene anytime</li><li>Finding a new secret adds a small sparkle to the menu bar lemon and a &quot;New&quot; tag in the Collection</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.1/LemonDesk-1.8.1.dmg" type="application/octet-stream" sparkle:edSignature="eOuRQwpU9DfHLB+as2YS2BnCMOCq465ZlLBPrd5gLeT0S6iZsRWYpRd45JaUnHosyTTuat862OMT/ecpB2IuBw==" length="14996958"/>
+      <description><![CDATA[<ul><li>후반 나무를 더 빨리 열 수 있어요: 포멜로 해금 3,000만 → 2,200만, 황금 레몬 해금 6,000만 → 4,200만 코인</li><li>여름 레모네이드 가판대 보너스를 판매가 +20%에서 +10%로 줄였어요. 어느 계절에 시작해도 진행 속도가 비슷해요</li></ul><ul><li>Late trees open sooner: unlocking the Pomelo now costs 22M coins (was 30M), and the Golden lemon 42M (was 60M)</li><li>The summer lemonade stand bonus is now +10% sale price (was +20%), so progress feels about the same whichever season you start in</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.2/LemonDesk-1.8.2.dmg" type="application/octet-stream" sparkle:edSignature="Y37FkJNlTIZbKEbH5xyO4cd/076Zs2EqSbkFbahXNdQeC+A5503Hpha3dDwphROwj/A2DVX9DdgZTuoMBad5AQ==" length="14997551"/>
     </item>
   </channel>
 </rss>

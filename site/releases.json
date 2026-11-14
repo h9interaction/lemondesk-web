@@ -1,5 +1,28 @@
 [
   {
+    "version": "1.8.4",
+    "date": "2026-11-14",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.4/LemonDesk-1.8.4.dmg",
+    "notes": {
+      "ko": [
+        "일꾼 여섯 명을 모두 또렷한 픽셀아트로 다시 다듬었어요. 얼굴과 테두리가 선명해졌고, 외부 모니터처럼 일반 해상도 화면에서도 깔끔해요",
+        "걷기와 일하는 동작이 매끄러워졌어요. 토리·준의 삽질, 봄이·새미의 물 주기, 레아·하루·새미의 걷기와 나르기를 새로 그렸고, 걸을 때 머리가 덜컹이던 것과 동작이 바뀔 때 몸이 커졌다 작아지던 것을 고쳤어요",
+        "삽이 땅에 닿는 순간 먼지가 일고 나무가 흔들려요. 토리는 씨를 심고, 흙을 다지고, 땀을 닦아요. 일꾼끼리 인사하고, 클릭 통과를 끄고 누르면 반응해요",
+        "강아지 세 마리가 저마다 달라졌어요. 진돗개, 웰시코기, 삽살개가 과수원을 돌아다니고, 엎드려 쉬고, 놀자고 하고, 귀를 긁어요",
+        "하늘에 구름이 흐르고 새가 지나가요. 꽃이 핀 나무에는 색색 나비가 모여요",
+        "장비를 올린 일꾼의 동작 그림은 다음 업데이트에서 이어서 다듬어요"
+      ],
+      "en": [
+        "All six workers are redone in crisp pixel art: clearer faces and outlines, and cleaner on standard-resolution displays such as external monitors",
+        "Smoother walking and working: Tori and Jun's digging, Bomi and Sammy's watering, and the walk and carry of Lea, Haru and Sammy are redrawn; heads no longer bob while walking, and workers no longer grow or shrink when switching actions",
+        "Dust puffs and the tree shakes the moment the shovel hits the ground. Tori sows seeds, pats the soil and wipes his brow. Workers greet each other and react when you click them (with click-through off)",
+        "The three guard dogs are now different breeds: a Jindo, a Welsh corgi and a Sapsali wander the orchard, lie down, play-bow and scratch",
+        "Clouds drift across the sky and birds fly by. Colorful butterflies gather around trees in bloom",
+        "Action art for workers with upgraded gear will be polished further in a later update"
+      ]
+    }
+  },
+  {
     "version": "1.8.2",
     "date": "2026-11-13",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.2/LemonDesk-1.8.2.dmg",

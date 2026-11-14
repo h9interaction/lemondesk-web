@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.8.2</title>
-      <pubDate>Fri, 13 Nov 2026 02:46:16 GMT</pubDate>
-      <sparkle:version>17</sparkle:version>
-      <sparkle:shortVersionString>1.8.2</sparkle:shortVersionString>
+      <title>1.8.4</title>
+      <pubDate>Sat, 14 Nov 2026 11:31:56 GMT</pubDate>
+      <sparkle:version>18</sparkle:version>
+      <sparkle:shortVersionString>1.8.4</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>후반 나무를 더 빨리 열 수 있어요: 포멜로 해금 3,000만 → 2,200만, 황금 레몬 해금 6,000만 → 4,200만 코인</li><li>여름 레모네이드 가판대 보너스를 판매가 +20%에서 +10%로 줄였어요. 어느 계절에 시작해도 진행 속도가 비슷해요</li></ul><ul><li>Late trees open sooner: unlocking the Pomelo now costs 22M coins (was 30M), and the Golden lemon 42M (was 60M)</li><li>The summer lemonade stand bonus is now +10% sale price (was +20%), so progress feels about the same whichever season you start in</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.2/LemonDesk-1.8.2.dmg" type="application/octet-stream" sparkle:edSignature="Y37FkJNlTIZbKEbH5xyO4cd/076Zs2EqSbkFbahXNdQeC+A5503Hpha3dDwphROwj/A2DVX9DdgZTuoMBad5AQ==" length="14997551"/>
+      <description><![CDATA[<ul><li>일꾼 여섯 명을 모두 또렷한 픽셀아트로 다시 다듬었어요. 얼굴과 테두리가 선명해졌고, 외부 모니터처럼 일반 해상도 화면에서도 깔끔해요</li><li>걷기와 일하는 동작이 매끄러워졌어요. 토리·준의 삽질, 봄이·새미의 물 주기, 레아·하루·새미의 걷기와 나르기를 새로 그렸고, 걸을 때 머리가 덜컹이던 것과 동작이 바뀔 때 몸이 커졌다 작아지던 것을 고쳤어요</li><li>삽이 땅에 닿는 순간 먼지가 일고 나무가 흔들려요. 토리는 씨를 심고, 흙을 다지고, 땀을 닦아요. 일꾼끼리 인사하고, 클릭 통과를 끄고 누르면 반응해요</li><li>강아지 세 마리가 저마다 달라졌어요. 진돗개, 웰시코기, 삽살개가 과수원을 돌아다니고, 엎드려 쉬고, 놀자고 하고, 귀를 긁어요</li><li>하늘에 구름이 흐르고 새가 지나가요. 꽃이 핀 나무에는 색색 나비가 모여요</li><li>장비를 올린 일꾼의 동작 그림은 다음 업데이트에서 이어서 다듬어요</li></ul><ul><li>All six workers are redone in crisp pixel art: clearer faces and outlines, and cleaner on standard-resolution displays such as external monitors</li><li>Smoother walking and working: Tori and Jun&#x27;s digging, Bomi and Sammy&#x27;s watering, and the walk and carry of Lea, Haru and Sammy are redrawn; heads no longer bob while walking, and workers no longer grow or shrink when switching actions</li><li>Dust puffs and the tree shakes the moment the shovel hits the ground. Tori sows seeds, pats the soil and wipes his brow. Workers greet each other and react when you click them (with click-through off)</li><li>The three guard dogs are now different breeds: a Jindo, a Welsh corgi and a Sapsali wander the orchard, lie down, play-bow and scratch</li><li>Clouds drift across the sky and birds fly by. Colorful butterflies gather around trees in bloom</li><li>Action art for workers with upgraded gear will be polished further in a later update</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.4/LemonDesk-1.8.4.dmg" type="application/octet-stream" sparkle:edSignature="zUT3ZAVcN9ynFI9GKSrBDJpGdkYs+fNSCmhrtdgaoZJFU0rjRj5+yARs8ql8FD3qcCS/5mcCBIgI3YWNMiALBw==" length="13946949"/>
     </item>
   </channel>
 </rss>

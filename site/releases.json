@@ -1,5 +1,22 @@
 [
   {
+    "version": "1.8.5",
+    "date": "2026-11-15",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.5/LemonDesk-1.8.5.dmg",
+    "notes": {
+      "ko": [
+        "장비를 올린 일꾼도 새 동작으로 움직여요. 견습부터 명인까지 장비 네 단계마다 토리·준·봄이·새미·레아·하루의 걷기, 삽질, 물 주기, 나르기, 걸터앉기, 버릇을 새로 그렸고, 토리의 씨 심기·흙 다지기·땀 닦기도 모든 장비에서 볼 수 있어요",
+        "폰으로 보기도 띠와 같은 모습이 됐어요. 새 그림과 일하는 동작, 먼지와 물, 구름·새·나비, 계절 소품, 강아지, 옷 색과 테마까지 Mac 띠처럼 보여요",
+        "일꾼 그림 둘레에 가끔 남던 작은 점을 지웠어요"
+      ],
+      "en": [
+        "Workers with upgraded gear now move like the rest: walking, digging, watering, carrying, sitting and habits are redrawn for all four gear tiers of Tori, Jun, Bomi, Sammy, Lea and Haru, and Tori sows, pats the soil and wipes his brow at every tier",
+        "Phone view now looks just like the strip: the new art and working motions, dust and water, clouds, birds and butterflies, seasonal props, guard dogs, outfit colors and theme, the same as on your Mac",
+        "Removed stray pixels that sometimes showed around the workers"
+      ]
+    }
+  },
+  {
     "version": "1.8.4",
     "date": "2026-11-14",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.4/LemonDesk-1.8.4.dmg",

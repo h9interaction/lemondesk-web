@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.8.4</title>
-      <pubDate>Sat, 14 Nov 2026 11:31:56 GMT</pubDate>
-      <sparkle:version>18</sparkle:version>
-      <sparkle:shortVersionString>1.8.4</sparkle:shortVersionString>
+      <title>1.8.5</title>
+      <pubDate>Sun, 15 Nov 2026 12:03:14 GMT</pubDate>
+      <sparkle:version>19</sparkle:version>
+      <sparkle:shortVersionString>1.8.5</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>일꾼 여섯 명을 모두 또렷한 픽셀아트로 다시 다듬었어요. 얼굴과 테두리가 선명해졌고, 외부 모니터처럼 일반 해상도 화면에서도 깔끔해요</li><li>걷기와 일하는 동작이 매끄러워졌어요. 토리·준의 삽질, 봄이·새미의 물 주기, 레아·하루·새미의 걷기와 나르기를 새로 그렸고, 걸을 때 머리가 덜컹이던 것과 동작이 바뀔 때 몸이 커졌다 작아지던 것을 고쳤어요</li><li>삽이 땅에 닿는 순간 먼지가 일고 나무가 흔들려요. 토리는 씨를 심고, 흙을 다지고, 땀을 닦아요. 일꾼끼리 인사하고, 클릭 통과를 끄고 누르면 반응해요</li><li>강아지 세 마리가 저마다 달라졌어요. 진돗개, 웰시코기, 삽살개가 과수원을 돌아다니고, 엎드려 쉬고, 놀자고 하고, 귀를 긁어요</li><li>하늘에 구름이 흐르고 새가 지나가요. 꽃이 핀 나무에는 색색 나비가 모여요</li><li>장비를 올린 일꾼의 동작 그림은 다음 업데이트에서 이어서 다듬어요</li></ul><ul><li>All six workers are redone in crisp pixel art: clearer faces and outlines, and cleaner on standard-resolution displays such as external monitors</li><li>Smoother walking and working: Tori and Jun&#x27;s digging, Bomi and Sammy&#x27;s watering, and the walk and carry of Lea, Haru and Sammy are redrawn; heads no longer bob while walking, and workers no longer grow or shrink when switching actions</li><li>Dust puffs and the tree shakes the moment the shovel hits the ground. Tori sows seeds, pats the soil and wipes his brow. Workers greet each other and react when you click them (with click-through off)</li><li>The three guard dogs are now different breeds: a Jindo, a Welsh corgi and a Sapsali wander the orchard, lie down, play-bow and scratch</li><li>Clouds drift across the sky and birds fly by. Colorful butterflies gather around trees in bloom</li><li>Action art for workers with upgraded gear will be polished further in a later update</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.4/LemonDesk-1.8.4.dmg" type="application/octet-stream" sparkle:edSignature="zUT3ZAVcN9ynFI9GKSrBDJpGdkYs+fNSCmhrtdgaoZJFU0rjRj5+yARs8ql8FD3qcCS/5mcCBIgI3YWNMiALBw==" length="13946949"/>
+      <description><![CDATA[<ul><li>장비를 올린 일꾼도 새 동작으로 움직여요. 견습부터 명인까지 장비 네 단계마다 토리·준·봄이·새미·레아·하루의 걷기, 삽질, 물 주기, 나르기, 걸터앉기, 버릇을 새로 그렸고, 토리의 씨 심기·흙 다지기·땀 닦기도 모든 장비에서 볼 수 있어요</li><li>폰으로 보기도 띠와 같은 모습이 됐어요. 새 그림과 일하는 동작, 먼지와 물, 구름·새·나비, 계절 소품, 강아지, 옷 색과 테마까지 Mac 띠처럼 보여요</li><li>일꾼 그림 둘레에 가끔 남던 작은 점을 지웠어요</li></ul><ul><li>Workers with upgraded gear now move like the rest: walking, digging, watering, carrying, sitting and habits are redrawn for all four gear tiers of Tori, Jun, Bomi, Sammy, Lea and Haru, and Tori sows, pats the soil and wipes his brow at every tier</li><li>Phone view now looks just like the strip: the new art and working motions, dust and water, clouds, birds and butterflies, seasonal props, guard dogs, outfit colors and theme, the same as on your Mac</li><li>Removed stray pixels that sometimes showed around the workers</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.5/LemonDesk-1.8.5.dmg" type="application/octet-stream" sparkle:edSignature="jwolYZFZglfD4XMgJ2ZvUumtRsgpfsWBA7AqPtaVZMotT+hTjsTANIk1nRjGylm2PfB6UZIOm1NYsEzGX1hYAg==" length="14588964"/>
     </item>
   </channel>
 </rss>

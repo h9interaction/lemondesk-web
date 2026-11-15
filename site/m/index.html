@@ -34,6 +34,7 @@
   .num { font-variant-numeric: tabular-nums; }
   :focus-visible { outline: 3px solid #2F6FD0; outline-offset: 2px; }
   .wrap { max-width: 480px; margin: 0 auto; padding: 0 12px calc(96px + env(safe-area-inset-bottom)); }
+  .wide .wrap { max-width: none; } /* 확인·캡처용 ?wide: 과수원 전체를 한 화면에 */
 
   header.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 2px 8px; color: var(--page-ink); }
   .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 16.5px; }
@@ -42,24 +43,20 @@
   .chip::before { content: ""; width: 8px; height: 8px; background: #A89A78; }
   .chip.on::before { background: #58B02C; }
 
-  /* 과수원 장면: Mac 띠와 같은 그림(아트 픽셀 1칸 = 1px). 옆으로 밀어 본다. */
+  /* 과수원 장면: Mac 띠와 같은 그림·움직임(아트 픽셀 1칸 = 1px, 맥 1pt = 2px). 옆으로 밀어 본다. */
   .scene { position: relative; height: 172px; overflow-x: auto; overflow-y: hidden; border: 3px solid #5B3A1A; scrollbar-width: none;
            background: linear-gradient(#BFE3F2 0 62%, #DDF1F8 62% 100%); -webkit-overflow-scrolling: touch; }
   .scene::-webkit-scrollbar { display: none; }
   .scene.dawn { background: linear-gradient(#F7CDB8 0 62%, #FCE6D6 62% 100%); }
   .scene.dusk { background: linear-gradient(#F3B57E 0 62%, #FADBB0 62% 100%); }
   .scene.night { background: linear-gradient(#141B36 0 62%, #222D55 62% 100%); }
-  .world { position: relative; height: 100%; min-width: 100%; }
-  .scene.night .world > * { filter: brightness(.72) saturate(.85); }
-  .scene.night .world > .lit { filter: none; }
-  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background: url(sprites/ground-0.png) repeat-x left bottom; }
-  .world img { position: absolute; transform: translateX(-50%); }
-  .w { position: absolute; bottom: 4px; transform: translateX(-50%); transition: left linear; }
-  .w .spr { background-repeat: no-repeat; animation: play var(--dur, 1.5s) steps(var(--n, 8)) infinite; }
-  .w .sh { position: absolute; left: 50%; bottom: -3px; width: 34px; height: 10px; margin-left: -17px; background: url(sprites/fx-shadow-0.png); opacity: .35; }
-  .w .zzz { position: absolute; left: 60%; bottom: 100%; width: 44px; height: 24px; background: url(sprites/fx-zzz.png); animation: zz 1.6s steps(4) infinite; }
-  @keyframes play { to { background-position-x: var(--end); } }
-  @keyframes zz { to { background-position-x: -176px; } }
+  .world { position: relative; height: 100%; min-width: 100%; overflow: hidden; } /* 과수원 밖으로 날아가는 새·구름이 스크롤 범위를 늘리지 않게 */
+  /* 그림은 아래 가운데가 기준점. 시간대·테마 색 보정과 옷 염색은 불러올 때 캔버스로 한 번 입힌다(맥 Sprite.image 처럼) */
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background-repeat: repeat-x; background-position: left bottom; image-rendering: pixelated; }
+  .world .sp, .world .bd { position: absolute; left: 0; bottom: 0; background-repeat: no-repeat; image-rendering: pixelated; }
+  .world .ent, .world .lift { position: absolute; left: 0; bottom: 0; width: 0; height: 0; }
+  .world .tl { position: absolute; inset: 0; background-repeat: no-repeat; image-rendering: pixelated; }
+  .world .sh { position: absolute; left: -17px; bottom: -3px; opacity: .35; background-repeat: no-repeat; image-rendering: pixelated; }
   .hint { margin: 6px 2px 0; font-size: 14px; color: var(--page-soft); }
 
   /* 픽셀 UI 틀(9-slice) */
@@ -112,7 +109,7 @@
   .why { font-size: 14px; color: #8A3B12; min-height: 0; }
   .card { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; margin-bottom: 10px; }
   .card .who { display: flex; align-items: flex-end; min-width: 60px; justify-content: center; }
-  .card .who .spr { background-repeat: no-repeat; animation: play 1.5s steps(8) infinite; }
+  .card .who .spr { background-repeat: no-repeat; }
   .card b { font-size: 16.5px; }
   .card .acts { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 6px; }
   .card .acts .btn { flex: 1; }
@@ -145,7 +142,6 @@
   footer { margin-top: 20px; font-size: 14px; color: var(--page-soft); text-align: center; }
   footer a { color: inherit; }
   @media (prefers-reduced-motion: reduce) {
-    .w .spr, .card .who .spr, .w .zzz { animation: none; }
     .party .panel { animation: fadeonly 2.6s forwards; }
     @keyframes fadeonly { 0%, 100% { opacity: 0 } 10%, 80% { opacity: 1 } }
   }
@@ -227,9 +223,11 @@
   </div>
 </dialog>
 
+<script src="motion.js?v=185"></script>
 <script>
 (() => {
   const LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+  if (new URLSearchParams(location.search).has('wide')) document.documentElement.classList.add('wide');
   const API = LOCAL ? location.origin + '/lemondesk/api/relay/' : 'https://lemondesk-api.interaction.hnine.com/api/relay/';
   const S = 'sprites/';
   const en = (navigator.language || '').toLowerCase().startsWith('en');
@@ -355,69 +353,502 @@
   const awayLeft = w => w.away ? state().sent + w.away - nowSec() : 0; // 1.8 서리 나간 일꾼
   const coin = (w = 14, h = 13) => { const i = el('img'); i.src = S + 'coin.png'; i.alt = ''; i.width = w; i.height = h; return i; };
 
-  // ── 과수원 장면 ─────────────────────────────────────────
-  const world = $('world'), trees = [], crew = new Map(), sizes = new Map();
-  const plotX = i => 190 + i * 116;
-  const sheetSize = url => sizes.get(url) || sizes.set(url, new Promise(res => { const i = new Image(); i.onload = () => res([i.naturalWidth / 8, i.naturalHeight]); i.onerror = () => res([44, 64]); i.src = url; })).get(url);
-  const sheetURL = (role, variant, tier, anim) => `${S}w-${role}${variant ? 'b' : ''}-${tier}-${anim}.png`;
-  async function setAnim(spr, url, dur) {
-    if (spr.dataset.url === url) return;
-    spr.dataset.url = url;
-    const [fw, fh] = await sheetSize(url);
-    if (spr.dataset.url !== url) return;
-    Object.assign(spr.style, {width: fw + 'px', height: fh + 'px', backgroundImage: `url(${url})`});
-    spr.style.setProperty('--end', -fw * 8 + 'px'); spr.style.setProperty('--dur', dur + 's');
-    spr.style.animation = 'none'; void spr.offsetWidth; spr.style.animation = '';
+  // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
+  // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
+  // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
+  const V = '?v=185'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
+  const plotX = i => O + 300 + i * 120;
+  const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
+  const ANIMS = ['idle', 'walk', 'carry', 'dig', 'seed', 'tamp', 'water', 'pick', 'wipe', 'wave', 'habit', 'yawn', 'sniff', 'sit'];
+  const DYE_HUES = [null, 355, 25, 125, 200, 275, 325], BUTTERFLY_HUES = [null, 200, 330, 25, 280]; // 맥 Palette.dyeHues, 나비 날개 색
+  const world = $('world'), scene = $('scene'), ground = world.querySelector('.ground');
+  const rnd = (a, b) => a + Math.random() * (b - a), anyOf = a => a[Math.floor(Math.random() * a.length)];
+  let index = null; // sprites/index.json: 이름 → [프레임 폭, 높이, 프레임 수, 염색할 색?]
+  const ready = fetch(S + 'index.json' + V).then(r => r.json()).then(d => {
+    index = d;
+    for (const n in d) if (/^(fx-|emote-)/.test(n)) load(S + n + '.png' + V).catch(() => {});
+    if (data) render();
+  }).catch(() => {});
+
+  // 색 보정(맥 Palette.grade: 테마 → 시간대 빛)과 옷 염색을 그림을 불러올 때 한 번 입혀 둔다(맥 Sprite.image 처럼)
+  const THEME = {blossom: [1.02, .97, 1.02, 10, 0, 6], sunset: [1.05, .95, .86, 4, 0, 0], moon: [.86, .90, 1.04, 0, 0, 8], garden: [.97, 1.04, .93, 4, 8, 0]};
+  const PERIOD = {dawn: [1.04, .97, .93, 6, 0, 0], dusk: [1.06, .90, .80, 8, 0, 0], night: [.60, .68, .92, 0, 4, 16]};
+  const then = (a, o) => !a ? o || null : !o ? a : [a[0] * o[0], a[1] * o[1], a[2] * o[2], a[3] * o[0] + o[3], a[4] * o[1] + o[4], a[5] * o[2] + o[5]];
+  const periodOf = h => h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 17 ? 'day' : h >= 17 && h < 20 ? 'dusk' : 'night';
+  let tint = null, tintKey = '', period = 'day', quiet = false; // quiet: Mac 이 잠들어 일꾼들도 존다
+  const files = new Map(), looks = new Map();
+  const load = url => files.get(url) || files.set(url, new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; })).get(url);
+  function withHue(r, g, b, hue) { // 맥 Palette.withHue: 채도·명도는 두고 색상만
+    const rf = r / 255, gf = g / 255, bf = b / 255, v = Math.max(rf, gf, bf), s = v > 0 ? (v - Math.min(rf, gf, bf)) / v : 0;
+    const hh = (hue / 60) % 6, i = Math.floor(hh) % 6, f = hh - Math.floor(hh), p = v * (1 - s), q = v * (1 - s * f), t = v * (1 - s * (1 - f));
+    const u = x => Math.max(0, Math.min(255, Math.round(x * 255)));
+    return [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i].map(u);
   }
-  const sceneCrate = el('img'); sceneCrate.alt = ''; sceneCrate.style.cssText = 'left:56px;bottom:8px'; world.append(sceneCrate);
-  const lantern = el('img', 'lit'); lantern.alt = ''; lantern.src = S + 'lantern-0.png'; lantern.style.cssText = 'left:118px;bottom:8px'; lantern.hidden = true; world.append(lantern);
-  let quiet = false; // Mac 이 잠들었거나 화면이 안 보이면 일꾼도 쉰다
-  function wander(w) {
-    clearTimeout(w.timer);
-    const n = trees.length;
-    if (quiet || calm || document.visibilityState !== 'visible' || !n) { setAnim(w.spr, sheetURL(w.role, w.variant, w.tier, 'idle'), 1.5); w.timer = setTimeout(() => wander(w), 3000); return; }
-    const target = w.role === 'harvester' && Math.random() < .3 ? 96 : plotX(Math.floor(Math.random() * n)) - 30 + Math.round(Math.random() * 12);
-    const dist = Math.abs(target - w.x), secs = dist / 36;
-    w.spr.style.transform = `scaleX(${target >= w.x ? 1 : -1})`;
-    setAnim(w.spr, sheetURL(w.role, w.variant, w.tier, 'walk'), .68);
-    w.el.style.transitionDuration = secs + 's'; w.el.style.left = target + 'px'; w.x = target;
-    w.timer = setTimeout(() => { setAnim(w.spr, sheetURL(w.role, w.variant, w.tier, 'idle'), 1.5); w.timer = setTimeout(() => wander(w), 2500 + Math.random() * 4500); }, secs * 1000);
+  function recolor(im, colors, hue, g) {
+    const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+    const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height), px = d.data, set = colors && new Set(colors.map(h => parseInt(h, 16))), memo = new Map();
+    const ch = (v, m, a) => Math.max(0, Math.min(255, Math.round(v * m + a)));
+    for (let i = 0; i < px.length; i += 4) {
+      if (!px[i + 3]) continue;
+      let r = px[i], gg = px[i + 1], b = px[i + 2];
+      if (set) { const k = r << 16 | gg << 8 | b; if (set.has(k)) { if (!memo.has(k)) memo.set(k, withHue(r, gg, b, hue)); [r, gg, b] = memo.get(k); } }
+      if (g) { r = ch(r, g[0], g[3]); gg = ch(gg, g[1], g[4]); b = ch(b, g[2], g[5]); }
+      px[i] = r; px[i + 1] = gg; px[i + 2] = b;
+    }
+    x.putImageData(d, 0, 0);
+    return new Promise(ok => c.toBlob(bl => ok(bl ? URL.createObjectURL(bl) : c.toDataURL())));
+  }
+  /** 그림 주소(불러온 뒤에 돌려줘서 바꿔 끼울 때 빈 칸이 안 보인다). dye: 색상(도), lit: 빛나는 것(랜턴·감정 표시)은 보정하지 않는다 */
+  function art(name, dye = null, lit = false) {
+    const url = S + name + '.png' + V, colors = dye != null && index[name] ? index[name][3] : null, g = lit ? null : tint;
+    if (!g && !colors) return load(url).then(() => url, () => url);
+    const key = `${name}|${colors ? dye : '-'}|${g ? tintKey : '-'}`;
+    if (!looks.has(key)) looks.set(key, load(url).then(im => recolor(im, colors, dye, g)).catch(() => url));
+    return looks.get(key);
+  }
+  /** 그림(또는 시트)을 요소에 건다. clip 이 있으면 프레임을 넘긴다(맥 CAKeyframeAnimation contents, discrete).
+   *  once: 한 번 재생하고 마지막 프레임에 머문다, frame: 멈춘 그림의 프레임, offset: 되풀이의 시작 시각(초) */
+  function show(e, name, {clip = null, once = false, frame = 0, offset = 0, dye = null, lit = false, center = true} = {}) {
+    const info = index[name]; if (!info) return;
+    const tok = e.tok = (e.tok || 0) + 1, [w, h, n] = info;
+    art(name, dye, lit).then(u => {
+      if (e.tok !== tok) return;
+      if (e.frames) { e.frames.cancel(); e.frames = null; }
+      Object.assign(e.style, {width: w + 'px', height: h + 'px', backgroundImage: `url("${u}")`, backgroundPosition: `${-(once ? n - 1 : frame) * w}px 0`});
+      if (center) e.style.marginLeft = -w / 2 + 'px';
+      if (!clip || n < 2 || calm) return;
+      const kf = [], kt = clip.keyTimes;
+      for (let i = 0; i < n; i++) kf.push({backgroundPosition: `${-i * w}px 0`, offset: kt[i], easing: 'steps(1, end)'});
+      kf.push({backgroundPosition: `${-(n - 1) * w}px 0`, offset: 1});
+      e.frames = e.animate(kf, {duration: clip.duration * 1000, iterations: once ? 1 : Infinity});
+      if (offset) e.frames.currentTime = offset * 1000;
+    });
+  }
+  const frames = name => index[name] ? index[name][2] : 0;
+  const loop = (e, name, perFrame, opt = {}) => show(e, name, {...opt, clip: Motion.even(frames(name), perFrame)});
+  // 장면 요소: 고정된 것은 left/bottom, 움직이는 것은 빈 그릇(ent, transform 으로 옮김) 안의 몸(bd)
+  function sp(z, x, y, cls) { const e = el('div', 'sp' + (cls ? ' ' + cls : '')); Object.assign(e.style, {zIndex: z, left: x + 'px', bottom: y + 'px'}); world.append(e); return e; }
+  function ent(z, y) { const e = el('div', 'ent'), lift = el('div', 'lift'), body = el('div', 'bd'); lift.append(body); e.append(lift); Object.assign(e.style, {zIndex: z, bottom: y + 'px'}); world.append(e); return {el: e, lift, body}; }
+  const atX = e => { const m = getComputedStyle(e).transform; return m && m !== 'none' ? Math.round(new DOMMatrixReadOnly(m).m41) : 0; };
+  /** 1px(0.5pt)씩 끊어 옮긴다(맥 position.x discrete). times: Motion.walkTimes(초). 걸린 시간(초)을 돌려준다 */
+  function walk(e, from, to, times) {
+    const dir = to > from ? 1 : -1, total = times[times.length - 1], kf = [];
+    for (let k = 0; k < times.length - 1; k++) kf.push({transform: `translateX(${from + dir * k}px)`, offset: times[k] / total, easing: 'steps(1, end)'});
+    kf.push({transform: `translateX(${to}px)`, offset: 1});
+    if (e.move) e.move.cancel();
+    e.style.transform = `translateX(${to}px)`;
+    e.move = e.animate(kf, {duration: total * 1000});
+    return total;
+  }
+  /** 일정한 빠르기로 흘러가며 양 끝에서 나타났다 사라진다(맥 drift). 걸린 시간(초) */
+  function drift(e, from, to, speed, opacity = 1) {
+    const dist = Math.abs(to - from), ms = dist / speed * 1000;
+    e.style.transform = `translateX(${to}px)`; e.style.opacity = 0;
+    e.animate([{transform: `translateX(${from}px)`}, {transform: `translateX(${to}px)`}], {duration: ms, easing: `steps(${Math.max(1, Math.round(dist))}, end)`});
+    e.animate([{opacity: 0}, {opacity, offset: .06}, {opacity, offset: .94}, {opacity: 0}], {duration: ms});
+    return ms / 1000;
+  }
+  const discrete = (values, prop, fmt) => values.map((v, i) => ({[prop]: fmt(v), offset: i / values.length, easing: 'steps(1, end)'})).concat({[prop]: fmt(values[values.length - 1]), offset: 1});
+  const later = (s, f) => setTimeout(f, s * 1000);
+  const resting = () => scene.hidden || $('tab-orchard').hidden || document.visibilityState !== 'visible'; // 안 보이면 장면도 쉰다
+
+  // ── 효과·세상의 반응 ─────────────────────────────
+  function puff(name, x, y, perFrame = 0.1, lit = false) { // 한 번 재생하고 사라진다
+    const n = frames(name); if (calm || !n || scene.hidden) return;
+    const e = sp(30, x, y); show(e, name, {clip: Motion.even(n, perFrame, false), once: true, lit});
+    later(n * perFrame + 0.05, () => e.remove());
+  }
+  function shake(i) { // 일꾼이 건드린 나무가 1px 씩 떨리고, 다 큰 나무는 흔들림 그림이 잠깐 보인다
+    const t = trees[i]; if (calm || !t) return;
+    t.el.animate(discrete([1, -1, 1, 0], 'transform', v => `translateX(${v}px)`), {duration: 280});
+    if (t.swayable) { t.a.animate([{opacity: 0, easing: 'steps(1, end)'}, {opacity: 1, offset: .7}, {opacity: 1}], {duration: 300}); t.b.animate([{opacity: 1, easing: 'steps(1, end)'}, {opacity: 0, offset: .7}, {opacity: 0}], {duration: 300}); }
+  }
+  function bumpCrate() { if (!calm && crateEl) crateEl.animate(discrete([1, -2, -1, 0], 'transform', v => `translateY(${v}px)`), {duration: 240}); }
+  function hop(w, values = [0, -10, -12, -6, 0], ms = 400) {
+    if (calm) return;
+    const base = -(w.liftPx || 0);
+    w.lift.animate(discrete(values.map(v => v + base), 'transform', v => `translateY(${v}px)`), {duration: ms});
+  }
+  function emote(name, host, hold = 1.1) { // 머리 위 감정 표시. 톡 튀어나와 잠깐 머문다(일꾼·개를 따라 움직인다)
+    const n = 'emote-' + name; if (calm || !index[n] || !host.h) return;
+    const e = el('div', 'bd emo'); e.style.bottom = host.h() + 'px'; e.style.left = '10px'; e.style.zIndex = 5; host.lift.append(e);
+    show(e, n, {lit: true});
+    e.animate(discrete([6, -4, 0], 'transform', v => `translateY(${v}px)`), {duration: 180});
+    later(hold, () => e.remove());
+  }
+  function dropFruit(i, w) { // 딴 열매가 나무에서 일꾼 바구니로
+    const p = state().plots[i], name = p && 'fruit-' + p.kind; if (calm || !p || !index[name]) return;
+    const ex = w.x + 12, ey = WORKER_Y + 20, e = sp(30, ex, ey); show(e, name);
+    e.animate([{transform: `translate(${plotX(i) - 12 - ex}px, ${ey - (TREE_Y + 68)}px)`}, {transform: 'translate(0, 0)'}], {duration: 220, easing: 'ease-in'});
+    later(0.22, () => e.remove());
+  }
+  function celebrate(w) { // 장비 단계가 오르면 반짝이며 깡충
+    if (calm) return;
+    for (let k = 0; k < 3; k++) later(k * 0.25, () => puff('fx-sparkle', w.x + Math.round(rnd(-20, 20)), WORKER_Y + w.h() - k * 12));
+    hop(w, [0, -12, 0, -8, 0], 600);
+  }
+  function coinBurst() { // 팔면 창고에서 동전이 튄다
+    const n = frames('fx-coin'); if (calm || !n || !crateEl) return;
+    for (let k = 0; k < 6; k++) {
+      const x = CRATE_X + Math.round(rnd(-20, 20)), e = sp(30, x, 58); loop(e, 'fx-coin', 0.06);
+      e.animate([{transform: 'translate(0, 0)', opacity: 1}, {opacity: 1, offset: .75}, {transform: `translate(${Math.round(rnd(-28, 28))}px, -60px)`, opacity: 0}], {duration: 900, delay: k * 70, fill: 'both'});
+      later(1.4, () => e.remove());
+    }
+  }
+  function sold() { // 맥 1.7·1.8.4: 다 같이 폴짝, 두 명쯤은 머리 위에 반짝
+    coinBurst();
+    for (const w of crew.values()) hop(w);
+    [...crew.values()].sort(() => Math.random() - .5).slice(0, 2).forEach(w => emote('star', w));
+  }
+
+  // ── 일꾼(맥 Worker): 계획(단계 목록)을 하나씩 실행한다 ─────────────────────────────
+  class Worker {
+    constructor(v, x) {
+      Object.assign(this, v, {x, facing: 1, steps: [], token: 0, playing: '', sheetName: '', once: false, last: null, lastTree: null, streak: 0, sitLift: 0, liftPx: 0});
+      this.speed = Motion.speed(this.role, this.slot);
+      const e = ent(20 + ROLES.indexOf(this.role) * 2 + this.slot, WORKER_Y);
+      Object.assign(this, e);
+      this.sh = el('div', 'sh'); this.lift.prepend(this.sh); show(this.sh, 'fx-shadow-0', {center: false});
+      this.el.style.transform = `translateX(${x}px)`;
+      this.play('idle');
+      for (const a of ['walk', ...Motion.workAnims(this.role, true), ...Motion.workAnims(this.role, false), 'carry']) if (index[this.sheet(a)]) art(this.sheet(a), this.hue()); // 미리 받아 둔다
+    }
+    hue() { return DYE_HUES[this.dye] ?? null; }
+    h() { return (index[this.sheetName] || [0, 64])[1]; }
+    /** 동작 → 시트 이름. 이 캐릭터·장비 단계 그림이 없으면 낮은 단계, 그다음 기본 캐릭터로(맥 Worker.sheet) */
+    sheet(anim) {
+      for (const v of this.variant ? ['b', ''] : ['']) for (let t = this.tier; t >= 0; t--) { const n = `w-${this.role}${v}-${t}-${anim}`; if (index[n]) return n; }
+      return `w-${this.role}-0-${anim}`;
+    }
+    owns(anim) { return !!index[`w-${this.role}${this.variant ? 'b' : ''}-${this.tier}-${anim}`]; }
+    standing() { return !(this.el.move && this.el.move.playState === 'running'); }
+    remember(c) { this.last = c; if (c.kind === 'work') { this.streak++; this.lastTree = c.tree; } else this.streak = 0; }
+    face(dir) { this.facing = dir; this.body.style.transform = `scaleX(${dir})`; }
+    look(px) { if (Math.abs(px - this.x) > 2) this.face(px > this.x ? 1 : -1); }
+    setLift(px) { this.liftPx = px; this.lift.style.transform = px ? `translateY(${-px}px)` : ''; this.sh.hidden = px > 0; }
+    play(anim, once = false) {
+      const name = this.sheet(anim), n = frames(name);
+      let clip = Motion.clip(anim, n);
+      if ((anim === 'walk' || anim === 'carry') && n) clip = Motion.even(n, Motion.cycle(this.speed) / n);
+      if (!n || !(once || this.once || name !== this.sheetName)) return clip; // 같은 되풀이 동작은 이어서 둔다
+      Object.assign(this, {playing: anim, sheetName: name, once});
+      show(this.body, name, {clip, once, dye: this.hue(), offset: anim === 'idle' ? rnd(0, clip.duration) : 0});
+      return clip;
+    }
+    reload() { const a = this.playing || 'idle'; this.sheetName = ''; this.play(a); }
+    update(v) { // 외모·장비 단계가 바뀌면 지금 동작을 새 시트로. 단계가 올랐으면 true
+      if (v.variant === this.variant && v.tier === this.tier && v.dye === this.dye) return false;
+      const up = v.tier > this.tier; Object.assign(this, {variant: v.variant, tier: v.tier, dye: v.dye}); this.reload(); return up;
+    }
+    wait(s) { this.token++; const t = this.token; clearTimeout(this.timer); this.timer = later(s, () => { if (this.token === t) this.next(); }); }
+    interrupt(steps) { // 지금 계획을 끊고 새 단계로. 걷던 중이면 지금 보이는 자리에서 멈춘다
+      if (this.el.move) { this.x = atX(this.el); this.el.move.cancel(); this.el.move = null; this.el.style.transform = `translateX(${this.x}px)`; }
+      this.steps = steps; this.next();
+    }
+    stop() { this.token++; clearTimeout(this.timer); this.dead = true; this.el.remove(); }
+    zzz(on) {
+      if (on && !this.z && frames('fx-zzz') && !calm) { this.z = el('div', 'bd'); Object.assign(this.z.style, {left: '16px', bottom: '56px'}); this.lift.append(this.z); loop(this.z, 'fx-zzz', 0.4, {lit: true}); }
+      else if (!on && this.z) { this.z.remove(); this.z = null; }
+    }
+    next() {
+      if (this.dead) return;
+      if (!this.steps.length) this.steps = plan(this);
+      if (!this.steps.length) return this.wait(1);
+      const st = this.steps.shift();
+      if (st.t === 'walk') {
+        this.setLift(0);
+        const target = Math.round(st.x), dist = Math.abs(target - this.x);
+        if (dist < 1) return this.next();
+        const dir = target > this.x ? 1 : -1;
+        if (dir !== this.facing && dist > 8) { this.steps.unshift(st); this.play('idle'); this.face(dir); return this.wait(0.14); } // 돌아설 때 한 박자
+        this.face(dir); this.play(st.anim);
+        const s = walk(this.el, this.x, target, Motion.walkTimes(dist / 2, this.speed));
+        this.x = target; return this.wait(s);
+      }
+      if (st.t === 'act') { if (TOWARD.has(st.anim)) this.face(1); this.setLift(st.anim === 'sit' ? this.sitLift : 0); this.play(st.anim); return this.wait(st.secs); }
+      if (st.t === 'clip') {
+        if (TOWARD.has(st.anim)) this.face(1);
+        this.setLift(0);
+        const clip = this.play(st.anim, true);
+        this.wait(Math.max(clip.duration, 0.3));
+        const t = this.token; // 중간에 다른 계획으로 끊기면 남은 효과는 내지 않는다
+        for (const [f, name] of Object.entries(clip.cues)) if (st.cues && st.cues[name]) later(clip.start(+f), () => { if (this.token === t) st.cues[name](); });
+        return;
+      }
+      st.f(); this.next();
+    }
+  }
+
+  // 할 일이 끝난 일꾼이 다음에 할 일(맥 OrchardView.plan·steps). 무엇을 할지는 Motion.choose
+  const idle = secs => ({t: 'act', anim: 'idle', secs});
+  const rest = (w, anim) => Motion.clip(anim, frames(w.sheet(anim))).loops ? {t: 'act', anim, secs: 1.44} : {t: 'clip', anim};
+  const dig = i => ({t: 'clip', anim: 'dig', cues: {hit: () => { puff('fx-dust', plotX(i) - 20, TREE_Y); shake(i); }, toss: () => puff('fx-dust', plotX(i) - 12, TREE_Y, 0.06)}});
+  function plan(w) {
+    const s = state();
+    if (quiet || calm || resting() || !s || !s.plots || !s.plots.length) return [idle(4)];
+    if (w.slot === 0 && staffOf(w.role) === 2 && Math.random() < 0.06) { const mine = meetUp(w); if (mine) return mine; }
+    const hello = greet(w); if (hello) return hello;
+    const has = new Set(['dig', 'water', 'pick'].filter(a => index[w.sheet(a)]).concat(['seed', 'tamp', 'wipe', 'wave', 'yawn', 'sniff', 'habit', 'sit'].filter(a => w.owns(a))));
+    const c = Motion.choose({role: w.role, fruit: s.plots.map(p => p.fruit), young: s.plots.map(p => p.stage < 3), crateFull: moment().crate >= s.crate.capacity,
+      night: period === 'night', season: s.season, streak: w.streak, last: w.last, lastTree: w.lastTree, has});
+    w.remember(c);
+    switch (c.kind) {
+      case 'work':
+        if (c.anim === 'pick') return [{t: 'walk', x: plotX(c.tree) - 28, anim: 'walk'}, {t: 'clip', anim: 'pick', cues: {pluck: () => { shake(c.tree); dropFruit(c.tree, w); }}},
+          {t: 'walk', x: CRATE_X + 36, anim: 'carry'}, {t: 'run', f: () => { puff('fx-sparkle', CRATE_X, 58); bumpCrate(); }}, idle(0.6)];
+        if (c.anim === 'water') return [{t: 'walk', x: plotX(c.tree) - 44, anim: 'walk'},
+          ...Array(c.reps).fill({t: 'clip', anim: 'water', cues: {pour: () => { puff('fx-water', plotX(c.tree) - 8, TREE_Y + 4); shake(c.tree); }}}), idle(rnd(1.5, 4))];
+        if (c.anim === 'dig') return [{t: 'walk', x: plotX(c.tree) - 40, anim: 'walk'}, ...Array(c.reps).fill(dig(c.tree)), idle(rnd(1, 3))];
+        if (c.anim === 'seed') return [{t: 'walk', x: plotX(c.tree) - 40, anim: 'walk'}, {t: 'clip', anim: 'seed', cues: {drop: () => puff('fx-sparkle', plotX(c.tree) - 20, TREE_Y - 4)}}, idle(rnd(1, 2.5))];
+        return [{t: 'walk', x: plotX(c.tree) - 40, anim: 'walk'}, {t: 'clip', anim: c.anim, cues: {pat: () => { puff('fx-dust', plotX(c.tree) - 20, TREE_Y, 0.07); shake(c.tree); }}}, idle(rnd(1, 2.5))];
+      case 'rest':
+        if (c.anim === 'wipe') return [{t: 'clip', anim: 'wipe', cues: {sweat: () => emote('sweat', w)}}, idle(rnd(1.5, 3))];
+        if (c.anim === 'habit') return [rest(w, 'habit'), idle(rnd(2, 4))];
+        return [rest(w, c.anim), {t: 'run', f: () => { if (c.anim === 'yawn' && period === 'night') puff('fx-zzz', w.x + 16, WORKER_Y + 60, 0.3, true); }}, idle(rnd(2, 3))];
+      case 'idle': return [idle(c.secs)];
+      case 'look': return [{t: 'run', f: () => w.face(-w.facing)}, idle(rnd(0.8, 1.4)), {t: 'run', f: () => w.face(-w.facing)}, idle(rnd(0.8, 1.6))];
+      case 'stroll': return [{t: 'walk', x: plotX(c.tree) - 52 + Math.round(rnd(-12, 12)), anim: 'walk'}, idle(rnd(2, 4))];
+      case 'sit': // 창고가 가득: 창고에 걸터앉아 기다린다(둘이 겹쳐 앉지 않게)
+        w.sitLift = Math.max(0, crateH() - 24);
+        return [{t: 'walk', x: CRATE_X + 16 - w.slot * 20, anim: 'walk'}, {t: 'act', anim: 'sit', secs: 8}];
+    }
+    return [idle(3)];
+  }
+  const staffOf = role => [...crew.values()].filter(w => w.role === role).length;
+  function meetUp(w) { // 1.7: 같은 역할 두 일꾼이 가운데에서 만나 건배
+    const b = crew.get(w.role + '-1'); if (calm || !b) return null;
+    const [l, r] = w.x <= b.x ? [w, b] : [b, w], mid = Math.round((l.x + r.x) / 2);
+    if (r.x - l.x <= 48) return null;
+    const cheer = {t: 'run', f: () => { puff('fx-cheers', mid, WORKER_Y + l.h() + 2, 0.15); hop(l); hop(r); }};
+    const left = [{t: 'walk', x: mid - 18, anim: 'walk'}, idle(0.4), cheer, idle(2)], right = [{t: 'walk', x: mid + 18, anim: 'walk'}, idle(2.4)];
+    b.interrupt(b === l ? left : right);
+    return w === l ? left : right;
+  }
+  let greeted = 0;
+  function greet(w) { // 바로 옆에 다른 일꾼이 서 있으면 가끔 인사(둘 다 음표, 건 쪽이 폴짝)
+    if (calm || Date.now() - greeted < 20000 || Math.random() >= 0.35) return null;
+    const other = [...crew.values()].find(o => o !== w && o.role !== w.role && Math.abs(o.x - w.x) < 36 && o.standing());
+    if (!other) return null;
+    greeted = Date.now();
+    emote('note', w); later(0.35, () => emote('note', other)); hop(w);
+    return [{t: 'run', f: () => w.look(other.x)}, idle(1.6)];
+  }
+  function poke(w) { // 일꾼을 누르면: 깜짝 놀라 폴짝, 손을 흔들거나(그림이 있으면) 하트
+    emote('bang', w, 0.7); hop(w);
+    const heart = {t: 'run', f: () => emote('heart', w)};
+    w.interrupt(w.owns('wave') ? [idle(0.5), heart, rest(w, 'wave'), idle(1)] : [idle(0.5), heart, idle(1.6)]);
+  }
+
+  // ── 강아지(맥 Dog): 0 진돗개, 1 웰시코기, 2 삽살개 ─────────────────────────────
+  class Dog {
+    constructor(kind, x) {
+      Object.assign(this, ent(16, WORKER_Y), {kind, x, last: null, token: 0, barking: false, range: [x, x]});
+      this.el.style.transform = `translateX(${x}px)`; this.still('sit', 0);
+    }
+    get pre() { return 'dog-' + 'abc'[Math.min(this.kind, 2)]; }
+    h() { return (index[this.pre + '-sit'] || [0, 36])[1]; }
+    still(anim, f) { show(this.body, `${this.pre}-${anim}`, {frame: f}); }
+    loop(anim, perFrame) { loop(this.body, `${this.pre}-${anim}`, perFrame); }
+    wait(s) { this.token++; const t = this.token; clearTimeout(this.timer); this.timer = later(s, () => { if (this.token === t) this.next(); }); }
+    settle() { if (this.el.move) { this.x = atX(this.el); this.el.move.cancel(); this.el.move = null; this.el.style.transform = `translateX(${this.x}px)`; } }
+    stop() { this.token++; clearTimeout(this.timer); this.el.remove(); }
+    setBarking(b) { if (b !== this.barking) { this.barking = b; this.next(); } }
+    pet() { this.settle(); this.last = {kind: 1}; this.loop('sit', 0.12); this.wait(2); }
+    next() {
+      this.settle();
+      const night = period === 'night';
+      if (calm) { this.still(this.barking ? 'bark' : 'sit', 0); return this.wait(6); }
+      const a = Motion.dogNext(this.kind, this.barking, night, this.last); this.last = a;
+      if (a.kind === 0) { this.still('sit', 0); return this.wait(a.secs); }
+      if (a.kind === 1) { this.loop('sit', 0.16); return this.wait(a.secs); }
+      if (a.kind === 4) { this.loop('bark', 0.15); return this.wait(a.secs); }
+      if (a.kind === 3) { // 진돗개는 엎드려 쉬고 밤에는 잔다, 코기는 놀자 자세, 삽살개는 귀 뒤를 긁는다
+        if (this.kind === 0) { this.still('trick', night ? 1 : 0); if (night) puff('fx-zzz', this.x + 16, WORKER_Y + 24, 0.4, true); }
+        else this.loop('trick', this.kind === 1 ? 0.18 : 0.1);
+        return this.wait(a.secs);
+      }
+      const [l, r] = this.range, target = Math.round(l + (r - l) * a.at), dist = Math.abs(target - this.x);
+      if (dist < 6) { this.still('sit', 0); return this.wait(0.8); }
+      const pace = Motion.dogPace(this.kind), dir = target > this.x ? 1 : -1;
+      this.body.style.transform = `scaleX(${dir})`;
+      this.loop('walk', pace.cycle / 4);
+      const s = walk(this.el, this.x, target, Motion.walkTimes(dist / 2, pace.speed, 2));
+      this.x = target; this.wait(s);
+    }
+  }
+
+  // ── 하늘: 구름 몇 개가 늘 흐르고, 낮에는 가끔 새가, 겨울이 아닌 낮에는 나비 네댓 마리가(꽃 핀 나무에 몰린다) ──
+  let clouds = [], butterflies = [], skyStarted = false, nextBird = Date.now() + rnd(4000, 12000);
+  function syncSky() {
+    const s = state();
+    if (calm || resting() || !s || !s.plots || !s.plots.length || !index) return;
+    if (clouds.length < Math.max(1, Math.floor(groundEnd / 440))) addCloud(skyStarted ? -28 : rnd(0, groundEnd - 80));
+    skyStarted = true;
+    if (period === 'night') return;
+    if (Date.now() > nextBird) { nextBird = Date.now() + rnd(18000, 45000); flyBirds(); }
+    if (s.season !== 'winter' && butterflies.length < (s.plots.length > 3 ? 5 : 4)) addButterfly(s.plots);
+  }
+  function addCloud(x) {
+    const name = 'cloud-' + Math.floor(rnd(0, 3)); if (!index[name]) return;
+    const top = H - index[name][1] - 2, e = sp(3, 0, Math.round(rnd(top - 20, top))); show(e, name);
+    const s = drift(e, Math.round(x), groundEnd + 28, rnd(2.8, 5.2), period === 'night' ? 0.35 : 0.92);
+    clouds.push(e); later(s, () => { e.remove(); clouds = clouds.filter(c => c !== e); });
+  }
+  function flyBirds() {
+    if (!index.bird) return;
+    const right = Math.random() < .5, y = rnd(96, 116), n = anyOf([1, 1, 2, 2, 3]), f = right ? 1 : -1;
+    for (let k = 0; k < n; k++) {
+      const by = Math.round(y + (k % 2) * 10 - k * 4), lag = 26 * k, b = ent(12, by);
+      loop(b.body, 'bird', 0.09, {offset: k * 0.13});
+      b.body.animate(discrete([0, -1, -2, -1, 0, 1], 'transform', v => `translateY(${v}px) scaleX(${f})`), {duration: 720, iterations: Infinity});
+      const s = drift(b.el, right ? -40 - lag : groundEnd + 40 + lag, right ? groundEnd + 40 : -40, rnd(84, 100));
+      later(s, () => b.el.remove());
+    }
+  }
+  function addButterfly(plots) {
+    if (!index.butterfly) return;
+    const weights = plots.map(p => p.stage === 3 ? 6 : p.stage === 2 ? 2 : p.stage === 5 || p.stage === 6 ? 1 : 0.2);
+    let r = rnd(0, weights.reduce((a, b) => a + b, 0)), i = Math.max(0, weights.findIndex(w => (r -= w) < 0));
+    const blooming = plots[i].stage === 3, cx = plotX(i), top = H + 12, stops = [[cx + rnd(-88, 88), top]];
+    for (let k = 0, n = 5 + Math.floor(rnd(0, 4)); k < n; k++) stops.push(blooming ? [cx + rnd(-44, 44), rnd(52, 112)] : [cx + rnd(-60, 60), rnd(28, 92)]);
+    stops.push([stops[stops.length - 1][0] + rnd(-60, 60), top]);
+    const hz = 15, speed = rnd(36, 52), pts = [];
+    for (let k = 1; k < stops.length; k++) { // 자리 사이를 휘어지게 잇고(2차 곡선), 15분의 1초마다 한 점씩
+      const [px, py] = stops[k - 1], [qx, qy] = stops[k], cx2 = (px + qx) / 2 + rnd(-24, 24), cy2 = Math.max(py, qy) + rnd(4, 20);
+      const n = Math.max(2, Math.floor(Math.hypot(qx - px, qy - py) / speed * hz));
+      for (let j = 0; j < n; j++) { const t = j / n, u = 1 - t; pts.push([Math.round(u * u * px + 2 * u * t * cx2 + t * t * qx), Math.round(u * u * py + 2 * u * t * cy2 + t * t * qy)]); }
+      if (blooming && qy < top) for (let j = 0, m = 6 + Math.floor(rnd(0, 11)); j < m; j++) pts.push([Math.round(qx), Math.round(qy)]); // 꽃 앞에서 잠깐 머문다
+    }
+    const b = ent(27, 0), last = pts[pts.length - 1];
+    loop(b.body, 'butterfly', rnd(0.09, 0.13), {offset: rnd(0, 0.2), dye: anyOf(BUTTERFLY_HUES)});
+    b.el.style.transform = `translate(${last[0]}px, ${-last[1]}px)`;
+    b.el.animate(pts.concat([last]).map(([x, y]) => ({transform: `translate(${x}px, ${-y}px)`, easing: 'steps(1, end)'})), {duration: pts.length / hz * 1000});
+    butterflies.push(b.el); later(pts.length / hz, () => { b.el.remove(); butterflies = butterflies.filter(e => e !== b.el); });
+  }
+
+  // ── 상태 → 장면 ─────────────────────────────
+  let trees = [], crew = new Map(), dogs = [], decor = [], lantern = null, crateEl = null, sparkle = null, crateIdx = -1;
+  let groundEnd = 0, built = '', laidOut = '', treesBuilt = false, wasAway = new Set();
+  const crateH = () => (index['crate-0'] || [0, 50])[1];
+  function clearScene() { // 색 보정이 바뀌면 그림을 전부 새로 건다(맥 redrawAll)
+    for (const w of crew.values()) w.stop(); for (const d of dogs) d.stop();
+    crew = new Map(); dogs = []; trees = []; decor = []; clouds = []; butterflies = []; lantern = crateEl = sparkle = null; crateIdx = -1; treesBuilt = false; skyStarted = false; laidOut = '';
+    world.replaceChildren(ground);
+    for (const [k, p] of looks) if (!k.endsWith('|-')) { looks.delete(k); p.then(u => u.startsWith('blob:') && URL.revokeObjectURL(u)); }
   }
   function renderScene() {
     const s = state(), has = !!(s && s.plots);
-    $('scene').hidden = !has;
-    $('hint').hidden = !(s && (!has || s.plots.length > 2));
+    scene.hidden = !has;
     if (s) $('hint').textContent = has ? T.pan : T.upgrade;
-    if (!has) return;
-    const h = s.hour ?? new Date().getHours();
+    if (!has || !index) { $('hint').hidden = !(s && !has); return; }
     quiet = !data.online;
-    $('scene').className = 'scene ' + (quiet ? 'night' : h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 17 ? 'day' : h >= 17 && h < 20 ? 'dusk' : 'night');
-    lantern.hidden = !$('scene').classList.contains('night');
-    world.style.width = Math.max(plotX(Math.max(0, s.plots.length - 1)) + 90, 0) + 'px';
-    while (trees.length > s.plots.length) trees.pop().remove();
-    s.plots.forEach((p, i) => {
-      let t = trees[i];
-      if (!t) { t = el('img'); t.alt = ''; t.style.cssText = `left:${plotX(i)}px;bottom:12px`; world.insertBefore(t, sceneCrate); trees[i] = t; }
-      const src = `${S}tree-${p.kind}-${Math.min(7, Math.max(0, p.stage))}.png`;
-      if (t.dataset.src !== src) { t.dataset.src = src; t.src = src; }
-    });
-    const want = new Map();
-    for (const wk of s.workers) for (let slot = 0; slot < (wk.crew || 0) - (awayLeft(wk) > 0 ? 1 : 0); slot++) want.set(`${wk.role}-${slot}`, {role: wk.role, variant: (wk.looks || [])[slot] || 0, tier: wk.tier || 0});
-    for (const [k, w] of crew) if (!want.has(k)) { clearTimeout(w.timer); w.el.remove(); crew.delete(k); }
-    let n = 0;
-    for (const [k, v] of want) {
-      let w = crew.get(k);
-      if (!w) {
-        w = {...v, x: 150 + n * 70, el: el('div', 'w'), spr: el('div', 'spr')};
-        w.el.append(el('div', 'sh'), w.spr); w.el.style.left = w.x + 'px'; world.append(w.el); crew.set(k, w);
-        w.timer = setTimeout(() => wander(w), 600 + n * 500);
-      } else if (w.variant !== v.variant || w.tier !== v.tier) { Object.assign(w, v); w.spr.dataset.url = ''; }
-      if (!w.spr.dataset.url) setAnim(w.spr, sheetURL(w.role, w.variant, w.tier, 'idle'), 1.5);
-      const z = w.el.querySelector('.zzz');
-      if (quiet && !z) w.el.append(el('div', 'zzz lit')); else if (!quiet && z) z.remove();
-      n++;
-    }
+    period = quiet ? 'night' : periodOf(s.hour ?? new Date().getHours());
+    scene.className = 'scene ' + period;
+    const g = then(THEME[s.theme] || null, PERIOD[period] || null), gk = g ? g.join() : '';
+    if (gk !== tintKey || !built) { clearScene(); tint = g; tintKey = gk; built = 'yes'; }
+    const n = s.plots.length;
+    groundEnd = plotX(Math.min((s.maxTrees || 10) - 1, n)) + 68;
+    world.style.width = groundEnd + 'px';
+    $('hint').hidden = groundEnd <= scene.clientWidth;
+    if (laidOut !== `${n}|${s.season}`) { laidOut = `${n}|${s.season}`; layout(s); }
+    syncTrees(s); syncWorkers(s); syncDogs(s); syncCrate();
+    lantern.hidden = period !== 'night';
   }
+  function layout(s) { // 땅·계절 소품·랜턴(나무 수나 계절이 바뀔 때만)
+    art('ground-pair').then(u => { ground.style.backgroundImage = `url("${u}")`; });
+    for (const d of decor) d.remove();
+    const n = s.plots.length, season = s.season || 'spring', spots = season === 'summer' ? [O + 192] : season === 'winter' ? [groundEnd - 36]
+      : [O + 200, ...Array.from({length: Math.max(0, Math.ceil((n - 3) / 3))}, (_, k) => plotX(2 + k * 3) + 60), groundEnd - 28];
+    decor = index['season-' + season] ? spots.map(x => { const e = sp(5, x, 8); show(e, 'season-' + season); return e; }) : [];
+    if (!lantern) { lantern = sp(6, O + 128, 8); loop(lantern, 'lantern', 0.7, {lit: true}); }
+    if (!crateEl) { crateEl = sp(15, CRATE_X, 8); crateIdx = -1; }
+  }
+  function syncTrees(s) {
+    const n = s.plots.length;
+    if (treesBuilt && n > trees.length) { const w = crew.get('planter-0'); if (w) w.interrupt([{t: 'walk', x: plotX(n - 1) - 40, anim: 'walk'}, dig(n - 1), dig(n - 1), idle(1)]); } // 1.7: 막 심은 자리를 판다
+    while (trees.length < n) {
+      const i = trees.length, e = sp(10, plotX(i), TREE_Y, 'tree'), a = el('div', 'tl'), b = el('div', 'tl');
+      b.style.opacity = 0; e.append(a, b); trees.push({el: e, a, b, kind: null, stage: -1});
+      if (treesBuilt) puff('fx-dust', plotX(i), TREE_Y);
+    }
+    while (trees.length > n) trees.pop().el.remove();
+    s.plots.forEach((p, i) => {
+      const t = trees[i], stage = Math.min(7, Math.max(0, p.stage));
+      if (t.stage === stage && t.kind === p.kind) return;
+      const prev = t.kind === p.kind ? t.stage : -1, name = `tree-${p.kind}-${stage}`, swayName = `tree-${p.kind}-${stage + 1}`;
+      Object.assign(t, {kind: p.kind, stage});
+      const [w, h] = index[name] || [124, 110];
+      Object.assign(t.el.style, {width: w + 'px', height: h + 'px', marginLeft: -w / 2 + 'px'});
+      art(name).then(u => { if (t.stage === stage) t.a.style.backgroundImage = `url("${u}")`; });
+      for (const x of [t.a, t.b]) x.getAnimations().forEach(a => a.cancel());
+      t.swayable = (stage === 3 || stage === 6) && !!index[swayName];
+      if (t.swayable) { // 다 큰 나무는 가끔 바람에 흔들린다
+        art(swayName).then(u => { if (t.stage === stage) t.b.style.backgroundImage = `url("${u}")`; });
+        if (!calm) {
+          const ms = rnd(7000, 12000), delay = rnd(0, 6000);
+          t.a.animate([{opacity: 1, easing: 'steps(1, end)'}, {opacity: 0, offset: .95, easing: 'steps(1, end)'}, {opacity: 1, offset: .98}, {opacity: 1}], {duration: ms, delay, iterations: Infinity});
+          t.b.animate([{opacity: 0, easing: 'steps(1, end)'}, {opacity: 1, offset: .95, easing: 'steps(1, end)'}, {opacity: 0, offset: .98}, {opacity: 0}], {duration: ms, delay, iterations: Infinity});
+        }
+      }
+      if (prev >= 0 && ((prev < 3 && stage >= 3) || (stage === 6 && prev !== 6))) puff('fx-sparkle', plotX(i) + 16, TREE_Y + Math.round(h * 0.6)); // 다 자랐거나 열매가 익은 순간
+    });
+    treesBuilt = true;
+  }
+  function syncCrate() { // 창고 그림(채운 정도)과 가득 찼을 때의 반짝임. tick 이 매초 부른다
+    const s = state(); if (!crateEl || !s) return;
+    const m = override ? {crate: override.crate} : moment(), ratio = m.crate / Math.max(1, s.crate.capacity), i = m.crate === 0 ? 0 : ratio < .7 ? 1 : 2;
+    if (i !== crateIdx) { crateIdx = i; show(crateEl, 'crate-' + i); }
+    const full = m.crate >= s.crate.capacity, n = frames('fx-sparkle');
+    if (full && !sparkle && n && !calm) { // 반짝 4프레임 + 쉬는 4프레임을 되풀이
+      sparkle = sp(16, CRATE_X + 16, 46);
+      show(sparkle, 'fx-sparkle');
+      const w = index['fx-sparkle'][0], kf = [];
+      for (let k = 0; k < n; k++) kf.push({backgroundPosition: `${-k * w}px 0`, opacity: 1, offset: k / (n + 4), easing: 'steps(1, end)'});
+      kf.push({backgroundPosition: `${-(n - 1) * w}px 0`, opacity: 0, offset: n / (n + 4), easing: 'steps(1, end)'}, {opacity: 0, offset: 1});
+      sparkle.animate(kf, {duration: (n + 4) * 120, iterations: Infinity});
+    } else if (!full && sparkle) { sparkle.remove(); sparkle = null; }
+  }
+  function syncWorkers(s) {
+    const want = new Map(), awayNow = new Set();
+    for (const wk of s.workers) {
+      const away = awayLeft(wk) > 0; if (away) awayNow.add(wk.role);
+      for (let slot = 0; slot < (wk.crew || 0) - (away ? 1 : 0); slot++)
+        want.set(`${wk.role}-${slot}`, {role: wk.role, slot, variant: (wk.looks || [])[slot] || 0, tier: wk.tier || 0, dye: (wk.dyes || [])[slot] || 0, crew: wk.crew});
+    }
+    for (const [k, w] of crew) if (!want.has(k)) { // 서리 나가는 일꾼은 오른쪽 밖으로 걸어 나간다
+      crew.delete(k);
+      if (awayNow.has(w.role) && !calm) w.interrupt([{t: 'walk', x: groundEnd + 60, anim: 'walk'}, {t: 'run', f: () => w.stop()}]); else w.stop();
+    }
+    for (const [k, v] of want) {
+      const w = crew.get(k);
+      if (w) { if (w.update(v)) celebrate(w); continue; }
+      const back = treesBuilt && wasAway.has(v.role) && v.slot === v.crew - 1 && !calm; // 서리에서 돌아와 창고 옆으로
+      const x = back ? groundEnd + 40 : v.role === 'harvester' ? CRATE_X + 36 + v.slot * 20 : plotX(Math.floor(rnd(0, Math.max(1, s.plots.length)))) - 40;
+      const nw = new Worker(v, x); crew.set(k, nw);
+      if (back) nw.interrupt([{t: 'walk', x: CRATE_X + 52, anim: index[nw.sheet('carry')] ? 'carry' : 'walk'}, idle(1.5)]);
+      else later(0.3 + crew.size * 0.4, () => nw.next());
+    }
+    wasAway = awayNow;
+    for (const w of crew.values()) { w.zzz(quiet); if (quiet && w.playing !== 'idle' && w.standing()) w.interrupt([idle(4)]); }
+  }
+  function syncDogs(s) { // 들인 개만큼 창고 둘레를 돌아다니고, 서리를 당한 뒤에는 짖는다(들인 개가 없으면 동네 개가 와서)
+    const barking = !!(s.bark && s.sent + s.bark > nowSec()), want = Math.min(3, Math.max(s.dogs || 0, barking ? 1 : 0));
+    while (dogs.length > want) dogs.pop().stop();
+    while (dogs.length < want) { const k = dogs.length, d = new Dog(k, CRATE_X - 28 + k * 22); dogs.push(d); later(0.5 + k * 0.6, () => d.next()); }
+    const left = O + 8, right = Math.max(left + 88, groundEnd - 24);
+    dogs.forEach((d, k) => { d.range = [left, left + Math.max(88, (right - left) * Motion.dogRange(k))]; d.setBarking(barking); });
+  }
+  // 일꾼·개를 누르면 반응한다(맥에서 클릭 통과를 끈 띠처럼). 몸 폭의 가운데 60% 만 받는다
+  scene.addEventListener('click', e => {
+    const hit = x => { const r = x.getBoundingClientRect(); return e.clientX >= r.left + r.width * .2 && e.clientX <= r.right - r.width * .2 && e.clientY >= r.top + r.height * .04 && e.clientY <= r.bottom; };
+    const w = [...crew.values()].filter(w => hit(w.body)).sort((a, b) => b.el.style.zIndex - a.el.style.zIndex)[0];
+    if (w) return poke(w);
+    const d = [...dogs].reverse().find(d => hit(d.body));
+    if (d) { d.pet(); emote('heart', d); }
+  });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') for (const w of crew.values()) if (w.standing()) w.interrupt([]); });
 
   // ── 창고·코인(매초) ─────────────────────────────────────
   let shownCoins = null;
@@ -438,7 +869,8 @@
     $('count').textContent = `${fmt(m.crate)} / ${fmt(cap)}`;
     $('bar').style.width = `${Math.min(100, ratio * 100)}%`;
     const pic = `${S}crate-${m.crate === 0 ? 0 : ratio < .7 ? 1 : 2}.png`;
-    if ($('crate-pic').dataset.src !== pic) { $('crate-pic').dataset.src = pic; $('crate-pic').src = pic; sceneCrate.src = pic; }
+    if ($('crate-pic').dataset.src !== pic) { $('crate-pic').dataset.src = pic; $('crate-pic').src = pic; }
+    syncCrate();
     const rd = s.raided, since = rd ? nowSec() - rd.at : Infinity;
     $('raid-note').hidden = !(since < 86400);
     if (since < 86400) $('raid-note').textContent = (rd.caught ? T.chased : T.raided)(fmt(rd.count), T.ago(Math.max(0, since)));
@@ -512,7 +944,10 @@
       $('crew').replaceChildren(...s.workers.map(w => {
         const c = el('div', 'panel card'), who = el('div', 'who');
         const looks = w.looks && w.looks.length ? w.looks : [0];
-        looks.forEach(v => { const sp = el('div', 'spr'); who.append(sp); setAnim(sp, sheetURL(w.role, v, w.tier ?? [5, 10, 15, 20].filter(l => w.level >= l).length, 'idle'), 1.5); });
+        looks.forEach((v, slot) => {
+          const e = el('div', 'spr'), tier = w.tier ?? [5, 10, 15, 20].filter(l => w.level >= l).length, name = `w-${w.role}${v ? 'b' : ''}-${tier}-idle`;
+          who.append(e); ready.then(() => index && show(e, name, {clip: Motion.clip('idle', frames(name)), offset: rnd(0, 3), dye: DYE_HUES[(w.dyes || [])[slot] || 0] ?? null, lit: true, center: false}));
+        });
         if (!w.level) who.style.opacity = .35;
         const info = el('div'), lv = el('div', 'sub num'), acts = el('div', 'acts'), why = el('span', 'why');
         info.append(el('b', 'px', T.roles[w.role] || w.role), lv, el('div', 'sub', T.jobs[w.role] || ''));
@@ -573,6 +1008,7 @@
       const p = pending.get(r.id); if (!p) continue;
       pending.delete(r.id); override = null;
       if (r.ok && p.action === 'unlock') party(T.newKind, `${S}tree-${p.kind}-6.png`, T.kinds[p.kind] || p.kind);
+      if (r.ok && p.action === 'sell') sold();
       toast(!r.ok ? T[r.reason] || T.unavailable : p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
         : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : T.grown);
     }
@@ -626,10 +1062,10 @@
 
   // 탭
   const tabs = ['orchard', 'plant', 'crew'];
-  const show = name => tabs.forEach(t => { $('tab-' + t).hidden = t !== name; $('t-' + t).setAttribute('aria-selected', t === name); });
-  tabs.forEach(t => { $('t-' + t).onclick = () => { show(t); scrollTo(0, 0); }; });
+  const showTab = name => tabs.forEach(t => { $('tab-' + t).hidden = t !== name; $('t-' + t).setAttribute('aria-selected', t === name); });
+  tabs.forEach(t => { $('t-' + t).onclick = () => { showTab(t); scrollTo(0, 0); }; });
   const startTab = new URLSearchParams(location.search).get('tab'); // 확인·캡처용 ?tab=plant|crew
-  if (tabs.includes(startTab)) show(startTab);
+  if (tabs.includes(startTab)) showTab(startTab);
 
   // 마지막으로 본 과수원을 바로 그린다(서버가 Mac 을 기다리는 동안 빈 화면이 없게). 타임라인이 있어 숫자는 계속 흐른다.
   try {
@@ -639,7 +1075,7 @@
   if (!data) { $('app').hidden = false; $('tabs').hidden = false; $('chip').hidden = false; $('chip').textContent = T.connecting; tick(); }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
   addEventListener('online', refresh);
-  setInterval(() => { if (document.visibilityState === 'visible') tick(); }, 1000);
+  setInterval(() => { if (document.visibilityState === 'visible') { tick(); syncSky(); } }, 1000);
   refresh();
 })();
 </script>

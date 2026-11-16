@@ -60,6 +60,8 @@
     <div class="tiles" id="t-installs"></div>
     <h2>사용 (동의한 설치)</h2>
     <div class="tiles" id="t-usage"></div>
+    <h2>이웃·서리 (동의한 설치)</h2>
+    <div class="tiles" id="t-social"></div>
     <h2>최근 30일</h2>
     <div class="grid2">
       <div class="chart" id="c-installs"><h3>일별 설치</h3></div>
@@ -133,7 +135,7 @@
 
   function render(s) {
     $('out').hidden = false;
-    ['t-installs', 't-usage', 'dist'].forEach(id => $(id).textContent = '');
+    ['t-installs', 't-usage', 't-social', 'dist'].forEach(id => $(id).textContent = '');
     ['c-installs', 'c-active'].forEach(id => $(id).querySelectorAll('svg,.tip').forEach(e => e.remove()));
     const i = s.installs, u = s.usage;
     tile($('t-installs'), n(i.total), '누적 설치');
@@ -146,6 +148,13 @@
     const r = u.retention7;
     tile($('t-usage'), r.cohort ? `${Math.round(r.retained * 100 / r.cohort)}%` : '-', `7일 잔존율 (${n(r.retained)}/${n(r.cohort)})`);
     tile($('t-usage'), n(u.participants), `통계 참여 설치 (오늘 새로 ${n(u.new_today)})`);
+    // 1.11: API 를 아직 다시 배포하지 않았으면 없다
+    const pct = (a, b) => b ? `${Math.round(a * 100 / b)}%` : '-';
+    const nb = u.neighbors || {active: 0, with: 0}, none = {days: 0, back: 0};
+    const rn = u.raided_next_day || {raided: none, others: none};
+    tile($('t-social'), pct(nb.with, nb.active), `이웃 있는 설치 (7일, ${n(nb.with)}/${n(nb.active)})`);
+    tile($('t-social'), pct(rn.raided.back, rn.raided.days), `서리당한 다음 날도 씀 (30일, ${n(rn.raided.back)}/${n(rn.raided.days)})`);
+    tile($('t-social'), pct(rn.others.back, rn.others.days), `서리 안 당한 날의 다음 날도 씀 (비교)`);
     // 30일을 빈 날까지 채운다
     const byDay = Object.fromEntries(s.daily.map(d => [d.day, d]));
     const days = [];

@@ -9,10 +9,12 @@
 - 폰으로 보기(1.6, relay/…): Mac 앱과 폰 웹페이지(site/m/) 사이 중계. 페어링 키는 해시로만 DB 에, 과수원 상태·명령은 메모리에만.
 - 서리(1.8, raid/…): 1.8 이상 모든 설치가 창고 상태(정원·종류별 개수·탱자 수·창고 레벨)를 알리고, 남의 창고에서 과일을 조금 가져온다.
   키는 자랑 소유 키(X-Owner-Key)와 같다. 한 사람은 늘 '누군가'로 숨기고, 기록은 8주 뒤 지운다.
+- 이웃(1.11, neighbors/…): 같은 소유 키로 초대 코드를 넣으면 바로 양쪽 이웃. 이웃마다 하루 한 번씩 돕기·선물(과일 한 개)을 보내고,
+  받는 쪽은 raid/status 의 inbox 로 받는다. 이웃 관계·코드·돕기 기록·과수원 모습(look)·고마움 수만 저장하고, 돕기 기록은 8주 뒤 지운다.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
-  --raid-fast YES 는 로컬 확인용: 새 키·초보 보호·창고 20% 조건 없이 바로 서리하고, 작전이 6~10초, 개가 30초만 짖는다
+  --raid-fast YES 는 로컬 확인용: 베타 때처럼 새 키·초보 보호·창고 20%·하루 3번·손실 상한·당한 뒤 개 없이 바로 서리하고, 작전이 6~10초
   회사 인프라: python brag.py --host 0.0.0.0 --prefix /api/ --board https://lemondesk.interaction.hnine.com/brag/ --cors https://lemondesk.interaction.hnine.com
               (PORT, IX_DATA_DIR 은 인프라가 넣어 준다)
 관리: python3 brag.py admin list|hide ID|unhide ID|delete ID
@@ -50,7 +52,10 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
           # 서리(1.8): 소유 키당, raid_ip·farm_new 는 IP 당(가짜 키를 많이 만들어 터는 것을 막는다)
           "raid_status": (240, 3600), "raid_targets": (120, 3600), "raid": (30, 3600), "raid_ip": (120, 3600), "farm_new": (30, 3600),
           # ponytail: 주인이 깨어 있다는 신호(팔기·관리 창)는 시간당 4번까지만 들킴으로 친다(늘 깨어 있는 척해 서리를 다 막지 못하게)
-          "raid_active": (4, 3600)}
+          "raid_active": (4, 3600),
+          # 이웃(1.11): 소유 키당, neighbor_add_ip 는 IP 당(키를 바꿔 가며 코드를 마구 넣어 보지 못하게)
+          "neighbors": (120, 3600), "neighbor_code": (10, 3600), "neighbor_add": (20, 3600), "neighbor_add_ip": (30, 3600),
+          "neighbor_send": (60, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -131,19 +136,30 @@ VALUE_SHARE = 0.15           # 한 번에 가져오는 값 상한: 내 정원 ×
 RAID_PLANS = {"light": 300, "normal": 600, "deep": 1200}
 CARETAKER_FAST = 0.7
 CAUGHT_REST = 600            # 들키면 혹이 나서 10분 늦게 돌아온다
-# 베타(대표 결정, 2026-11-12): 테스트하려고 숨김 조건(창고 20%·초보 3일·창고 레벨 2·새 키 하루)을 끈다.
-# 정식 때 되돌릴 값: MIN_FILL 0.2, NEW_KEY 86400, NEWBIE 3 * 86400, MIN_LEVEL 2 (서버 테스트는 이 값으로 규칙을 확인한다)
-# 베타 2(대표 결정, 2026-11-12): 같은 곳 하루 한 번만 남기고 하루 3번·하루 손실 상한·당한 뒤 개 2시간도 끈다. 정식 때 False.
-BETA_OPEN = True
-MIN_FILL = 0                 # 창고가 이만큼 찬 과수원만
-MIN_LEVEL = 0                # 창고 레벨이 이 이상인 과수원만
+# 정식 값(1.11, 대표 결정 2026-11-15). 1.8 베타 동안은 숨김 조건(창고 20%·초보 3일·창고 레벨 2·새 키 하루)을 0 으로,
+# BETA_OPEN 을 True 로 두어 같은 곳 하루 한 번만 남기고 하루 3번·하루 손실 상한·당한 뒤 개 2시간도 껐다(지금은 --raid-fast 만 그렇게).
+BETA_OPEN = False
+MIN_FILL = 0.2               # 창고가 이만큼 찬 과수원만
+MIN_LEVEL = 2                # 창고 레벨이 이 이상인 과수원만
 GUARD = 2 * 3600             # 당한 뒤 개가 짖는 시간
-TRACKS = 86400               # 발자국(되갚기)
-NEW_KEY = 0                  # 새 키는 이만큼 뒤부터 서리
-NEWBIE = 0                   # 서버가 처음 본 뒤 이만큼은 서리당하지 않는다
+TRACKS = 86400               # 발자국(되갚기·되찾아 주기)
+NEW_KEY = 86400              # 새 키는 이만큼 뒤부터 서리
+NEWBIE = 3 * 86400           # 서버가 처음 본 뒤 이만큼은 서리당하지 않는다
 STALE = 14 * 86400           # 소식 없는 설치는 대상에서 뺀다
 RAID_TARGETS = 12
 RAID_ID = re.compile(r"[A-Za-z0-9_-]{8,24}")
+TARGET_ID = re.compile(r"[0-9a-f]{16}")  # 서리 대상·이웃 id(요청한 사람에게만 통하는 HMAC)
+
+# 이웃(1.11). 앱 Balance.Neighbors 와 같은 값. 계정 없이 서리와 같은 소유 키로 맺는다.
+MAX_NEIGHBORS = 10
+NEIGHBOR_DOG, MAX_NEIGHBOR_DOGS = 0.05, 3  # 개가 있는 이웃 한 곳마다 서리 −5%(최대 3곳, GUARD_MAX 안에서)
+CODE_CHARS, CODE_LEN = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6  # I·O·0·1 없음. 화면에는 ABC-DEF
+STAMPS = {"heart", "note", "star"}       # 고마워요·반가워요·멋져요(자유 글은 없다)
+SEASONS = {"spring", "summer", "autumn", "winter"}
+TREE_LOOK = (KINDS, (0, 7))                    # 과수원 모습의 나무: 종류, 자란 단계
+WORKER_LOOK = (ROLES, (0, 1), (0, 4), (0, 6))  # 일꾼: 역할, variant, 장비 단계, 염색
+LOOK_MAX = 2048
+INBOX = 20                   # raid/status 한 번에 주는 받은 돕기·선물 수
 
 
 def crate_capacity(level):
@@ -162,14 +178,15 @@ def raid_budget(cap, best):
     return int(cap * PRICE[best] * VALUE_SHARE)
 
 
-def raid_loot(crate, cap, fences, dogs, lost, role, level, plan, budget, revenge=False):
+def raid_loot(crate, cap, fences, dogs, lost, role, level, plan, budget, revenge=False, neighbor_dogs=0):
     """한 번에 담아 오는 과일. 살짝은 값싼 것부터, 깊숙이는 비싼 것부터, 보통은 종류를 돌아가며 하나씩.
-    자루 칸·상대 창고의 8%·오늘 남은 손실 허용량 중 가장 작은 만큼, 한 종류는 든 개수의 절반까지, 값은 budget 까지."""
+    자루 칸·상대 창고의 8%·오늘 남은 손실 허용량 중 가장 작은 만큼, 한 종류는 든 개수의 절반까지, 값은 budget 까지.
+    neighbor_dogs(1.11): 당하는 쪽 이웃 중 개가 있는 곳 수. 앱과 같은 순서로 더해야 소수 끝자리까지 같다."""
     total = sum(crate.values())
     if total <= 0:
         return {}
     walls = min(FENCE_MAX, FENCE * fences) * (0.5 if role == "planter" else 1.0)
-    guard = 1 - min(GUARD_MAX, walls + DOG * min(dogs, MAX_DOGS))
+    guard = 1 - min(GUARD_MAX, walls + DOG * min(dogs, MAX_DOGS) + NEIGHBOR_DOG * min(neighbor_dogs, MAX_NEIGHBOR_DOGS))
     twice = 2.0 if revenge else 1.0
     slots = int((SACK_BASE + SACK_PER_LEVEL * level) * (HARVESTER_SACK if role == "harvester" else 1.0) * twice * guard)
     allow = max(0, int(cap * DAILY_LOSS) - lost)
@@ -229,7 +246,48 @@ def clean_farm(b):
         raise BadRequest()
     return {"cap": cap, "level": level, "crate": crate, "fences": _int(b.get("fences"), 0, MAX_TREES),
             "dogs": _int(b.get("dogs", 0), 0, MAX_DOGS), "best": b["best"],
-            "active": b.get("active") is True, "ack": [_match(a, RAID_ID) for a in ack]}
+            "active": b.get("active") is True, "ack": [_match(a, RAID_ID) for a in ack],
+            "look": clean_look(b.get("look"))}  # 1.11. 옛 앱은 안 보낸다(None: 저장된 모습을 그대로 둔다)
+
+
+def _one(v, allowed):
+    if not isinstance(v, str) or v not in allowed:
+        raise BadRequest()
+    return v
+
+
+def _tuple(v, *specs):
+    """[값, …] 한 줄. 칸마다 허용 집합 또는 (최소, 최대) 정수"""
+    if not isinstance(v, list) or len(v) != len(specs):
+        raise BadRequest()
+    for x, s in zip(v, specs):
+        if isinstance(s, tuple):
+            _int(x, *s)
+        else:
+            _one(x, s)
+    return v
+
+
+def _rows(v, n, *specs):
+    if not isinstance(v, list) or len(v) > n:
+        raise BadRequest()
+    return [_tuple(r, *specs) for r in v]
+
+
+def clean_look(v):
+    """과수원 모습(1.11, 이웃 엽서 그림용). 틀린 필드만 버린다(서리 맞추기는 그대로 성공).
+    dict 가 아니거나 2KB 를 넘으면 None 이라 저장된 모습을 그대로 둔다."""
+    if not isinstance(v, dict) or len(json.dumps(v, separators=(",", ":")).encode()) > LOOK_MAX:
+        return None
+    checks = {"trees": lambda x: _rows(x, MAX_TREES, *TREE_LOOK), "workers": lambda x: _rows(x, 6, *WORKER_LOOK),
+              "dogs": lambda x: _int(x, 0, MAX_DOGS), "theme": lambda x: _one(x, THEMES), "season": lambda x: _one(x, SEASONS)}
+    out = {}
+    for k, check in checks.items():
+        try:
+            out[k] = check(v[k])
+        except (KeyError, BadRequest):
+            pass
+    return out
 
 
 CMD_ID = re.compile(r"[A-Za-z0-9-]{1,40}")
@@ -275,7 +333,9 @@ def clean_ping(b, now):
     return {"install": install, "day": day, "version": _match(b.get("version"), VERSION_RE), "os": _match(b.get("os"), VERSION_RE),
             "lang": _match(lang, LANG_RE) if lang else "", "arch": b["arch"],
             "minutes": _int(b.get("minutes"), 0, 1440), "opens": _int(b.get("opens"), 0, 10000),
-            "sales": _int(b.get("sales"), 0, 100000), "kinds": _int(b.get("kinds"), 0, 13), "platform": b.get("platform", "mac")}
+            "sales": _int(b.get("sales"), 0, 100000), "kinds": _int(b.get("kinds"), 0, 13), "platform": b.get("platform", "mac"),
+            # 1.11: 이웃 수, 최근 7일 안에 서리당했는지(0/1). 옛 앱은 안 보내므로 0
+            "nb": _int(b.get("nb", 0), 0, MAX_NEIGHBORS), "rb": _int(b.get("rb", 0), 0, 1)}
 
 
 def clean_install(b):
@@ -392,11 +452,25 @@ class Board:
                 raider_done INTEGER NOT NULL DEFAULT 0, victim_done INTEGER NOT NULL DEFAULT 0);
             CREATE INDEX IF NOT EXISTS raids_raider ON raids(raider, end);
             CREATE INDEX IF NOT EXISTS raids_victim ON raids(victim, end);
+            CREATE TABLE IF NOT EXISTS codes(owner TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, created REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS neighbors(owner TEXT NOT NULL, other TEXT NOT NULL, created REAL NOT NULL,
+                PRIMARY KEY(owner, other));
+            CREATE TABLE IF NOT EXISTS gifts(id TEXT PRIMARY KEY, sender TEXT NOT NULL, receiver TEXT NOT NULL, day TEXT NOT NULL,
+                kind TEXT NOT NULL, fruit TEXT, stamp TEXT NOT NULL, worker TEXT NOT NULL, created REAL NOT NULL,
+                done INTEGER NOT NULL DEFAULT 0);
+            CREATE INDEX IF NOT EXISTS gifts_receiver ON gifts(receiver, done);
+            CREATE INDEX IF NOT EXISTS gifts_sender ON gifts(sender, day);
         """)
-        # 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
-        for table in ("install_counts", "pings"):
-            if "platform" not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
-                self.db.execute("ALTER TABLE %s ADD COLUMN platform TEXT NOT NULL DEFAULT 'mac'" % table)
+        # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
+        # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by)
+        for table, col, decl in (("install_counts", "platform", "TEXT NOT NULL DEFAULT 'mac'"), ("pings", "platform", "TEXT NOT NULL DEFAULT 'mac'"),
+                                 ("pings", "nb", "INTEGER NOT NULL DEFAULT 0"), ("pings", "rb", "INTEGER NOT NULL DEFAULT 0"),
+                                 ("farms", "look", "TEXT NOT NULL DEFAULT '{}'"), ("farms", "thanks", "INTEGER NOT NULL DEFAULT 0"),
+                                 ("raids", "beneficiary", "TEXT NOT NULL DEFAULT ''"), ("raids", "beneficiary_done", "INTEGER NOT NULL DEFAULT 0"),
+                                 ("raids", "caught_by", "INTEGER NOT NULL DEFAULT 0")):
+            if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
+                self.db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
+        self.db.execute("CREATE INDEX IF NOT EXISTS raids_beneficiary ON raids(beneficiary, end)")
         self.db.commit()
 
     def close(self):
@@ -520,7 +594,11 @@ class Board:
                 self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
             self.db.execute("DELETE FROM posts WHERE owner=?", (owner,))
             self.db.execute("DELETE FROM farms WHERE owner=?", (owner,))  # 1.8 서리 참여·기록도 함께
-            self.db.execute("DELETE FROM raids WHERE raider=? OR victim=?", (owner, owner))
+            self.db.execute("DELETE FROM raids WHERE raider=? OR victim=? OR beneficiary=?", (owner, owner, owner))
+            # 1.11 이웃: 코드, 이웃 관계(양쪽), 보내고 받은 돕기·선물
+            self.db.execute("DELETE FROM codes WHERE owner=?", (owner,))
+            self.db.execute("DELETE FROM neighbors WHERE owner=? OR other=?", (owner, owner))
+            self.db.execute("DELETE FROM gifts WHERE sender=? OR receiver=?", (owner, owner))
             self.db.execute("DELETE FROM highlights WHERE owner=?", (owner,))
             self.db.commit()
         return len(ids)
@@ -543,13 +621,14 @@ class Board:
         inst = sha(p["install"])
         self.db.execute("INSERT INTO participants VALUES(?,?) "
                         "ON CONFLICT(install) DO UPDATE SET first_day = min(first_day, excluded.first_day)", (inst, p["day"]))
-        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform) "
-                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
+        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform, nb, rb) "
+                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
                         "version=excluded.version, os=excluded.os, lang=excluded.lang, arch=excluded.arch, platform=excluded.platform, "
                         "minutes=max(minutes, excluded.minutes), opens=max(opens, excluded.opens), "
-                        "sales=max(sales, excluded.sales), kinds=excluded.kinds, received=excluded.received",
+                        "sales=max(sales, excluded.sales), kinds=excluded.kinds, received=excluded.received, "
+                        "nb=max(nb, excluded.nb), rb=max(rb, excluded.rb)",
                         (inst, p["day"], p["version"], p["os"], p["lang"], p["arch"], p["minutes"], p["opens"],
-                         p["sales"], p["kinds"], now.timestamp(), p["platform"]))
+                         p["sales"], p["kinds"], now.timestamp(), p["platform"], p["nb"], p["rb"]))
         self.db.commit()
 
     @locked
@@ -579,11 +658,24 @@ class Board:
                   for k, n in (("dau", 1), ("wau", 7), ("mau", 30))}
         cohort = [r[0] for r in self.db.execute("SELECT install FROM participants WHERE first_day BETWEEN ? AND ?", (ago(14), ago(8)))]
         retained = sum(1 for i in cohort if self.db.execute("SELECT 1 FROM pings WHERE install = ? AND day >= ?", (i, ago(6))).fetchone())
+
+        def next_day(rb):
+            """rb 가 같은 날(30일~2일 전) 중 다음 날도 쓴 날 수. 어제는 오늘 신호가 아직 다 오지 않아 뺀다."""
+            days, back = self.db.execute(
+                "SELECT COUNT(*), COALESCE(SUM(EXISTS(SELECT 1 FROM pings q WHERE q.install = p.install AND q.day = date(p.day, '+1 day'))), 0) "
+                "FROM pings p WHERE p.rb = ? AND p.day BETWEEN ? AND ?", (rb, ago(30), ago(2))).fetchone()
+            return {"days": days, "back": back}
+
+        nb_active, nb_with = self.db.execute("SELECT COUNT(*), COALESCE(SUM(m >= 1), 0) FROM "
+                                             "(SELECT MAX(nb) AS m FROM pings WHERE day >= ? GROUP BY install)", (ago(6),)).fetchone()
         usage = {"participants": one("SELECT COUNT(*) FROM participants"),
                  "new_today": one("SELECT COUNT(*) FROM participants WHERE first_day = ?", today),
                  "active": active, "retention7": {"cohort": len(cohort), "retained": retained},
                  "versions": by_usage("version"), "os": by_usage("os"), "arch": by_usage("arch"), "lang": by_usage("lang"),
-                 "platform": by_usage("platform")}
+                 "platform": by_usage("platform"),
+                 # 1.11: 7일 안에 쓴 설치 중 이웃이 있는 설치, 서리당한(rb=1) 설치와 아닌 설치의 다음 날 활동
+                 "neighbors": {"active": nb_active, "with": nb_with},
+                 "raided_next_day": {"raided": next_day(1), "others": next_day(0)}}
         start = ago(days - 1)
         rows = {d: {"day": d, "installs": 0, "active": a, "new": nw, "avg_minutes": round(m / a) if a else 0, "opens": o, "sales": sl}
                 for d, a, nw, m, o, sl in self.db.execute("SELECT day, active, new, minutes, opens, sales FROM daily WHERE day >= ?", (start,))}
@@ -672,16 +764,20 @@ class Board:
             # 서리: 8주 소식 없는 설치와 8주 지난 기록
             self.db.execute("DELETE FROM farms WHERE seen < ?", (t - KEEP_WEEKS * WEEK,))
             self.db.execute("DELETE FROM raids WHERE end < ?", (t - KEEP_WEEKS * WEEK,))
+            # 이웃: 8주 지난 돕기·선물 기록, 과수원이 지워진 설치의 코드와 이웃 관계(빈자리가 상한을 차지하지 않게)
+            self.db.execute("DELETE FROM gifts WHERE created < ?", (t - KEEP_WEEKS * WEEK,))
+            self.db.execute("DELETE FROM codes WHERE owner NOT IN (SELECT owner FROM farms)")
+            self.db.execute("DELETE FROM neighbors WHERE owner NOT IN (SELECT owner FROM farms) OR other NOT IN (SELECT owner FROM farms)")
             self.db.commit()
 
     # 서리 (1.8). 한 사람(raider)은 당한 쪽 응답 어디에도 넣지 않는다.
 
-    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best FROM farms"
+    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best, thanks FROM farms"
 
     @staticmethod
     def _farm_row(r):
         return {"owner": r[0], "cap": r[1], "crate": json.loads(r[2]), "fences": r[3], "level": r[4], "first": r[5],
-                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11]}
+                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11], "thanks": r[12]}
 
     def _farm(self, owner):
         r = self.db.execute(self.FARM + " WHERE owner=?", (owner,)).fetchone()
@@ -690,6 +786,28 @@ class Board:
     def _target_id(self, me, owner):
         """대상 id 는 요청한 사람에게만 통한다(키 해시를 내려 주지 않는다)"""
         return hmac.new(self.salt, (me + "|" + owner).encode(), hashlib.sha256).hexdigest()[:16]
+
+    def _nick(self, owner):
+        r = self.db.execute("SELECT nickname FROM posts WHERE owner=? AND hidden=0 ORDER BY created DESC LIMIT 1", (owner,)).fetchone()
+        return r[0] if r else None
+
+    def _seed(self, owner):
+        """닉네임이 없으면 앱이 이 수로 이름을 짓는다("졸린 유자 과수원"). 같은 설치는 늘 같은 이름."""
+        return int(hmac.new(self.salt, owner.encode(), hashlib.sha256).hexdigest()[:8], 16)
+
+    def _nb_dogs(self, owner):
+        """개가 있는 이웃 수(1.11, 최대 3). 서리당할 때 한 곳마다 NEIGHBOR_DOG 만큼 덜 가져간다."""
+        n = self.db.execute("SELECT COUNT(*) FROM neighbors n JOIN farms f ON f.owner = n.other WHERE n.owner=? AND f.dogs>0",
+                            (owner,)).fetchone()[0]
+        return min(n, MAX_NEIGHBOR_DOGS)
+
+    def _footprint(self, me, other, t):
+        """되찾아 주기(1.11): 이웃(other)이 24시간 안에 당하고 아직 되갚지 않은 가장 최근 서리 (id, 서리꾼, 끝난 시각).
+        원래 서리꾼이 나거나 내 이웃이면 뺀다(이웃끼리는 털지 않는다)."""
+        return self.db.execute(
+            "SELECT r.id, r.raider, r.end FROM raids r JOIN farms f ON f.owner = r.raider WHERE r.victim=? AND r.end<=? AND r.end>? "
+            "AND r.revenge=0 AND r.avenged=0 AND r.raider<>? AND r.raider NOT IN (SELECT other FROM neighbors WHERE owner=?) "
+            "ORDER BY r.end DESC LIMIT 1", (other, t, t - TRACKS, me, me)).fetchone()
 
     @staticmethod
     def _final(loot, caught):
@@ -706,13 +824,29 @@ class Board:
         t, day = now.timestamp(), day_key(now)
         f = self._farm(me)
         q = self.db.execute
+
+        def back(r):  # 이웃 대신 되찾아 온 것은 이웃에게 간다(내 창고에는 없음)
+            out = {"id": r[0], "role": r[1], "loot": {} if r[4] else self._final(r[2], r[3]), "caught": bool(r[3])}
+            if r[4]:
+                out["for"] = "neighbor"
+            return out
+
+        inbox = q("SELECT * FROM (SELECT id, kind, fruit, stamp, worker, sender, created FROM gifts WHERE receiver=? AND done=0 "
+                  "ORDER BY created DESC LIMIT ?) ORDER BY created", (me, INBOX)).fetchall()
         return {
-            # 내가 당한 것(끝난 것만): 앱이 창고에서 빼고 ack 한다
-            "raided": [{"id": r[0], "loot": self._final(r[1], r[2]), "caught": bool(r[2])} for r in
-                       q("SELECT id, loot, caught FROM raids WHERE victim=? AND end<=? AND victim_done=0 ORDER BY end", (me, t))],
+            # 내가 당한 것(끝난 것만): 앱이 창고에서 빼고 ack 한다. by: 들켰다면 누가 봤는지(1.11, 들키지 않았으면 owner)
+            "raided": [{"id": r[0], "loot": self._final(r[1], r[2]), "caught": bool(r[2]), "by": "neighbor" if r[3] else "owner"} for r in
+                       q("SELECT id, loot, caught, caught_by FROM raids WHERE victim=? AND end<=? AND victim_done=0 ORDER BY end", (me, t))],
             # 내가 보낸 일꾼이 들고 온 것
-            "back": [{"id": r[0], "role": r[1], "loot": self._final(r[2], r[3]), "caught": bool(r[3])} for r in
-                     q("SELECT id, role, loot, caught FROM raids WHERE raider=? AND end<=? AND raider_done=0 ORDER BY end", (me, t))],
+            "back": [back(r) for r in q("SELECT id, role, loot, caught, beneficiary<>'' FROM raids WHERE raider=? AND end<=? AND raider_done=0 "
+                                        "ORDER BY end", (me, t))],
+            # 1.11: 이웃이 보낸 돕기·선물(최근 20개, 오래된 것부터). 앱이 반영하고 ack 하면 보낸 사람 고마움 +1
+            "inbox": [{"id": r[0], "kind": r[1], "fruit": r[2], "stamp": r[3], "worker": json.loads(r[4]), "name": self._nick(r[5]),
+                       "seed": self._seed(r[5])} for r in inbox],
+            # 1.11: 이웃이 나 대신 되찾아 온 것(ack 하면 되찾아 준 사람 고마움 +1)
+            "recovered": [{"id": r[0], "loot": self._final(r[1], r[2]), "caught": bool(r[2])} for r in
+                          q("SELECT id, loot, caught FROM raids WHERE beneficiary=? AND end<=? AND beneficiary_done=0 ORDER BY end", (me, t))],
+            "thanks": f["thanks"] if f else 0,
             # 아직 나가 있는 일꾼(들키면 10분 늘어난다)
             "away": [{"id": r[0], "role": r[1], "left": int(r[2] - t + 0.999)} for r in
                      q("SELECT id, role, end FROM raids WHERE raider=? AND end>?", (me, t))],
@@ -728,7 +862,8 @@ class Board:
     @locked
     def raid_status(self, owner_key, body, ip, now):
         """창고 상태 알리기(앱이 켤 때·팔 때·관리 창을 열 때·20% 경계·30분마다, 일꾼이 나가 있으면 1분마다).
-        active: 주인이 방금 팔았거나 창을 열었다 → 지금 밭에 있는 서리꾼이 들킨다."""
+        active: 주인이 방금 팔았거나 창을 열었다 → 지금 내 밭과 이웃 밭(1.11)에 있는 서리꾼이 들킨다.
+        look(1.11): 과수원 모습. ack 에는 반영한 서리·돕기·선물·되찾은 것 id 를 함께 넣는다."""
         me = self.owner(owner_key)
         farm = clean_farm(body)
         t = now.timestamp()
@@ -741,27 +876,37 @@ class Board:
         else:
             self.db.execute("UPDATE farms SET cap=?, crate=?, fences=?, dogs=?, best=?, level=?, seen=? WHERE owner=?",
                             (farm["cap"], crate, farm["fences"], farm["dogs"], farm["best"], farm["level"], t, me))
-        if farm["active"] and self.db.execute("SELECT 1 FROM raids WHERE victim=? AND start<=? AND end>? AND caught=0",
-                                              (me, t, t)).fetchone():
+        if farm["look"] is not None:
+            self.db.execute("UPDATE farms SET look=? WHERE owner=?", (json.dumps(farm["look"]), me))
+        live = " AND start<=? AND end>? AND caught=0"
+        near = "victim IN (SELECT other FROM neighbors WHERE owner=?)"
+        if farm["active"] and self.db.execute("SELECT 1 FROM raids WHERE (victim=? OR " + near + ")" + live, (me, me, t, t)).fetchone():
             try:
                 self.limit("raid_active", me, now)
-                self.db.execute("UPDATE raids SET caught=1, end=end+? WHERE victim=? AND start<=? AND end>? AND caught=0",
-                                (CAUGHT_REST, me, t, t))
+                self.db.execute("UPDATE raids SET caught=1, end=end+? WHERE victim=?" + live, (CAUGHT_REST, me, t, t))
+                self.db.execute("UPDATE raids SET caught=1, caught_by=1, end=end+? WHERE " + near + live, (CAUGHT_REST, me, t, t))
             except RateLimited:
                 pass
         for rid in farm["ack"]:
             self.db.execute("UPDATE raids SET raider_done=1 WHERE id=? AND raider=? AND end<=?", (rid, me, t))
             self.db.execute("UPDATE raids SET victim_done=1 WHERE id=? AND victim=? AND end<=?", (rid, me, t))
+            # 앱은 반영한 id 를 계속 다시 보낸다. 고마움은 처음 반영할 때 한 번만 센다.
+            if self.db.execute("UPDATE gifts SET done=1 WHERE id=? AND receiver=? AND done=0", (rid, me)).rowcount:
+                self.db.execute("UPDATE farms SET thanks=thanks+1 WHERE owner=(SELECT sender FROM gifts WHERE id=?)", (rid,))
+            if self.db.execute("UPDATE raids SET beneficiary_done=1 WHERE id=? AND beneficiary=? AND end<=? AND beneficiary_done=0",
+                               (rid, me, t)).rowcount:
+                self.db.execute("UPDATE farms SET thanks=thanks+1 WHERE owner=(SELECT raider FROM raids WHERE id=?)", (rid,))
         self.db.commit()
         return self._raid_view(me, now)
 
     def _candidates(self, me, now):
-        """서리할 수 있는 과수원(개가 짖는 곳도 보여 준다). 초보(설치 3일·창고 레벨 2 미만)·14일 소식 없음·20% 미만·
+        """서리할 수 있는 과수원(개가 짖는 곳도 보여 준다). 내 이웃(1.11)·초보(설치 3일·창고 레벨 2 미만)·14일 소식 없음·20% 미만·
         오늘 손실 상한·오늘 내가 이미 간 곳은 뺀다. ponytail: farms 를 다 훑는다. 참여자가 수만이 되면 seen·first 색인으로."""
         t, day = now.timestamp(), day_key(now)
         done = {r[0] for r in self.db.execute("SELECT victim FROM raids WHERE raider=? AND day=? AND revenge=0", (me, day))}
         out = []
-        for r in self.db.execute(self.FARM + " WHERE owner<>? AND seen>? AND first<=? AND level>=?", (me, t - STALE, t - NEWBIE, MIN_LEVEL)):
+        for r in self.db.execute(self.FARM + " WHERE owner<>? AND seen>? AND first<=? AND level>=? "
+                                 "AND owner NOT IN (SELECT other FROM neighbors WHERE owner=?)", (me, t - STALE, t - NEWBIE, MIN_LEVEL, me)).fetchall():
             f = self._farm_row(r)
             f["lost"] = f["lost"] if f["lost_day"] == day else 0
             if f["owner"] in done or sum(f["crate"].values()) < f["cap"] * MIN_FILL or (not BETA_OPEN and f["lost"] >= int(f["cap"] * DAILY_LOSS)):
@@ -780,22 +925,19 @@ class Board:
         t = now.timestamp()
         out = []
         for f in picks:
-            nick = self.db.execute("SELECT nickname FROM posts WHERE owner=? AND hidden=0 ORDER BY created DESC LIMIT 1",
-                                   (f["owner"],)).fetchone()
             n = sum(f["crate"].values())
             kinds = sorted(f["crate"], key=lambda k: (-PRICE[k], ORDER[k]))
-            out.append({"id": self._target_id(me, f["owner"]), "name": nick[0] if nick else None,
-                        # 닉네임이 없으면 앱이 이 수로 이름을 짓는다("졸린 유자 과수원"). 같은 설치는 늘 같은 이름.
-                        "seed": int(hmac.new(self.salt, f["owner"].encode(), hashlib.sha256).hexdigest()[:8], 16),
+            out.append({"id": self._target_id(me, f["owner"]), "name": self._nick(f["owner"]), "seed": self._seed(f["owner"]),
                         # 찬 정도는 10% 단위(작은 변화로 누가 누군지 맞춰 보지 못하게)
                         "fill": round(n / f["cap"], 1), "kinds": [{"kind": k, "lots": f["crate"][k] >= 10} for k in kinds],
-                        "fences": f["fences"], "dogs": f["dogs"], "dog": f["guard"] > t})
+                        "fences": f["fences"], "dogs": f["dogs"], "nbDogs": self._nb_dogs(f["owner"]), "dog": f["guard"] > t})
         view = self._raid_view(me, now)
         return {"targets": out, "left": view["left"], "ready": view["ready"]}
 
     @locked
     def raid(self, owner_key, body, ip, now):
-        """일꾼을 보낸다. {target, role, level, plan} 또는 되갚기 {revenge: 발자국 id, role, level, plan}"""
+        """일꾼을 보낸다. {target, role, level, plan}, 되갚기 {revenge: 발자국 id, …},
+        되찾아 주기(1.11) {recover: 이웃 id, …}: 그 이웃의 가장 최근 발자국을 따라 되갚기처럼 털고, 담은 것은 이웃에게 간다(recovered)."""
         me = self.owner(owner_key)
         if not isinstance(body, dict) or body.get("role") not in ROLES or body.get("plan") not in RAID_PLANS:
             raise BadRequest()
@@ -808,31 +950,37 @@ class Board:
             raise BadRequest("too_new")
         if self.db.execute("SELECT 1 FROM raids WHERE raider=? AND role=? AND end>?", (me, role, t)).fetchone():
             raise BadRequest("busy")
-        revenge = body.get("revenge")
-        if revenge is not None:
-            r = self.db.execute("SELECT raider FROM raids WHERE id=? AND victim=? AND revenge=0 AND avenged=0 AND end<=? AND end>?",
-                                (_match(revenge, RAID_ID), me, t, t - TRACKS)).fetchone()
-            victim = self._farm(r[0]) if r else None
+        revenge, recover, beneficiary = body.get("revenge"), body.get("recover"), ""
+        if revenge is not None or recover is not None:
+            if recover is not None:  # 되찾아 주기는 이웃의 발자국으로 하는 되갚기다(양 두 배, 하루 3번에 안 센다)
+                beneficiary = self._neighbor(me, recover)
+                r = self._footprint(me, beneficiary, t)
+                revenge = r[0] if r else recover
+            else:
+                r = self.db.execute("SELECT id, raider FROM raids WHERE id=? AND victim=? AND revenge=0 AND avenged=0 AND end<=? AND end>?",
+                                    (_match(revenge, RAID_ID), me, t, t - TRACKS)).fetchone()
+            victim = self._farm(r[1]) if r else None
             if victim is None:
                 raise KeyError(revenge)
             victim["lost"] = victim["lost"] if victim["lost_day"] == day else 0
         else:
             if self._raids_left(me, day) <= 0:
                 raise BadRequest("no_raids_left")
-            tid = _match(body.get("target"), re.compile(r"[0-9a-f]{16}"))
+            tid = _match(body.get("target"), TARGET_ID)
             victim = next((f for f in self._candidates(me, now) if self._target_id(me, f["owner"]) == tid), None)
             if victim is None:
                 raise KeyError(tid)
             if victim["guard"] > t and not BETA_OPEN:
                 raise BadRequest("guarded")
         loot = raid_loot(victim["crate"], victim["cap"], victim["fences"], victim["dogs"], 0 if BETA_OPEN else victim["lost"], role, level, plan,
-                         raid_budget(mine["cap"], mine["best"]), revenge is not None)
+                         raid_budget(mine["cap"], mine["best"]), revenge is not None, self._nb_dogs(victim["owner"]))
         if not loot:
             raise BadRequest("empty")
         rid = secrets.token_urlsafe(9)
         dur = raid_duration(role, plan)
-        self.db.execute("INSERT INTO raids(id, raider, victim, day, role, plan, start, end, loot, revenge) VALUES(?,?,?,?,?,?,?,?,?,?)",
-                        (rid, me, victim["owner"], day, role, plan, t, t + dur, json.dumps(loot, sort_keys=True), int(revenge is not None)))
+        self.db.execute("INSERT INTO raids(id, raider, victim, day, role, plan, start, end, loot, revenge, beneficiary) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                        (rid, me, victim["owner"], day, role, plan, t, t + dur, json.dumps(loot, sort_keys=True), int(revenge is not None),
+                         beneficiary))
         if revenge is not None:
             self.db.execute("UPDATE raids SET avenged=1 WHERE id=?", (revenge,))
         if revenge is not None:
@@ -844,6 +992,118 @@ class Board:
                             (json.dumps(left, sort_keys=True), day, victim["lost"] + sum(loot.values()), t + (0 if BETA_OPEN else GUARD), victim["owner"]))
         self.db.commit()
         return {"id": rid, "role": role, "left": int(dur)}
+
+    # 이웃 (1.11). 서로 돕는 사이: 서리 대상에서 빠지고 하루 한 번씩 돕기·선물. 상대 키 해시는 내려 주지 않는다(id 는 _target_id).
+
+    def _member(self, owner_key, action, now):
+        """이웃 요청 공통: 키 확인 → 횟수 제한 → 서리 맞추기로 만든 내 과수원이 있어야 한다"""
+        me = self.owner(owner_key)
+        self.limit(action, me, now)
+        mine = self._farm(me)
+        if mine is None:
+            raise BadRequest("no_farm")
+        return me, mine
+
+    def _neighbor(self, me, nid):
+        """요청한 사람에게 준 id 로 이웃을 찾는다"""
+        nid = _match(nid, TARGET_ID)
+        for (other,) in self.db.execute("SELECT other FROM neighbors WHERE owner=?", (me,)).fetchall():
+            if self._target_id(me, other) == nid:
+                return other
+        raise KeyError(nid)
+
+    def _code(self, me, now, renew=False):
+        """내 초대 코드(없으면 만든다). renew 면 새 코드로 바꾸고 옛 코드는 더 통하지 않는다."""
+        r = self.db.execute("SELECT code FROM codes WHERE owner=?", (me,)).fetchone()
+        if r and not renew:
+            return r[0]
+        code = ""
+        while not code or self.db.execute("SELECT 1 FROM codes WHERE code=?", (code,)).fetchone():
+            code = "".join(secrets.choice(CODE_CHARS) for _ in range(CODE_LEN))
+        self.db.execute("DELETE FROM codes WHERE owner=?", (me,))
+        self.db.execute("INSERT INTO codes VALUES(?,?,?)", (me, code, now.timestamp()))
+        return code
+
+    def _neighbor_view(self, me, mine, now):
+        t, day = now.timestamp(), day_key(now)
+        done = set(self.db.execute("SELECT receiver, kind FROM gifts WHERE sender=? AND day=?", (me, day)).fetchall())
+        out = []
+        for other, seen, dogs, look in self.db.execute("SELECT n.other, f.seen, f.dogs, f.look FROM neighbors n JOIN farms f ON f.owner = n.other "
+                                                       "WHERE n.owner=? ORDER BY n.created, n.rowid", (me,)).fetchall():
+            fp = self._footprint(me, other, t)
+            out.append({"id": self._target_id(me, other), "name": self._nick(other), "seed": self._seed(other), "look": json.loads(look),
+                        # 마지막으로 맞춘 지 몇 초. 언제 켜고 끄는지 자세히 드러나지 않게 시간 단위로 반올림
+                        "seen": int(max(0, t - seen) / 3600 + 0.5) * 3600,
+                        "helped": (other, "help") in done, "gifted": (other, "gift") in done, "dogs": dogs,
+                        # 24시간 안에 당하고 아직 아무도 되갚지 않았으면 남은 초(내가 되찾아 줄 수 있다)
+                        "track": int(fp[2] + TRACKS - t) if fp else 0})
+        return {"code": self._code(me, now), "max": MAX_NEIGHBORS, "thanks": mine["thanks"], "neighbors": out}
+
+    @locked
+    def neighbor_list(self, owner_key, now):
+        me, mine = self._member(owner_key, "neighbors", now)
+        out = self._neighbor_view(me, mine, now)
+        self.db.commit()  # 처음 보면 코드를 만든다
+        return out
+
+    @locked
+    def neighbor_code(self, owner_key, body, now):
+        me, _ = self._member(owner_key, "neighbor_code", now)
+        code = self._code(me, now, renew=isinstance(body, dict) and body.get("renew") is True)
+        self.db.commit()
+        return {"code": code}
+
+    @locked
+    def neighbor_add(self, owner_key, body, ip, now):
+        """받은 코드를 넣으면 바로 양쪽 이웃. 입력의 대소문자·하이픈·공백은 무시한다."""
+        me, mine = self._member(owner_key, "neighbor_add", now)
+        self.limit("neighbor_add_ip", self.ip(ip), now)
+        code = body.get("code") if isinstance(body, dict) else None
+        code = re.sub(r"[\s-]", "", code).upper() if isinstance(code, str) else ""
+        r = self.db.execute("SELECT c.owner FROM codes c JOIN farms f ON f.owner = c.owner WHERE c.code=?", (code,)).fetchone()
+        if not r or r[0] == me:
+            raise BadRequest("bad_code")
+        other = r[0]
+        if self.db.execute("SELECT 1 FROM neighbors WHERE owner=? AND other=?", (me, other)).fetchone():
+            raise BadRequest("already")
+        if any(self.db.execute("SELECT COUNT(*) FROM neighbors WHERE owner=?", (o,)).fetchone()[0] >= MAX_NEIGHBORS for o in (me, other)):
+            raise BadRequest("full")
+        t = now.timestamp()
+        self.db.executemany("INSERT INTO neighbors VALUES(?,?,?)", [(me, other, t), (other, me, t)])
+        out = dict(self._neighbor_view(me, mine, now), added=self._target_id(me, other))
+        self.db.commit()  # 목록을 만들며 내 코드가 처음 생길 수 있어 그 뒤에
+        return out
+
+    @locked
+    def neighbor_remove(self, owner_key, body, now):
+        """이웃 끊기(양쪽). 이미 보낸 돕기·선물은 그대로 간다."""
+        me, mine = self._member(owner_key, "neighbors", now)
+        other = self._neighbor(me, body.get("id") if isinstance(body, dict) else None)
+        self.db.execute("DELETE FROM neighbors WHERE (owner=? AND other=?) OR (owner=? AND other=?)", (me, other, other, me))
+        out = self._neighbor_view(me, mine, now)
+        self.db.commit()
+        return out
+
+    @locked
+    def neighbor_send(self, owner_key, kind, body, now):
+        """돕기(help)·선물(gift, 과일 한 개)을 이웃마다 하루 한 번씩. 받는 쪽은 raid/status 의 inbox 로 받는다.
+        선물 과일은 내가 연 가장 비싼 과일 값 이하만 확인한다(창고에서 빼는 것은 앱이 한다)."""
+        me, mine = self._member(owner_key, "neighbor_send", now)
+        if not isinstance(body, dict):
+            raise BadRequest()
+        other = self._neighbor(me, body.get("id"))
+        stamp, worker, fruit = _one(body.get("stamp"), STAMPS), _tuple(body.get("worker"), *WORKER_LOOK), None
+        if kind == "gift":
+            fruit = body.get("fruit")
+            if not isinstance(fruit, str) or fruit not in PRICE or PRICE[fruit] > PRICE[mine["best"]]:
+                raise BadRequest("bad_fruit")
+        day = day_key(now)
+        if self.db.execute("SELECT 1 FROM gifts WHERE sender=? AND receiver=? AND day=? AND kind=?", (me, other, day, kind)).fetchone():
+            raise BadRequest("done_today")
+        self.db.execute("INSERT INTO gifts(id, sender, receiver, day, kind, fruit, stamp, worker, created) VALUES(?,?,?,?,?,?,?,?,?)",
+                        (secrets.token_urlsafe(9), me, other, day, kind, fruit, stamp, json.dumps(worker), now.timestamp()))
+        self.db.commit()
+        return {"ok": True}
 
     def _snap(self, week, kind, rank, p):
         owner = self.db.execute("SELECT owner FROM posts WHERE id=?", (p["id"],)).fetchone()[0]
@@ -1156,6 +1416,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                     return self.send(200, {"current": board.week(now), "weeks": board.weeks()})
                 if parts[:1] == ["raid"]:
                     return self.raid(method, parts[1:], owner, now)
+                if parts[:1] == ["neighbors"]:
+                    return self.neighbors(method, parts[1:], owner, now)
                 if method == "GET" and parts == ["me"]:
                     return self.send(200, board.me(owner, now))
                 if method == "DELETE" and parts == ["me"]:
@@ -1165,6 +1427,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send({"unauthorized": 401, "mac_asleep": 409, "conflict": 409, "too_large": 413, "implausible": 422,
                                   # 서리
                                   "too_new": 409, "busy": 409, "no_raids_left": 409, "guarded": 409, "empty": 409, "no_farm": 409,
+                                  # 이웃(bad_fruit 은 422)
+                                  "bad_code": 409, "full": 409, "already": 409, "done_today": 409,
                                   }.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
@@ -1196,6 +1460,19 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, board.raid_targets(owner, now))
             if method == "POST" and parts == []:
                 return self.send(200, board.raid(owner, self.body(), self.client_ip(), now))
+            return self.send(404, {"error": "not_found"})
+
+        def neighbors(self, method, parts, owner, now):
+            if method == "GET" and parts == []:
+                return self.send(200, board.neighbor_list(owner, now))
+            if method == "POST" and parts == ["code"]:
+                return self.send(200, board.neighbor_code(owner, self.body(), now))
+            if method == "POST" and parts == ["add"]:
+                return self.send(200, board.neighbor_add(owner, self.body(), self.client_ip(), now))
+            if method == "POST" and parts == ["remove"]:
+                return self.send(200, board.neighbor_remove(owner, self.body(), now))
+            if method == "POST" and parts in (["help"], ["gift"]):
+                return self.send(200, board.neighbor_send(owner, parts[0], self.body(), now))
             return self.send(404, {"error": "not_found"})
 
         def serve_static(self, rel):
@@ -1248,8 +1525,16 @@ def open_board(data_dir):
     return Board(os.path.join(data_dir, "brag.sqlite3"), salt)
 
 
+def fast_raids():
+    """--raid-fast YES(로컬 확인·자체 점검 전용): 베타 때처럼 새 키·초보 보호·창고 20%·하루 3번·손실 상한·당한 뒤 개 없이
+    바로 서리하고, 작전은 6~10초. 자체 점검을 하루에 여러 번 돌려도 막히지 않는다."""
+    global NEW_KEY, NEWBIE, MIN_FILL, MIN_LEVEL, BETA_OPEN
+    NEW_KEY, NEWBIE, MIN_FILL, MIN_LEVEL, BETA_OPEN = 0, 0, 0, 0, True
+    RAID_PLANS.update(light=6, normal=8, deep=10)
+
+
 def main(argv):
-    global PREFIX, BOARD_URL, CORS_ORIGIN, STATS_TOKEN, NEW_KEY, NEWBIE, GUARD, MIN_FILL
+    global PREFIX, BOARD_URL, CORS_ORIGIN, STATS_TOKEN
     STATS_TOKEN = os.environ.get("STATS_TOKEN", "")
     args = dict(zip(argv[1::2], argv[2::2])) if argv[1:2] != ["admin"] else {}
     # 회사 인프라는 Data dir 을 IX_DATA_DIR 로, 포트를 PORT 로 넣어 준다
@@ -1258,8 +1543,7 @@ def main(argv):
     BOARD_URL = args.get("--board", BOARD_URL)
     CORS_ORIGIN = args.get("--cors", CORS_ORIGIN)
     if args.get("--raid-fast") == "YES":  # 로컬 확인 전용(자체 점검·캡처)
-        NEW_KEY, NEWBIE, GUARD, MIN_FILL = 0, 0, 30, 0
-        RAID_PLANS.update(light=6, normal=8, deep=10)
+        fast_raids()
     board = open_board(data)
     if argv[1:2] == ["admin"]:
         cmd, pid = (argv[2:] + ["", ""])[:2]

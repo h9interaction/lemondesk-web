@@ -1,5 +1,30 @@
 [
   {
+    "version": "1.15.0",
+    "date": "2026-11-16",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.0/LemonDesk-1.15.0.dmg",
+    "notes": {
+      "ko": [
+        "매니저 일꾼 '도담'이 생겼어요(창고 레벨 6부터). 쉬지 않고 창고가 가득 찰 때마다 대신 팔고(제값의 60~80%, 손으로 팔면 100%), 레벨 5부터 빈 칸에 심고, 레벨 10부터 다음 것을 대신 사요. 주말에도 과수원이 멈추지 않아요",
+        "관리 창에 '다음에 사면 좋은 것'이 한 줄로 보여요",
+        "레모네이드 가판대를 열 수 있어요. 창고의 과일로 레모네이드·과일청·마멀레이드를 만들면 재료보다 1.5배 비싸게 팔려요",
+        "가판대에 손님이 찾아와 주문을 남겨요. 직접 채우면 보상과 팁을 받아요(주문은 도담이 대신 채우지 않아요)",
+        "날씨가 생겼어요. 비가 오고, 눈이 내리고, 바람이 불어요. 비 오는 동안 돌보기 일꾼은 물 주기를 쉬어요",
+        "이웃 찾기에 '선배·후배' 정렬이 생겼어요. 막 시작했다면 키워 줄 선배를 찾아보세요",
+        "폰으로 보기에서도 도담·가판대·주문·날씨를 보고 바꿀 수 있어요"
+      ],
+      "en": [
+        "Meet Dodam, your orchard manager (from crate level 6). Dodam sells every time the crate fills, without breaks (60–80% of the price; selling by hand still gets 100%), plants empty plots from level 5, and buys your next upgrade from level 10. Your orchard keeps going over the weekend",
+        "The management window now shows the best thing to buy next",
+        "Open a lemonade stand and turn fruit from your crate into lemonade, syrup or marmalade, which sell for 1.5× the fruit",
+        "Guests visit the stand and leave orders. Fill them yourself for a reward and a tip (Dodam leaves orders to you)",
+        "Weather arrives: rain, snow and wind. Caretakers take a break from watering while it rains",
+        "Find Neighbors can now sort by senior and junior. Just starting out? Find a senior to help you grow",
+        "Phone view shows Dodam, the stand, orders and weather too, and lets you change them"
+      ]
+    }
+  },
+  {
     "version": "1.14.0",
     "date": "2026-11-16",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.14.0/LemonDesk-1.14.0.dmg",

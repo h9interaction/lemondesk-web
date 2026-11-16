@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.14.0</title>
-      <pubDate>Mon, 16 Nov 2026 10:47:28 GMT</pubDate>
-      <sparkle:version>23</sparkle:version>
-      <sparkle:shortVersionString>1.14.0</sparkle:shortVersionString>
+      <title>1.15.0</title>
+      <pubDate>Mon, 16 Nov 2026 13:56:54 GMT</pubDate>
+      <sparkle:version>24</sparkle:version>
+      <sparkle:shortVersionString>1.15.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>폰으로 보기에서도 Mac 에서 하던 일을 거의 다 할 수 있어요. 이웃·모음 탭이 생겼고, 서리 보내기·이웃 찾기·출장·바구니·묘목, 소품 자리·테마·옷 색 바꾸기도 폰에서 돼요</li><li>Mac 이 잠들거나 꺼져 있어도 폰에서 팔기·심기·고용 같은 일을 예약해 두면, Mac 이 깨어날 때 그 시각에 한 것처럼 반영돼요(최대 50개, 72시간)</li><li>Mac 이 꺼져 있어도 폰에서 이웃 물 주기·선물·출장·바구니·묘목을 바로 보낼 수 있어요</li><li>이웃 찾기가 생겼어요. 코드를 주고받지 않아도 과수원 목록에서 이웃 요청을 보내고, 받은 요청은 수락·거절·차단할 수 있어요. 찾기에 보이지 않게 끌 수도 있어요</li><li>초대 링크를 보내면, 받은 사람은 누르기만 해도 앱에서 바로 이웃을 맺을 수 있어요</li></ul><ul><li>Phone view now does almost everything the Mac app does: new Neighbors and Book tabs, plus scrumping, finding neighbors, worker loans, baskets, saplings, decor spots, themes and outfit colors</li><li>Even while your Mac is asleep or off, queue up selling, planting or hiring from your phone. When the Mac wakes up, they&#x27;re applied as if done at that moment (up to 50, within 72 hours)</li><li>Water, gifts, worker loans, baskets and saplings for neighbors go out right away from your phone, even with the Mac off</li><li>Find Neighbors: send a neighbor request from the orchard list without swapping codes, and accept, decline or block requests you get. You can hide yourself from the list too</li><li>Send an invite link: your friend taps it and becomes your neighbor right in the app</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.14.0/LemonDesk-1.14.0.dmg" type="application/octet-stream" sparkle:edSignature="Z/++cmlWWeArsV+19ms0pc48wo5yygyS13FTXrnEjIrxOX54+2VzKxO/V8DBgfS6jFEW+UsOoK7XguPYAAq2BA==" length="17576956"/>
+      <description><![CDATA[<ul><li>매니저 일꾼 &#x27;도담&#x27;이 생겼어요(창고 레벨 6부터). 쉬지 않고 창고가 가득 찰 때마다 대신 팔고(제값의 60~80%, 손으로 팔면 100%), 레벨 5부터 빈 칸에 심고, 레벨 10부터 다음 것을 대신 사요. 주말에도 과수원이 멈추지 않아요</li><li>관리 창에 &#x27;다음에 사면 좋은 것&#x27;이 한 줄로 보여요</li><li>레모네이드 가판대를 열 수 있어요. 창고의 과일로 레모네이드·과일청·마멀레이드를 만들면 재료보다 1.5배 비싸게 팔려요</li><li>가판대에 손님이 찾아와 주문을 남겨요. 직접 채우면 보상과 팁을 받아요(주문은 도담이 대신 채우지 않아요)</li><li>날씨가 생겼어요. 비가 오고, 눈이 내리고, 바람이 불어요. 비 오는 동안 돌보기 일꾼은 물 주기를 쉬어요</li><li>이웃 찾기에 &#x27;선배·후배&#x27; 정렬이 생겼어요. 막 시작했다면 키워 줄 선배를 찾아보세요</li><li>폰으로 보기에서도 도담·가판대·주문·날씨를 보고 바꿀 수 있어요</li></ul><ul><li>Meet Dodam, your orchard manager (from crate level 6). Dodam sells every time the crate fills, without breaks (60–80% of the price; selling by hand still gets 100%), plants empty plots from level 5, and buys your next upgrade from level 10. Your orchard keeps going over the weekend</li><li>The management window now shows the best thing to buy next</li><li>Open a lemonade stand and turn fruit from your crate into lemonade, syrup or marmalade, which sell for 1.5× the fruit</li><li>Guests visit the stand and leave orders. Fill them yourself for a reward and a tip (Dodam leaves orders to you)</li><li>Weather arrives: rain, snow and wind. Caretakers take a break from watering while it rains</li><li>Find Neighbors can now sort by senior and junior. Just starting out? Find a senior to help you grow</li><li>Phone view shows Dodam, the stand, orders and weather too, and lets you change them</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.0/LemonDesk-1.15.0.dmg" type="application/octet-stream" sparkle:edSignature="lltnj508F3wNItM7xexOCk3Cy4LXkteX61oqqRzf4JkBWjosXeO6vHw7MkhA4fRCFNJTwrQSxsKmt2HvGOw0CA==" length="18190946"/>
     </item>
   </channel>
 </rss>

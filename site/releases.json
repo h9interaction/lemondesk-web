@@ -1,5 +1,34 @@
 [
   {
+    "version": "1.12.0",
+    "date": "2026-11-16",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.12.0/LemonDesk-1.12.0.dmg",
+    "notes": {
+      "ko": [
+        "땅이 끝없이 넓어져요. 밭 10칸이 다 차면 오른쪽 풀숲을 개간해 한 칸씩 늘릴 수 있어요. 코인을 내면 일꾼이 몇 시간 동안 땅을 일궈요(이웃 손길이 있으면 더 빨라요)",
+        "띠가 화면 폭까지 길어지고, 그보다 넓은 밭은 ⌥(Option)를 누른 채 띠 위에서 스크롤해 둘러볼 수 있어요. ⌥를 누르고 있는 동안은 나무를 눌러 따고 창고를 눌러 팔 수도 있어요",
+        "땅을 일구다 보면 옛 물건이 나와요. 녹슨 물뿌리개부터 보물 상자까지 여덟 가지를 꾸미기 소품으로 놓을 수 있어요",
+        "관리 창에 밭 지도가 생겼어요. 칸을 누르면 띠가 그곳으로 가요",
+        "이웃 탭에서 내 과수원 이름을 정할 수 있어요. 이웃과 서리 목록에 그 이름으로 보여요",
+        "폰으로 보기에서도 넓어진 밭을 손가락으로 밀어 둘러볼 수 있어요",
+        "설정의 '내 자랑 지우기'가 이제 게시물과 받은 별만 지워요. 이웃과 이웃 코드, 서리 기록은 그대로예요(1.11 에서는 함께 지워졌어요). 서버의 기록을 모두 지우려면 바로 아래 '서버의 내 기록 모두 지우기'를 써요",
+        "자랑하기는 한 주에 하나만 올라가서, 다시 올리면 지우지 않아도 지난 게시물이 새 내용으로 바뀌어요. 자랑하기 창에 이 안내를 넣었어요",
+        "영어로 쓸 때 관리 창 위쪽 탭이 보이지 않던 문제를 고쳤어요"
+      ],
+      "en": [
+        "Your land now goes on forever. When all 10 plots are full, clear the wild patch on the right to add one plot at a time. Pay some coins and your workers spend a few hours clearing it (faster with a neighbor's help)",
+        "The strip now stretches up to the width of your screen, and wider orchards scroll: hold ⌥ (Option) and scroll over the strip to look around. While holding ⌥ you can also click trees to pick and click the crate to sell",
+        "Clearing land turns up old treasures: eight finds, from a rusty watering can to a treasure chest, that you can place as decorations",
+        "A new orchard map in the window: click a plot to move the strip there",
+        "Name your orchard on the Neighbors tab. Your neighbors and the scrumping list will see that name",
+        "In Phone view, swipe to look around your bigger orchard",
+        "Delete My Posts in Settings now removes only your posts and their stars. Your neighbors, invite code and scrumping records stay (in 1.11 they were deleted too). To delete everything on the server, use Delete Everything on the Server right below it",
+        "There's one board post per week, so posting again replaces your last post without deleting it. The posting window now says so",
+        "Fixed the window's tabs being hidden when the app is in English"
+      ]
+    }
+  },
+  {
     "version": "1.11.0",
     "date": "2026-11-16",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.11.0/LemonDesk-1.11.0.dmg",

@@ -1,5 +1,28 @@
 [
   {
+    "version": "1.13.0",
+    "date": "2026-11-16",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.13.0/LemonDesk-1.13.0.dmg",
+    "notes": {
+      "ko": [
+        "선배와 후배가 생겼어요. 창고 레벨이 4 이상 차이 나는 이웃(창고 12레벨 전)은 후배예요. 선배는 후배에게 일꾼을 4시간 출장 보내고(후배 띠에 일곱 번째 일꾼으로 와서 일해요), 비싼 과일 바구니와 아직 못 연 나무 묘목을 보낼 수 있어요",
+        "후배가 창고 6·12레벨, 유자·핑크 레몬 해금을 넘을 때마다 함께 축하하고 선배에게 고마움이 쌓여요. 제자를 졸업시키면 레몬 선생님 깃발 소품과 목표가 열려요",
+        "이웃 물 주기가 하루 2번(오전·오후)으로 늘었어요. 선배가 후배에게 주면 손길이 1시간이에요",
+        "오래 비우면 밭에 잡초와 낙엽이 쌓여요(열매와 나무는 그대로예요). 돌아와 치우면 퇴비가 되어 잠깐 더 빨리 자라고, 없는 동안 이웃이 물을 주면 잡초도 뽑아 줘요",
+        "폰으로 보기에서도 잡초·출장 일꾼·받은 묘목이 보이고, 폰에서 팔거나 심으면 밭이 치워져요",
+        "영어에서 서리 보내기 버튼이 Share 로 나오던 것을 고쳤어요"
+      ],
+      "en": [
+        "Seniors and juniors: a neighbor whose crate is 4 or more levels below yours (and under level 12) is your junior. Lend them a worker for 4 hours (it shows up on their strip as a seventh worker), or send a basket of pricey fruit and a sapling of a tree they haven't unlocked yet",
+        "Each time a junior reaches crate level 6 or 12 or unlocks yuja or pink lemon, you celebrate together and the senior earns thanks. Graduate a student to unlock the Lemon Mentor Flag decoration and new goals",
+        "You can now water each neighbor twice a day (morning and afternoon). Water from a senior to a junior lasts an hour",
+        "If you're away for a while, weeds and fallen leaves pile up on your field (your fruit and trees stay the same). Tidy up when you're back to make compost that speeds growth for a bit, and neighbors who water while you're away pull the weeds too",
+        "Phone view now shows weeds, lent workers and received saplings, and selling or planting from your phone tidies the field",
+        "Fixed the scrumping Send button showing as Share in English"
+      ]
+    }
+  },
+  {
     "version": "1.12.0",
     "date": "2026-11-16",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.12.0/LemonDesk-1.12.0.dmg",

@@ -14,6 +14,9 @@
   돕기 기록은 8주 뒤 지운다.
 - 쩔(1.13, neighbors/dispatch|basket|sapling): 창고 레벨이 4 이상 높은 선배가 후배 이웃에게 일꾼 출장·큰 바구니·묘목을 보낸다.
   받는 쪽 상한은 모든 선배를 합쳐 센다. 쩔 기록(carries)은 8주 뒤 지우고, 사제 단계는 이웃 관계(neighbors.steps)에 비트로 남긴다.
+- 1.14(docs/research/mobile-1.14.md): 이웃 찾기·요청(neighbors/discover|request|accept|decline|block|prefs, 요청·차단 기록),
+  폰 중계 예약(Mac 이 잠든 동안 '내 과수원' 명령을 relay_queue 에, Mac 이 relay/queue 로 받는다)과 대리(relay/link 로 소유 키 해시를
+  기기에 이어 두면 잠든 동안 이웃 명령을 서버가 처리하고 내 쪽 변화를 relay_effects 에 쌓는다).
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -58,7 +61,9 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
           "raid_active": (4, 3600),
           # 이웃(1.11): 소유 키당, neighbor_add_ip 는 IP 당(키를 바꿔 가며 코드를 마구 넣어 보지 못하게)
           "neighbors": (120, 3600), "neighbor_code": (10, 3600), "neighbor_add": (20, 3600), "neighbor_add_ip": (30, 3600),
-          "neighbor_send": (60, 3600), "neighbor_name": (10, 3600)}
+          "neighbor_send": (60, 3600), "neighbor_name": (10, 3600),
+          # 1.14 이웃 찾기·요청(소유 키당), 예약 명령 받아 가기(기기당)
+          "discover": (120, 3600), "neighbor_request": (60, 3600), "queue": (600, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -80,14 +85,28 @@ RELAY_WAIT = 25              # Mac 롱폴링 최대 초(앞단 프록시 시간 
 RELAY_WAITERS = 2            # 한 기기가 동시에 열 수 있는 대기(잠자기에서 깨면 끊긴 대기가 하나 남아 있다)
 RELAY_WAITERS_ALL = 2000     # 서버 전체 동시 대기. 넘으면 기다리지 않고 바로 답한다(스레드 고갈 방지)
 RELAY_WATCH = 30             # 폰이 이 초 안에 봤으면 '보는 중'
-RELAY_ONLINE = 90            # Mac 이 이 초 안에 왔으면(또는 기다리는 중이면) 깨어 있음
+RELAY_ONLINE = 35            # Mac 이 이 초 안에 왔으면(또는 기다리는 중이면) 깨어 있음. 롱폴링(RELAY_WAIT)을 쉬지 않고 이으므로 그보다 조금 길게(1.14: 90 이면 앱을 끈 직후 명령이 예약되지 않고 사라졌다)
 RELAY_FRESH = 3              # 폰이 처음 열 때 Mac 의 새 상태를 기다리는 초
 RELAY_CMD_TTL = 30           # 명령을 Mac 이 가져가지 않으면 버리는 초
 RELAY_QUEUE = 10
 RELAY_KEEP_DAYS = 90         # 쓰지 않는 페어링 보관
 RELAY_RESULT = 3             # 폰 명령이 Mac 의 처리 결과를 기다리는 초(넘으면 폰이 다시 묻는다)
 RELAY_ASKERS = 4             # 한 기기에서 동시에 결과를 기다릴 수 있는 명령 수
-ACTIONS = {"sell", "plant", "unlock", "hire", "crate", "hire2", "replant", "care"}  # hire2·replant: 1.7.1, care: 1.13 밭 치우기
+# 1.14 Mac 이 잠들었을 때(docs/research/mobile-1.14.md 확정 절): '내 과수원' 명령은 시각과 함께 쌓아 두고(예약),
+# 이웃 명령(nb_*)은 서버가 그 과수원 대리로 바로 처리한다. 서리 명령은 깨어 있을 때만.
+RELAY_QUEUE_MAX = 50
+RELAY_QUEUE_KEEP = 72 * 3600  # 앱 Balance.maxOffline(따라잡기 상한)과 같게
+RELAY_SERVER_RESULTS = 10     # 대리로 처리한 결과를 상태 results[] 에 섞어 줄 개수
+RELAY_SERVER_RESULT_TTL = 600
+# 대리로 처리한 결과({id, ok, reason, message, code}): reason 은 Mac 결과와 같은 poor|unavailable|failed, code 는 서버 오류 코드 그대로
+PROXY_POOR = {"no_fruit"}
+PROXY_MESSAGES = {
+    "no_fruit": "창고에 그 과일이 모자라요", "done_today": "이미 보냈어요. 다음 때 다시 해 주세요", "full": "이웃이 가득 찼어요",
+    "already": "이미 이웃이에요", "pending": "이미 요청을 보냈어요", "cooldown": "조금 뒤에 다시 요청할 수 있어요",
+    "closed": "지금은 요청을 받지 않는 과수원이에요", "rate_limited": "너무 많이 보냈어요. 나중에 다시 해 주세요",
+    "bad_code": "코드를 찾지 못했어요", "not_junior": "후배에게만 보낼 수 있어요", "taken_today": "오늘은 이미 받았어요",
+    "taken_week": "이번 주에는 이미 받았어요", "busy": "그 일꾼은 지금 바빠요", "holding": "아직 심지 않은 묘목이 있어요",
+    "not_found": "그 과수원을 찾지 못했어요", "no_farm": "Mac 에서 과수원을 한 번 맞춘 뒤에 할 수 있어요"}
 
 # 자랑 게시판 조작 방지(1.7.1): 올린 숫자가 게임에서 나올 수 있는 범위인지 본다. 앱 Balance.swift 와 같은 값(test_brag 가 대조한다).
 # 게임 저장은 서버로 옮기지 않는다. 가능한 최대치 바로 아래로 꾸민 숫자는 못 막고, 신고·관리 명령이 나머지를 맡는다.
@@ -209,6 +228,11 @@ TREE_LOOK = (KINDS, (0, 7))                    # 과수원 모습의 나무: 종
 WORKER_LOOK = (ROLES, (0, 1), (0, 4), (0, 6))  # 일꾼: 역할, variant, 장비 단계, 염색
 LOOK_MAX = 2048
 INBOX = 20                   # raid/status 한 번에 주는 받은 돕기·선물 수
+
+# 이웃 찾기·요청(1.14). id 는 이웃·서리 대상과 같은 _target_id(요청한 사람마다 다르다)
+REQUESTS_PER_DAY, REQUESTS_PENDING = 20, 30
+REQUEST_DAYS = 7 * 86400     # 요청이 사라지는 때이자, 거절·만료 뒤 같은 곳에 다시 요청을 막는 때
+DISCOVER_PAGE = 20
 
 # 선배·후배(1.13, docs/research/carry-1.13.md). 앱 Balance.Carry 와 같은 값.
 JUNIOR_GAP = 4               # 내 창고 레벨 − 이웃 창고 레벨 ≥ 4 이고
@@ -398,6 +422,46 @@ def clean_look(v):
 
 
 CMD_ID = re.compile(r"[A-Za-z0-9-]{1,40}")
+
+
+def _v_int(lo, hi):
+    return lambda v: isinstance(v, int) and not isinstance(v, bool) and lo <= v <= hi
+
+
+def _v_in(allowed):
+    return lambda v: isinstance(v, str) and v in allowed
+
+
+def _v_re(pattern):
+    return lambda v: isinstance(v, str) and pattern.fullmatch(v) is not None
+
+
+def _v_opt(f):
+    return lambda v: v is None or f(v)
+
+
+_NID, _STAMP, _ROLE, _KIND, _FRUIT, _PLAN = _v_re(TARGET_ID), _v_in(STAMPS), _v_in(ROLES), _v_in(KINDS), _v_in(PRICE), _v_in(RAID_PLANS)
+_TEXT = lambda v: isinstance(v, str) and len(v) <= 40  # noqa: E731 이름·검색어(이름 검사는 처리하는 쪽이 한다)
+# 폰 → Mac 명령과 받는 칸(그 밖의 칸은 버린다). 본문의 id 는 명령 id 라서, 확정 절에 id 로 적힌 이웃·찾은 과수원은 target,
+# 소품은 prop·pos 로 받는다(2026-11-16 코디네이터 정정). 실제로 되는지(코인·칸 수 등)는 Mac(또는 대리면 서버 규칙)이 본다.
+MINE = {  # '내 과수원' 명령: Mac 이 잠들었으면 예약(1.14). hire2·replant: 1.7.1, care: 1.13 밭 치우기
+    "sell": {}, "plant": {"kind": _KIND}, "unlock": {"kind": _KIND}, "hire": {"role": _ROLE}, "crate": {}, "hire2": {"role": _ROLE},
+    "replant": {"plot": _v_int(0, MAX_PLOTS - 1), "kind": _KIND}, "care": {},
+    "clear": {}, "seedling": {"plot": _v_opt(_v_int(0, MAX_PLOTS - 1))}, "theme": {"theme": _v_in(THEMES)},
+    "dye": {"role": _ROLE, "slot": _v_opt(_v_int(0, 5)), "variant": _v_opt(_v_int(0, 1)), "dye": _v_int(0, 6)},
+    "decor": {"prop": _v_re(re.compile(r"[a-z0-9-]{1,32}")),  # pos: 0~1, null 이면 치움
+              "pos": _v_opt(lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1)}}
+SERVER = {  # '서버' 명령: Mac 이 깨어 있으면 Mac 이 서버에 보내고, 잠들었으면 nb_* 만 서버가 대리로(서리는 mac_asleep)
+    "nb_help": {"target": _NID, "stamp": _STAMP}, "nb_gift": {"target": _NID, "fruit": _FRUIT, "stamp": _STAMP},
+    "nb_add": {"code": _v_re(re.compile(r"[A-Za-z0-9 -]{1,20}"))}, "nb_name": {"name": _TEXT},
+    "nb_dispatch": {"target": _NID, "role": _ROLE}, "nb_basket": {"target": _NID, "fruit": _FRUIT, "count": _v_int(1, MAX_CRATE), "stamp": _STAMP},
+    "nb_sapling": {"target": _NID, "kind": _KIND}, "nb_request": {"target": _NID, "stamp": _v_opt(_STAMP)},
+    "nb_accept": {"target": _NID}, "nb_decline": {"target": _NID}, "nb_block": {"target": _NID},
+    "nb_discover": {"q": _v_opt(_TEXT), "sort": _v_opt(_v_in({"new", "similar", "recent"})), "page": _v_opt(_v_int(0, 50))},
+    "raid_targets": {}, "raid_send": {"target": _NID, "role": _ROLE, "plan": _PLAN},
+    "raid_revenge": {"track": _v_re(RAID_ID), "role": _ROLE, "plan": _PLAN}, "raid_recover": {"target": _NID, "role": _ROLE, "plan": _PLAN}}
+COMMANDS = {**MINE, **SERVER}
+ACTIONS = set(COMMANDS)
 KEY = re.compile(r"[0-9a-f]{64}")
 URLISH = re.compile(r"(https?:|www\.|\.(com|net|org|kr|io|me|xyz|club)\b|@)", re.I)
 
@@ -406,6 +470,10 @@ class BadRequest(Exception):
     def __init__(self, code="bad_data"):
         super().__init__(code)
         self.code = code
+
+
+class Owner(str):
+    """이미 해시한 소유자(1.14 폰 대리: 서버는 relay_link 에 해시만 갖고 있다). Board.owner 가 그대로 쓴다."""
 
 
 class RateLimited(Exception):
@@ -582,6 +650,17 @@ class Board:
                 start REAL NOT NULL, end REAL NOT NULL, done INTEGER NOT NULL DEFAULT 0, seen INTEGER NOT NULL DEFAULT 0);
             CREATE INDEX IF NOT EXISTS carries_receiver ON carries(receiver, kind, day);
             CREATE INDEX IF NOT EXISTS carries_sender ON carries(sender, kind, end);
+            -- 1.14 이웃 요청(status: pending·declined, 수락하면 지운다. ended: 거절한 때)과 차단
+            CREATE TABLE IF NOT EXISTS requests(sender TEXT NOT NULL, receiver TEXT NOT NULL, created REAL NOT NULL, stamp TEXT,
+                status TEXT NOT NULL, ended REAL NOT NULL DEFAULT 0, PRIMARY KEY(sender, receiver));
+            CREATE INDEX IF NOT EXISTS requests_receiver ON requests(receiver, status);
+            CREATE TABLE IF NOT EXISTS blocks(owner TEXT NOT NULL, other TEXT NOT NULL, created REAL NOT NULL, PRIMARY KEY(owner, other));
+            -- 1.14 폰 중계: Mac 이 잠든 동안의 예약 명령, 폰 대리 연결(소유 키 해시), 대리로 한 일의 내 쪽 변화
+            CREATE TABLE IF NOT EXISTS relay_queue(device TEXT NOT NULL, id TEXT NOT NULL, action TEXT NOT NULL, body TEXT NOT NULL,
+                at REAL NOT NULL, PRIMARY KEY(device, id));
+            CREATE TABLE IF NOT EXISTS relay_link(device TEXT PRIMARY KEY, owner TEXT NOT NULL, created REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS relay_effects(device TEXT NOT NULL, id TEXT NOT NULL, kind TEXT NOT NULL, body TEXT NOT NULL,
+                at REAL NOT NULL, PRIMARY KEY(device, id));
         """)
         # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
         # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by). 1.12: 내 과수원 이름
@@ -593,7 +672,9 @@ class Board:
                                  ("raids", "beneficiary", "TEXT NOT NULL DEFAULT ''"), ("raids", "beneficiary_done", "INTEGER NOT NULL DEFAULT 0"),
                                  ("raids", "caught_by", "INTEGER NOT NULL DEFAULT 0"),
                                  ("neighbors", "steps", "INTEGER NOT NULL DEFAULT 0"), ("gifts", "long", "INTEGER NOT NULL DEFAULT 0"),
-                                 ("farms", "seedling", "INTEGER NOT NULL DEFAULT 0")):
+                                 ("farms", "seedling", "INTEGER NOT NULL DEFAULT 0"),
+                                 # 1.14 이웃 찾기에 보이기·요청 받기(기본 켬)
+                                 ("farms", "listed", "INTEGER NOT NULL DEFAULT 1"), ("farms", "asks", "INTEGER NOT NULL DEFAULT 1")):
             if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
                 self.db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
         self.db.execute("CREATE INDEX IF NOT EXISTS raids_beneficiary ON raids(beneficiary, end)")
@@ -622,6 +703,8 @@ class Board:
 
     @staticmethod
     def owner(key):
+        if isinstance(key, Owner):
+            return str(key)
         if not isinstance(key, str) or not re.fullmatch(r"[0-9a-f]{64}", key):
             raise BadRequest("unauthorized")
         return sha(key)
@@ -746,6 +829,10 @@ class Board:
             self.db.execute("DELETE FROM neighbors WHERE owner=? OR other=?", (owner, owner))
             self.db.execute("DELETE FROM gifts WHERE sender=? OR receiver=?", (owner, owner))
             self.db.execute("DELETE FROM carries WHERE sender=? OR receiver=?", (owner, owner))  # 1.13 쩔 기록
+            # 1.14 이웃 요청·차단, 폰 대리 연결
+            self.db.execute("DELETE FROM requests WHERE sender=? OR receiver=?", (owner, owner))
+            self.db.execute("DELETE FROM blocks WHERE owner=? OR other=?", (owner, owner))
+            self.db.execute("DELETE FROM relay_link WHERE owner=?", (owner,))
             self.db.commit()
         return n
 
@@ -915,16 +1002,21 @@ class Board:
             self.db.execute("DELETE FROM carries WHERE end < ?", (t - KEEP_WEEKS * WEEK,))  # 1.13 쩔 기록
             self.db.execute("DELETE FROM codes WHERE owner NOT IN (SELECT owner FROM farms)")
             self.db.execute("DELETE FROM neighbors WHERE owner NOT IN (SELECT owner FROM farms) OR other NOT IN (SELECT owner FROM farms)")
+            # 1.14: 요청은 7일 뒤 사라지고 다시 7일 뒤(다시 요청 막기가 끝나면) 지운다. 과수원이 지워진 설치의 요청·차단
+            self.db.execute("DELETE FROM requests WHERE created < ? OR sender NOT IN (SELECT owner FROM farms) "
+                            "OR receiver NOT IN (SELECT owner FROM farms)", (t - 2 * REQUEST_DAYS,))
+            self.db.execute("DELETE FROM blocks WHERE owner NOT IN (SELECT owner FROM farms) OR other NOT IN (SELECT owner FROM farms)")
             self.db.commit()
 
     # 서리 (1.8). 한 사람(raider)은 당한 쪽 응답 어디에도 넣지 않는다.
 
-    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best, thanks, name, seedling FROM farms"
+    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best, thanks, name, seedling, listed, asks FROM farms"
 
     @staticmethod
     def _farm_row(r):
         return {"owner": r[0], "cap": r[1], "crate": json.loads(r[2]), "fences": r[3], "level": r[4], "first": r[5],
-                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11], "thanks": r[12], "name": r[13], "seedling": r[14]}
+                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11], "thanks": r[12], "name": r[13], "seedling": r[14],
+                "listed": bool(r[15]), "asks": bool(r[16])}
 
     def _farm(self, owner):
         r = self.db.execute(self.FARM + " WHERE owner=?", (owner,)).fetchone()
@@ -1274,7 +1366,163 @@ class Board:
         return {"code": self._code(me, now), "max": MAX_NEIGHBORS, "thanks": mine["thanks"], "neighbors": out,
                 "teacher": self._grads(me),  # 1.13 내가 졸업시킨 제자 수
                 # 1.12 내가 정한 과수원 이름(없으면 null)과 앱이 이름을 지을 seed
-                "me": {"name": mine["name"] or None, "seed": self._seed(me)}}
+                "me": {"name": mine["name"] or None, "seed": self._seed(me)},
+                # 1.14 받은·보낸 이웃 요청(7일 안), 찾기에 보이기·요청 받기
+                "requests": self._requests(me, t), "prefs": {"listed": mine["listed"], "requests": mine["asks"]}}
+
+    def _requests(self, me, t):
+        q = self.db.execute
+        return {
+            "in": [{"id": self._target_id(me, o), "name": self._nick(o), "seed": self._seed(o), "look": json.loads(look), "level": level,
+                    "stamp": stamp, "at": int(at)} for o, stamp, at, look, level in
+                   q("SELECT r.sender, r.stamp, r.created, f.look, f.level FROM requests r JOIN farms f ON f.owner = r.sender "
+                     "WHERE r.receiver=? AND r.status='pending' AND r.created>? AND r.sender NOT IN (SELECT other FROM blocks WHERE owner=?) "
+                     "ORDER BY r.created", (me, t - REQUEST_DAYS, me))],
+            # 거절된 것도 7일 동안 그대로 보인다(거절했다고 알리지 않는다: "아직 답이 없어요")
+            "out": [{"id": self._target_id(me, o), "name": self._nick(o), "seed": self._seed(o), "at": int(at)} for o, at in
+                    q("SELECT r.receiver, r.created FROM requests r JOIN farms f ON f.owner = r.receiver WHERE r.sender=? AND r.created>? "
+                      "ORDER BY r.created", (me, t - REQUEST_DAYS))]}
+
+    def _find(self, me, nid, owners):
+        """요청한 사람에게 준 id(_target_id)로 owners 중에서 찾는다"""
+        nid = _match(nid, TARGET_ID)
+        for o in owners:
+            if self._target_id(me, o) == nid:
+                return o
+        raise KeyError(nid)
+
+    def _blocked(self, a, b):
+        return self.db.execute("SELECT 1 FROM blocks WHERE (owner=? AND other=?) OR (owner=? AND other=?)", (a, b, b, a)).fetchone() is not None
+
+    def _befriend(self, a, b, t):
+        if any(self.db.execute("SELECT COUNT(*) FROM neighbors WHERE owner=?", (o,)).fetchone()[0] >= MAX_NEIGHBORS for o in (a, b)):
+            raise BadRequest("full")
+        self.db.executemany("INSERT INTO neighbors(owner, other, created) VALUES(?,?,?)", [(a, b, t), (b, a, t)])
+        self.db.execute("DELETE FROM requests WHERE (sender=? AND receiver=?) OR (sender=? AND receiver=?)", (a, b, b, a))
+
+    @locked
+    def discover(self, owner_key, query, now):
+        """이웃 찾기(1.14): 최근 14일 안에 켜진 과수원 중 나·내 이웃·차단(양쪽)·보이기 끈 곳을 뺀다. 한 번에 20곳.
+        sort: recent(최근 활동, 기본)·similar(창고 레벨이 비슷한 순)·new(후배가 될 과수원만, 새로 시작한 순). q: 이름 검색.
+        ponytail: farms 를 다 훑고 이름도 하나씩 찾는다. 참여자가 수만이 되면 seen 색인과 이름 열 검색으로."""
+        me, mine = self._member(owner_key, "discover", now)
+        query = query if isinstance(query, dict) else {}
+        sort, text, page = query.get("sort") or "recent", query.get("q") or "", query.get("page") or 0
+        if sort not in ("recent", "similar", "new") or not _TEXT(text):
+            raise BadRequest()
+        page = _int(int(page) if isinstance(page, str) and page.isdigit() else page, 0, 50)
+        t = now.timestamp()
+        rows = self.db.execute("SELECT owner, look, level, seen, first FROM farms WHERE owner<>? AND listed=1 AND seen>? "
+                               "AND owner NOT IN (SELECT other FROM neighbors WHERE owner=?) "
+                               "AND owner NOT IN (SELECT other FROM blocks WHERE owner=?) AND owner NOT IN (SELECT owner FROM blocks WHERE other=?)",
+                               (me, t - STALE, me, me, me)).fetchall()
+        text = " ".join(text.split()).lower()
+        if text:
+            rows = [r for r in rows if text in (self._nick(r[0]) or "").lower()]
+        if sort == "new":
+            rows = sorted((r for r in rows if is_junior(mine["level"], r[2])), key=lambda r: -r[4])
+        elif sort == "similar":
+            rows.sort(key=lambda r: (abs(r[2] - mine["level"]), -r[3]))
+        else:
+            rows.sort(key=lambda r: -r[3])
+        part = rows[page * DISCOVER_PAGE:(page + 1) * DISCOVER_PAGE]
+        return {"farms": [{"id": self._target_id(me, o), "name": self._nick(o), "seed": self._seed(o), "look": json.loads(look), "level": level,
+                           "neighbors": self.db.execute("SELECT COUNT(*) FROM neighbors WHERE owner=?", (o,)).fetchone()[0],
+                           "seen": int(max(0, t - seen) / 3600 + 0.5) * 3600, "junior": is_junior(mine["level"], level)}
+                          for o, look, level, seen, _ in part],
+                "more": len(rows) > (page + 1) * DISCOVER_PAGE}
+
+    @locked
+    def neighbor_request(self, owner_key, body, now):
+        """이웃 요청(1.14) {id, stamp?} → {ok}. 상대가 이미 나에게 요청해 두었으면 바로 이웃({ok, added}).
+        차단(어느 쪽이든)이면 조용히 ok. 보낸 요청 하루 20·대기 30, 거절·만료 뒤 같은 곳은 7일 뒤에."""
+        me, mine = self._member(owner_key, "neighbor_request", now)
+        if not isinstance(body, dict) or not _v_opt(_STAMP)(body.get("stamp")):
+            raise BadRequest()
+        t = now.timestamp()
+        other = self._find(me, body.get("id"), [r[0] for r in self.db.execute("SELECT owner FROM farms WHERE owner<>?", (me,))])
+        if self._blocked(me, other):
+            return {"ok": True}
+        if self.db.execute("SELECT 1 FROM neighbors WHERE owner=? AND other=?", (me, other)).fetchone():
+            raise BadRequest("already")
+        if self.db.execute("SELECT 1 FROM requests WHERE sender=? AND receiver=? AND status='pending' AND created>?",
+                           (other, me, t - REQUEST_DAYS)).fetchone():
+            self._befriend(me, other, t)
+            self.db.commit()
+            return {"ok": True, "added": self._target_id(me, other)}
+        old = self.db.execute("SELECT status, created, ended FROM requests WHERE sender=? AND receiver=?", (me, other)).fetchone()
+        if old and old[0] == "pending" and old[1] > t - REQUEST_DAYS:
+            raise BadRequest("pending")
+        if old and (old[2] if old[0] == "declined" else old[1] + REQUEST_DAYS) > t - REQUEST_DAYS:
+            raise BadRequest("cooldown")
+        if not self._farm(other)["asks"]:
+            raise BadRequest("closed")
+        if any(self.db.execute("SELECT COUNT(*) FROM neighbors WHERE owner=?", (o,)).fetchone()[0] >= MAX_NEIGHBORS for o in (me, other)):
+            raise BadRequest("full")
+        today = datetime.strptime(day_key(now), "%Y-%m-%d").replace(tzinfo=KST).timestamp()  # KST 오늘 0시
+        sent, waiting = self.db.execute("SELECT SUM(created>=?), SUM(status='pending' AND created>?) FROM requests WHERE sender=?",
+                                        (today, t - REQUEST_DAYS, me)).fetchone()
+        if (sent or 0) >= REQUESTS_PER_DAY or (waiting or 0) >= REQUESTS_PENDING:
+            raise RateLimited()
+        self.db.execute("INSERT OR REPLACE INTO requests(sender, receiver, created, stamp, status) VALUES(?,?,?,?,'pending')",
+                        (me, other, t, body.get("stamp")))
+        self.db.commit()
+        return {"ok": True}
+
+    @locked
+    def neighbor_answer(self, owner_key, kind, body, now):
+        """받은 요청에 accept(양쪽 이웃, 이웃 목록 + added)·decline(보낸 쪽에는 알리지 않는다), block(요청·찾기에서 서로 안 보이고
+        이웃이었으면 끊긴다. id 는 받은 요청·찾기·이웃 목록 어디서 온 것이든). 셋 다 이웃 목록을 돌려준다."""
+        me, mine = self._member(owner_key, "neighbors", now)
+        nid = body.get("id") if isinstance(body, dict) else None
+        t = now.timestamp()
+        if kind == "block":
+            other = self._find(me, nid, [r[0] for r in self.db.execute("SELECT owner FROM farms WHERE owner<>?", (me,))])
+            self.db.execute("INSERT OR IGNORE INTO blocks VALUES(?,?,?)", (me, other, t))
+            self.db.execute("DELETE FROM requests WHERE (sender=? AND receiver=?) OR (sender=? AND receiver=?)", (me, other, other, me))
+            self.db.execute("DELETE FROM neighbors WHERE (owner=? AND other=?) OR (owner=? AND other=?)", (me, other, other, me))
+            extra = {}
+        else:
+            other = self._find(me, nid, [r[0] for r in self.db.execute(
+                "SELECT sender FROM requests WHERE receiver=? AND status='pending' AND created>?", (me, t - REQUEST_DAYS))])
+            if kind == "accept":
+                self._befriend(me, other, t)
+                extra = {"added": self._target_id(me, other)}
+            else:
+                self.db.execute("UPDATE requests SET status='declined', ended=? WHERE sender=? AND receiver=?", (t, other, me))
+                extra = {}
+        out = dict(self._neighbor_view(me, self._farm(me), now), **extra)
+        self.db.commit()
+        return out
+
+    @locked
+    def neighbor_prefs(self, owner_key, body, now):
+        """{listed?, requests?}(1.14): 이웃 찾기에 보이기, 요청 받기. 보낸 것만 바꾼다."""
+        me, mine = self._member(owner_key, "neighbor_name", now)
+        if not isinstance(body, dict) or any(k in body and not isinstance(body[k], bool) for k in ("listed", "requests")):
+            raise BadRequest()
+        listed, asks = body.get("listed", mine["listed"]), body.get("requests", mine["asks"])
+        self.db.execute("UPDATE farms SET listed=?, asks=? WHERE owner=?", (int(listed), int(asks), me))
+        self.db.commit()
+        return {"prefs": {"listed": listed, "requests": asks}}
+
+    @locked
+    def proxy_view(self, owner, now):
+        """폰 대리(1.14): Mac 이 잠든 동안 relay/view 에 덧붙일 이웃 목록(횟수 제한 없이, 폰이 5초마다 본다)"""
+        mine = self._farm(owner)
+        if mine is None:
+            return None
+        out = self._neighbor_view(owner, mine, now)
+        self.db.commit()
+        return out
+
+    @locked
+    def proxy_farm(self, owner):
+        """폰 대리: 창고(선물할 과일이 있는지)와 과수원 모습(보내는 일꾼 모습)"""
+        f = self._farm(owner)
+        if f:
+            f["look"] = json.loads(self.db.execute("SELECT look FROM farms WHERE owner=?", (owner,)).fetchone()[0])
+        return f
 
     @locked
     def neighbor_list(self, owner_key, now):
@@ -1450,7 +1698,8 @@ class Relay:
         e = self.live.get(device)
         if e is None:
             e = self.live[device] = {"state": None, "state_at": 0.0, "mac_seen": 0.0, "waiting": 0, "viewer_seen": 0.0,
-                                     "wake": False, "commands": [], "saved": 0.0, "cond": threading.Condition(self.lock), "results": {}, "asking": 0}
+                                     "wake": False, "commands": [], "saved": 0.0, "cond": threading.Condition(self.lock), "results": {}, "asking": 0,
+                                     "server_results": [], "discover": None}  # 1.14 대리로 처리한 결과·찾기(Mac 이 잠든 동안)
         return e
 
     def _online(self, e, t):
@@ -1493,7 +1742,8 @@ class Relay:
     def unpair(self, auth):
         device = self.mac(auth)
         with self.board.lock:
-            self.board.db.execute("DELETE FROM relay WHERE device=?", (device,))
+            for table in ("relay", "relay_queue", "relay_link", "relay_effects"):  # 1.14 예약·대리 연결·대리로 한 일도
+                self.board.db.execute("DELETE FROM %s WHERE device=?" % table, (device,))
             self.board.db.commit()
         with self.lock:
             e = self.live.pop(device, None)
@@ -1560,8 +1810,36 @@ class Relay:
     def _seen(self, e):
         """폰에 돌려주는 모양(잠근 채로 부른다)"""
         t = time.time()
-        return {"state": json.loads(e["state"]) if e["state"] else None, "stateAt": e["state_at"] or None,
+        state = json.loads(e["state"]) if e["state"] else None
+        e["server_results"] = [(at, r) for at, r in e["server_results"] if t - at < RELAY_SERVER_RESULT_TTL]
+        if state is not None and e["server_results"]:  # 1.14 서버가 대리로 처리한 결과도 Mac 의 결과와 같은 자리에
+            state["results"] = (state.get("results") if isinstance(state.get("results"), list) else []) + [r for _, r in e["server_results"]]
+        return {"state": state, "stateAt": e["state_at"] or None,
                 "macSeen": t if e["waiting"] else (e["mac_seen"] or None), "online": self._online(e, t), "now": t}
+
+    def _out(self, device, e, now):
+        """폰에 돌려줄 모양 + Mac 이 잠들었으면(1.14) 예약 대기 수, 대리 연결이 있으면 서버가 만든 이웃 목록·요청·찾기를 덧붙인다"""
+        with self.lock:
+            s, discover = self._seen(e), e["discover"]
+        st = s["state"]
+        if s["online"] or st is None:
+            return s
+        with self.board.lock:
+            st["queued"] = self.board.db.execute("SELECT COUNT(*) FROM relay_queue WHERE device=? AND at>?",
+                                                 (device, now.timestamp() - RELAY_QUEUE_KEEP)).fetchone()[0]
+        owner = self._linked(device)
+        v = self.board.proxy_view(Owner(owner), now) if owner else None
+        if v:
+            st.update(neighbors=v["neighbors"], requests=v["requests"], prefs=v["prefs"], thanks=v["thanks"], myCode=v["code"],
+                      myName=v["me"]["name"])
+            if discover is not None:
+                st["discover"] = discover
+        return s
+
+    def _linked(self, device):
+        with self.board.lock:
+            r = self.board.db.execute("SELECT owner FROM relay_link WHERE device=?", (device,)).fetchone()
+        return r[0] if r else None
 
     def view(self, auth, now):
         device = self.phone(auth)
@@ -1577,9 +1855,12 @@ class Relay:
                 end = time.monotonic() + RELAY_FRESH
                 while e["state_at"] < t and time.monotonic() < end:
                     e["cond"].wait(end - time.monotonic())
-            return self._seen(e)
+            online = self._online(e, t)
+            if online:
+                return self._seen(e)
+        return self._out(device, e, now)
 
-    def command(self, auth, body, now):
+    def command(self, auth, body, now, ip=""):
         device = self.phone(auth)
         self.board.limit("command", device, now)
         if not isinstance(body, dict):
@@ -1588,25 +1869,23 @@ class Relay:
         if not isinstance(cid, str) or not CMD_ID.fullmatch(cid) or action not in ACTIONS:
             raise BadRequest()
         cmd = {"id": cid, "action": action}
-        if action in ("plant", "unlock"):
-            if body.get("kind") not in KINDS:
+        for k, ok in COMMANDS[action].items():  # 정한 칸만 넘긴다(1.12 부터 칸 번호는 넓힌 칸까지, 실제 칸 수 안인지는 Mac 이 본다)
+            if not ok(body.get(k)):
                 raise BadRequest()
-            cmd["kind"] = body["kind"]
-        if action in ("hire", "hire2"):
-            if body.get("role") not in ROLES:
-                raise BadRequest()
-            cmd["role"] = body["role"]
-        if action == "replant":
-            plot = body.get("plot")
-            # 1.12: 넓힌 칸도. 실제 칸 수 안인지는 Mac 이 본다(서버는 칸 수를 모른다)
-            if body.get("kind") not in KINDS or isinstance(plot, bool) or not isinstance(plot, int) or not 0 <= plot < MAX_PLOTS:
-                raise BadRequest()
-            cmd["kind"], cmd["plot"] = body["kind"], plot
+            if k in body:
+                cmd[k] = body[k]
         with self.lock:
             e = self._entry(device)
             t = time.time()
-            if not self._online(e, t):
-                raise BadRequest("mac_asleep")
+            asleep = not self._online(e, t)
+        if asleep:  # 1.14: 내 과수원 명령은 예약, 이웃 명령은 대리(연결이 있으면), 서리는 깨어 있을 때만
+            if action in MINE:
+                return self._queue(device, e, cmd, now)
+            if action.startswith("nb_") and self._linked(device):
+                return self._proxy(device, e, cmd, now, ip)
+            raise BadRequest("mac_asleep")
+        with self.lock:
+            t = time.time()
             e["commands"] = [c for c in e["commands"] if t - c["at"] < RELAY_CMD_TTL]
             if len(e["commands"]) >= RELAY_QUEUE:
                 raise RateLimited()
@@ -1627,10 +1906,136 @@ class Relay:
                     self.waiting -= 1
             return {"ok": True, "result": e["results"].get(cid), **self._seen(e)}
 
+    def _queue(self, device, e, cmd, now):
+        """1단계 예약(1.14): 누른 시각과 함께 쌓는다. Mac 이 깨어나 따라잡기 중 그 시각에 끼워 실행한다. 같은 id 는 한 번만."""
+        t = now.timestamp()
+        with self.board.lock:
+            db = self.board.db
+            db.execute("DELETE FROM relay_queue WHERE device=? AND at<=?", (device, t - RELAY_QUEUE_KEEP))
+            r = db.execute("SELECT at FROM relay_queue WHERE device=? AND id=?", (device, cmd["id"])).fetchone()
+            if r is None:
+                if db.execute("SELECT COUNT(*) FROM relay_queue WHERE device=?", (device,)).fetchone()[0] >= RELAY_QUEUE_MAX:
+                    db.commit()
+                    raise RateLimited()
+                db.execute("INSERT INTO relay_queue VALUES(?,?,?,?,?)", (device, cmd["id"], cmd["action"],
+                           json.dumps({k: v for k, v in cmd.items() if k not in ("id", "action")}), t))
+            db.commit()
+        return {"ok": True, "queued": True, "at": r[0] if r else t, "result": None, **self._out(device, e, now)}
+
+    def _proxy(self, device, e, cmd, now, ip):
+        """2단계 대리(1.14): Mac 이 잠든 동안 이웃 명령을 서버가 그 과수원으로 바로 처리한다. 결과는 바로 돌려주고 상태 results[] 에도
+        섞는다. 내 쪽에 남는 변화(선물·바구니 과일, 출장 일꾼, 보낸 횟수)는 relay_effects 에 쌓아 Mac 이 깨어나면 반영한다."""
+        b, action, cid = self.board, cmd["action"], cmd["id"]
+        me = Owner(self._linked(device))
+        state = json.loads(e["state"]) if e["state"] else {}
+        effect, discover = None, None
+        try:
+            farm = b.proxy_farm(me)
+            if farm is None:
+                raise BadRequest("no_farm")
+            look = farm["look"]
+
+            def worker(role=None):  # 보내는 일꾼 모습: 과수원 모습(look)에서, 없으면 기본 모습
+                return next((w for w in look.get("workers", []) if role is None or w[0] == role), [role or "caretaker", 0, 0, 0])
+            if action in ("nb_gift", "nb_basket"):  # 그새 창고(마지막으로 알린 것 − 아직 반영 안 된 대리 선물)에 없으면 막는다
+                have = farm["crate"].get(cmd["fruit"], 0) - self._spent(device, cmd["fruit"])
+                if have < 1:
+                    raise BadRequest("no_fruit")
+            if action in ("nb_help", "nb_gift"):
+                kind = action[3:]
+                b.neighbor_send(me, kind, {"id": cmd["target"], "stamp": cmd["stamp"], "worker": worker(),
+                                           **({"fruit": cmd["fruit"]} if kind == "gift" else {})}, now)
+                out, effect = {}, {"kind": kind, **({"fruit": cmd["fruit"], "count": 1} if kind == "gift" else {})}  # help: 보낸 횟수만
+            elif action == "nb_dispatch":
+                level = next((w.get("level") for w in state.get("workers") or [] if isinstance(w, dict) and w.get("role") == cmd["role"]), 1)
+                level = max(0, min(level if isinstance(level, int) and not isinstance(level, bool) else 1, DISPATCH_LEVEL_CAP))
+                out = b.neighbor_carry(me, "dispatch", {"id": cmd["target"], "role": cmd["role"], "level": level,
+                                                       "worker": worker(cmd["role"])}, now)
+                effect = {"kind": "dispatch", "role": cmd["role"]}  # 출장 4시간 동안 그 일꾼 자리가 빈다
+            elif action == "nb_basket":
+                count = min(cmd["count"], have)
+                out = b.neighbor_carry(me, "basket", {"id": cmd["target"], "fruit": cmd["fruit"], "count": count, "stamp": cmd["stamp"],
+                                                     "worker": worker()}, now)
+                effect = {"kind": "basket", "fruit": cmd["fruit"], "count": out["count"]}
+            elif action == "nb_sapling":
+                out = b.neighbor_carry(me, "sapling", {"id": cmd["target"], "kind": cmd["kind"], "worker": worker()}, now)
+                effect = {"kind": "sapling"}
+            elif action == "nb_add":
+                out = b.neighbor_add(me, {"code": cmd["code"]}, ip or "0.0.0.0", now)
+            elif action == "nb_name":
+                out = b.neighbor_name(me, {"name": cmd["name"]}, now)
+            elif action == "nb_request":
+                out = b.neighbor_request(me, {"id": cmd["target"], "stamp": cmd.get("stamp")}, now)
+            elif action == "nb_discover":
+                out = discover = b.discover(me, cmd, now)
+            else:  # nb_accept·nb_decline·nb_block
+                out = b.neighbor_answer(me, action[3:], {"id": cmd["target"]}, now)
+            result = {"id": cid, "ok": True, **{k: out[k] for k in ("count", "added", "name") if k in out}}
+        except (BadRequest, RateLimited, KeyError) as x:
+            code = x.code if isinstance(x, BadRequest) else "rate_limited" if isinstance(x, RateLimited) else "not_found"
+            result = {"id": cid, "ok": False, "reason": "poor" if code in PROXY_POOR else "unavailable" if code in PROXY_MESSAGES else "failed",
+                      "message": PROXY_MESSAGES.get(code, "보내지 못했어요"), "code": code}
+        t = now.timestamp()
+        if effect:
+            with b.lock:
+                b.db.execute("INSERT INTO relay_effects VALUES(?,?,?,?,?)", (device, secrets.token_hex(8), effect.pop("kind"), json.dumps(effect), t))
+                b.db.commit()
+        with self.lock:
+            e["server_results"] = (e["server_results"] + [(time.time(), result)])[-RELAY_SERVER_RESULTS:]
+            if discover is not None:
+                e["discover"] = discover
+        return {"ok": True, "result": result, **self._out(device, e, now)}
+
+    def _spent(self, device, fruit):
+        """대리로 보내고 Mac 이 아직 반영하지 않은 그 과일 개수"""
+        with self.board.lock:
+            return sum(json.loads(body).get("count", 0) for (body,) in self.board.db.execute(
+                "SELECT body FROM relay_effects WHERE device=? AND kind IN ('gift', 'basket')", (device,))
+                if json.loads(body).get("fruit") == fruit)
+
+    def link(self, auth, owner_key, now):
+        """2단계 대리 등록(1.14): Mac 이 폰으로 보기를 켤 때마다. 소유 키는 해시만 둔다(다른 표와 같은 소유자 값)."""
+        device = self.mac(auth)
+        owner = Board.owner(owner_key)
+        self.board.limit("pair", device, now)
+        with self.board.lock:
+            self.board.db.execute("INSERT OR REPLACE INTO relay_link VALUES(?,?,?)", (device, owner, now.timestamp()))
+            self.board.db.commit()
+        return {"ok": True}
+
+    def queue(self, auth, now):
+        """Mac 이 깨어나면 받는다: 예약 명령(오래된 것부터, 72시간 지난 것은 지운다)과 대리로 한 일의 내 쪽 변화"""
+        device = self.mac(auth)
+        self.board.limit("queue", device, now)
+        with self.board.lock:
+            db = self.board.db
+            db.execute("DELETE FROM relay_queue WHERE device=? AND at<=?", (device, now.timestamp() - RELAY_QUEUE_KEEP))
+            db.commit()
+            return {"commands": [{"id": i, "action": a, **json.loads(body), "at": at} for i, a, body, at in
+                                 db.execute("SELECT id, action, body, at FROM relay_queue WHERE device=? ORDER BY at, rowid", (device,))],
+                    "effects": [{"id": i, "kind": k, **json.loads(body), "at": at} for i, k, body, at in
+                                db.execute("SELECT id, kind, body, at FROM relay_effects WHERE device=? ORDER BY at, rowid", (device,))]}
+
+    def queue_done(self, auth, body, now):
+        """{ids}: 반영한 예약 명령·변화를 지운다"""
+        device = self.mac(auth)
+        self.board.limit("queue", device, now)
+        ids = body.get("ids") if isinstance(body, dict) else None
+        if not isinstance(ids, list) or len(ids) > 200 or not all(isinstance(i, str) and CMD_ID.fullmatch(i) for i in ids):
+            raise BadRequest()
+        with self.board.lock:
+            for table in ("relay_queue", "relay_effects"):
+                self.board.db.executemany("DELETE FROM %s WHERE device=? AND id=?" % table, [(device, i) for i in ids])
+            self.board.db.commit()
+        return {"ok": True}
+
     def maintain(self, now):
         t = now.timestamp()
         with self.board.lock:
             self.board.db.execute("DELETE FROM relay WHERE seen < ?", (t - RELAY_KEEP_DAYS * 86400,))
+            self.board.db.execute("DELETE FROM relay_queue WHERE at <= ?", (t - RELAY_QUEUE_KEEP,))
+            for table in ("relay_link", "relay_effects"):  # 1.14: 페어링이 지워진 기기
+                self.board.db.execute("DELETE FROM %s WHERE device NOT IN (SELECT device FROM relay)" % table)
             self.board.db.commit()
         with self.lock:  # 하루 넘게 아무도 안 온 기기의 메모리 상태
             for d in [d for d, e in self.live.items() if not e["waiting"] and max(e["mac_seen"], e["viewer_seen"], e["state_at"]) < t - 86400]:
@@ -1694,7 +2099,7 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
             owner = self.headers.get("X-Owner-Key")
             try:
                 if parts[:1] == ["relay"]:
-                    return self.relay(method, parts[1:], q, now)
+                    return self.relay(method, parts[1:], q, owner, now)
                 if method == "GET" and parts == ["health"]:
                     return self.send(200, {"ok": True})
                 if method == "GET" and parts == ["posts"]:
@@ -1728,7 +2133,7 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 if parts[:1] == ["raid"]:
                     return self.raid(method, parts[1:], owner, now)
                 if parts[:1] == ["neighbors"]:
-                    return self.neighbors(method, parts[1:], owner, now)
+                    return self.neighbors(method, parts[1:], q, owner, now)
                 if method == "GET" and parts == ["me"]:
                     return self.send(200, board.me(owner, now))
                 if method == "DELETE" and parts == ["me", "posts"]:  # 1.11.1 게시물만
@@ -1744,6 +2149,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                                   "bad_code": 409, "full": 409, "already": 409, "done_today": 409,
                                   # 쩔(1.13, bad_kind 는 422)
                                   "not_junior": 409, "taken_today": 409, "taken_week": 409, "holding": 409,
+                                  # 이웃 요청(1.14)
+                                  "pending": 409, "cooldown": 409, "closed": 409,
                                   }.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
@@ -1752,7 +2159,7 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
             except ValueError:
                 return self.send(422, {"error": "bad_data"})
 
-        def relay(self, method, parts, q, now):
+        def relay(self, method, parts, q, owner, now):
             auth = self.headers.get("Authorization")
             if method == "POST" and parts == ["pair"]:
                 return self.send(200, relay.pair(auth, self.body(), self.client_ip(), now))
@@ -1765,7 +2172,14 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
             if method == "GET" and parts == ["view"]:
                 return self.send(200, relay.view(auth, now))
             if method == "POST" and parts == ["command"]:
-                return self.send(200, relay.command(auth, self.body(), now))
+                return self.send(200, relay.command(auth, self.body(), now, self.client_ip()))
+            # 1.14 예약·대리
+            if method == "GET" and parts == ["queue"]:
+                return self.send(200, relay.queue(auth, now))
+            if method == "POST" and parts == ["queue", "done"]:
+                return self.send(200, relay.queue_done(auth, self.body(), now))
+            if method == "POST" and parts == ["link"]:
+                return self.send(200, relay.link(auth, owner, now))
             return self.send(404, {"error": "not_found"})
 
         def raid(self, method, parts, owner, now):
@@ -1777,9 +2191,17 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, board.raid(owner, self.body(), self.client_ip(), now))
             return self.send(404, {"error": "not_found"})
 
-        def neighbors(self, method, parts, owner, now):
+        def neighbors(self, method, parts, q, owner, now):
             if method == "GET" and parts == []:
                 return self.send(200, board.neighbor_list(owner, now))
+            if method == "GET" and parts == ["discover"]:  # 1.14 이웃 찾기·요청
+                return self.send(200, board.discover(owner, q, now))
+            if method == "POST" and parts == ["request"]:
+                return self.send(200, board.neighbor_request(owner, self.body(), now))
+            if method == "POST" and parts in (["accept"], ["decline"], ["block"]):
+                return self.send(200, board.neighbor_answer(owner, parts[0], self.body(), now))
+            if method == "POST" and parts == ["prefs"]:
+                return self.send(200, board.neighbor_prefs(owner, self.body(), now))
             if method == "POST" and parts == ["code"]:
                 return self.send(200, board.neighbor_code(owner, self.body(), now))
             if method == "POST" and parts == ["add"]:

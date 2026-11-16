@@ -121,9 +121,9 @@
 
   .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; justify-content: center; padding: 0 8px env(safe-area-inset-bottom);
           border: solid transparent; border-width: 6px 8px; border-image: url(sprites/ui-plank.png) 6 8 fill / 6px 8px stretch; }
-  .tabs button { flex: 1; max-width: 160px; min-height: 56px; background: none; border: 0; color: #FFE9B8; font-size: 16.5px; display: flex; flex-direction: column;
+  .tabs button { flex: 1; min-width: 0; max-width: 160px; min-height: 56px; background: none; border: 0; color: #FFE9B8; font-size: 14px; display: flex; flex-direction: column;
                  align-items: center; justify-content: center; gap: 2px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  .tabs button img { height: 25px; }
+  .tabs button img { height: 25px; width: auto; }
   .tabs button[aria-selected="true"] { color: #FFD84A; box-shadow: inset 0 -4px 0 #FFD84A; }
 
   dialog.sheet { margin: auto auto 0; padding: 0; border: 0; background: none; width: 100%; max-width: 480px; }
@@ -134,6 +134,39 @@
   .plots button img { width: 62px; height: 55px; display: block; margin: 0 auto; }
   .plots button:disabled { opacity: .4; }
 
+  /* 1.14: 땅·꾸미기·밭 지도·옷 색·이웃·모음 */
+  .panel + .panel, #farm > .panel { margin-top: 10px; }
+  .panel > b.px { display: block; font-size: 16.5px; }
+  .note { font-size: 14px; color: var(--soft); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+  .row > .btn { flex: 1 1 0; min-width: 0; }
+  .row > .field { flex: 2 1 140px; }
+  .field { min-width: 0; min-height: 48px; font: inherit; font-size: 16px; padding: 6px 10px; border: 2px solid #C9A56B; border-radius: 0; background: #FFFDF3; color: #4A2E14; }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .seg button { flex: 1 1 0; min-width: 56px; min-height: 44px; padding: 4px 6px; border: 2px solid #C9A56B; background: #FFFDF3; color: #4A2E14; font: inherit; font-size: 14px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: #FFD84A; border-color: #5B3A1A; font-weight: 700; }
+  .seg button:disabled { opacity: .45; cursor: default; }
+  .seg button img { height: 22px; width: auto; vertical-align: middle; }
+  .seg .sw { flex: 1 1 0; min-width: 0; max-width: 52px; }
+  .prop { display: grid; grid-template-columns: 1fr; gap: 0; margin-top: 10px; font-size: 15px; }
+  .mini { display: flex; align-items: flex-end; height: 40px; margin: 4px 0; overflow: hidden; }
+  .mini img { height: 38px; width: auto; margin-right: -14px; }
+  .tag { display: inline-block; margin-left: 6px; padding: 0 6px; font-size: 13px; background: #E4F2C8; color: #2F5208; vertical-align: 2px; }
+  .icons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .icons img { width: 24px; height: 22px; }
+  .off img, img.off { filter: brightness(0); opacity: .25; }
+  .dex { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 4px; margin-top: 8px; text-align: center; font-size: 13px; line-height: 1.25; }
+  .dex img { width: 48px; height: 43px; display: block; margin: 0 auto 2px; }
+  .goal { margin-top: 8px; font-size: 14px; }
+  .goal .bar { height: 8px; margin: 2px 0 0; }
+  .goal.done { color: var(--soft); }
+  .plots > div { border: 2px solid #C9A56B; padding: 2px 0 0; min-height: 76px; font-size: 14px; text-align: center; }
+  .plots > div img { width: 62px; height: 55px; display: block; margin: 0 auto; }
+  #map { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); margin: 0; }
+  #map img { width: 100%; max-width: 62px; height: auto; }
+  .plots.list { grid-template-columns: 1fr; }
+  .plots.list button { min-height: 52px; font-size: 16px; display: flex; align-items: center; gap: 10px; padding: 4px 10px; text-align: left; }
+  .plots.list button img { width: auto; height: 32px; margin: 0; }
   .party { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 20; }
   .party .panel { width: 220px; text-align: center; animation: pop 2.6s ease-out forwards; }
   .party b { display: block; font-size: 16.5px; margin-bottom: 6px; }
@@ -176,6 +209,7 @@
         </div>
         <button class="btn px" id="sell" type="button" data-t="sell">모두 팔기</button>
       </div>
+      <div id="farm"></div>
       <p class="raid-note" id="raid-note" role="status" hidden></p>
       <div class="panel banner" id="banner" hidden><p id="banner-text"></p><button class="btn y px" id="retry" type="button" hidden></button></div>
       <div class="panel week" id="week" hidden>
@@ -187,11 +221,13 @@
         </div>
         <p class="more num" id="w-more"></p>
       </div>
+      <div id="deco-sec" hidden><h2 class="sec px" data-t="decoH">꾸미기</h2><div id="deco"></div></div>
     </section>
 
     <section id="tab-plant" role="tabpanel" aria-labelledby="t-plant" hidden>
       <h2 class="sec px" id="field"></h2>
       <div class="grid" id="kinds"></div>
+      <div id="map-sec" hidden><h2 class="sec px" data-t="mapH">밭 지도</h2><div class="panel"><div class="plots" id="map"></div></div></div>
     </section>
 
     <section id="tab-crew" role="tabpanel" aria-labelledby="t-crew" hidden>
@@ -199,6 +235,38 @@
       <div id="crew"></div>
       <h2 class="sec px" data-t="crateUp">창고 넓히기</h2>
       <div id="crate"></div>
+    </section>
+
+    <section id="tab-nb" role="tabpanel" aria-labelledby="t-nb" hidden>
+      <p class="panel" id="nb-old" hidden></p>
+      <div id="nb-main">
+        <div id="nb-req"></div>
+        <h2 class="sec px" data-t="myFarm">내 과수원</h2>
+        <div class="panel">
+          <b class="px" id="my-name"></b>
+          <p class="note num" id="my-thanks"></p>
+          <div class="row"><input class="field" id="name-in" maxlength="20" autocomplete="off" aria-label="과수원 이름"><button class="btn y px" id="name-go" type="button" data-t="rename">이름 바꾸기</button></div>
+          <div class="row"><button class="btn px" id="invite" type="button" data-t="invite">초대 링크 복사</button></div>
+          <div class="row"><input class="field" id="code-in" autocomplete="off" autocapitalize="characters" aria-label="이웃 코드나 링크"><button class="btn px" id="code-go" type="button" data-t="addBtn">이웃 맺기</button></div>
+          <p class="note" data-t="stampH">보낼 때 붙일 스탬프</p>
+          <div class="seg" id="stamps"></div>
+        </div>
+        <h2 class="sec px num" id="nb-h"></h2>
+        <div id="nb-list"></div>
+        <h2 class="sec px" data-t="findH">이웃 찾기</h2>
+        <div class="panel">
+          <div class="row"><input class="field" id="q" type="search" autocomplete="off" aria-label="과수원 이름 검색"><button class="btn px" id="find" type="button" data-t="findBtn">찾기</button></div>
+          <div class="seg" id="sorts"></div>
+          <div id="found"></div>
+        </div>
+        <h2 class="sec px" data-t="raidH">서리</h2>
+        <div id="raid"></div>
+      </div>
+    </section>
+
+    <section id="tab-col" role="tabpanel" aria-labelledby="t-col" hidden>
+      <p class="panel" id="col-old" hidden></p>
+      <div id="col"></div>
     </section>
   </main>
 
@@ -220,6 +288,8 @@
   <button type="button" role="tab" id="t-orchard" aria-controls="tab-orchard" aria-selected="true"><img src="sprites/icon-orchard.png" alt=""><span data-t="tOrchard">과수원</span></button>
   <button type="button" role="tab" id="t-plant" aria-controls="tab-plant" aria-selected="false"><img src="sprites/icon-plant.png" alt=""><span data-t="tPlant">심기</span></button>
   <button type="button" role="tab" id="t-crew" aria-controls="tab-crew" aria-selected="false"><img src="sprites/icon-crew.png" alt=""><span data-t="tCrew">일꾼</span></button>
+  <button type="button" role="tab" id="t-nb" aria-controls="tab-nb" aria-selected="false"><img src="sprites/emote-heart.png" alt=""><span data-t="tNb">이웃</span></button>
+  <button type="button" role="tab" id="t-col" aria-controls="tab-col" aria-selected="false"><img src="sprites/prop-chest-0.png" alt=""><span data-t="tCol">모음</span></button>
 </nav>
 
 <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
@@ -274,6 +344,47 @@
     chased: (n, ago) => `You chased off a scrumper. They only got ${n} · ${ago}`,
     clearing: s => `Clearing land · ${s > 0 ? `${dur(s)} left` : 'almost done'}`,
     seedling: k => `A senior sent you a ${k} sapling. Plant it on your Mac.`,
+    tNb: 'Neighbors', tCol: 'Book', decoH: 'Style', mapH: 'Field map', myFarm: 'My orchard', rename: 'Rename', invite: 'Copy invite link', addBtn: 'Add',
+    stampH: 'Stamp to attach', findH: 'Find neighbors', findBtn: 'Search', raidH: 'Scrumping', nameIn: 'Orchard name', codeIn: 'Neighbor code or link', qIn: 'Search orchard names',
+    update14: 'Update Lemon Desk on your Mac to 1.14 to use this tab.', thanks: n => `Thanks ${n}`, nbH: (n, m) => `Neighbors ${n} / ${m}`,
+    noNb: 'No neighbors yet. Find one below or share your invite link.', copied: 'Invite link copied', copyThis: u => `Copy this link: ${u}`,
+    landH: 'Expand Land', landNow: (n, f) => `${n} plots` + (f ? ` · something is buried at plot ${f}` : ''), clearBtn: t => `Start Clearing · ${t}`, landMax: 'Fill the field first',
+    weedsNote: 'Weeds and leaves are piling up in the field.', careBtn: 'Tidy Up', seedHave: k => `A senior sent you a ${k} sapling.`, seedBtn: 'Plant sapling',
+    theme: 'Theme', themes: {sunny: 'Sunny', blossom: 'Blossom', sunset: 'Sunset', moon: 'Moonlight', garden: 'Secret Garden'}, props: 'Props',
+    spots: ['Left', 'Middle', 'Right', 'Put away'], lockedN: n => `${n} more props to unlock (open them on your Mac)`,
+    propNames: {'prop-mailbox': 'Mailbox', 'prop-bench': 'Bench', 'prop-flowerpots': 'Row of flowerpots', 'prop-birdhouse': 'Birdhouse', 'prop-giftbasket': 'Gift basket',
+      'prop-signpost': 'Village signpost', 'prop-fountain': 'Lemon fountain', 'prop-scarecrow': 'Straw-hat scarecrow', 'prop-sacks': 'Pile of loot sacks',
+      'prop-clothesline': 'Bandit-mask clothesline', 'prop-oldcan': 'Rusty Watering Can', 'prop-jar': 'Onggi Jar', 'prop-wheelbarrow': 'Old Wheelbarrow', 'prop-beehive': 'Beehive',
+      'prop-well': 'Old Stone Well', 'prop-stonelamp': 'Mossy Stone Lantern', 'prop-windmill': 'Little Wooden Windmill', 'prop-mentorflag': 'Lemon Mentor Flag', 'prop-chest': 'Treasure Chest'},
+    outfit: 'Outfit color', dyes: ['Original', 'Red', 'Orange', 'Green', 'Sky', 'Purple', 'Pink'],
+    stamps: {heart: 'Heart', note: 'Note', star: 'Star'}, junior: 'Junior', senior: 'Senior', teacher: n => `Mentor ${n}`, seen: a => `Visited ${a}`,
+    water: 'Water', gift: 'Gift', dispatch: 'Send worker', basket: 'Big basket', sapling: 'Sapling', recover: 'Get it back',
+    helpDay: (am, pm) => `Watering today · AM ${am ? '✓' : '–'} · PM ${pm ? '✓' : '–'}`, nbWeeds: 'Their field is weedy. Watering pulls weeds too.',
+    trackLeft: t => `Got scrumped. You can get it back within ${t}.`, giftWhich: 'Which fruit to gift?', basketWhich: 'Which fruit fills the basket?', saplingWhich: 'Which sapling to send?',
+    roleWhich: 'Which worker goes?', planWhich: 'How deep?', plans: {light: 'Quick', normal: 'Normal', deep: 'Deep'},
+    reqIn: n => `Neighbor requests ${n}`, accept: 'Accept', decline: 'Decline', block: 'Block', reqOut: 'Sent requests', noAnswerYet: 'No answer yet',
+    request: 'Request', requested: 'Requested', sorts: {new: 'New orchards', similar: 'Similar level', recent: 'Recently active'}, more2: 'Next page', none: 'No orchards found.',
+    farmLine: (l, n, a) => `Crate level ${l} · ${n} neighbors · ${a}`, newFarm: 'New', raidLeft: n => `Scrumps left today: ${n}`, raidAwake: 'You can only send scrumpers while your Mac is on.',
+    targetsBtn: 'Show targets', raidGo: 'Scrump', revenge: 'Pay back', revengeLine: t => `Follow the scrumper's tracks · ${t} left`, fillLine: (f, d) => `Crate ${f}% full` + (d ? ' · dog barking' : ''),
+    noTargets: 'No orchards to scrump right now.',
+    dexH: (n, m) => `Book ${n} / ${m}`, goalsH: 'Goals', secretsH: (n, m) => `Secrets ${n} / ${m}`, scrumpH: (n, m) => `Scrumping book ${n} / ${m}`, giftedH: (n, m) => `Gift book ${n} / ${m}`,
+    goals: {plant: n => n === 1 ? 'Plant your first tree' : `Plant ${n} trees`, dex: n => `Fill ${n} kinds in the Book`, rainbow: () => 'Unlock the rainbow lemon', crate: n => `Crate level ${n}`,
+      worker: n => `Worker level ${n}`, second: () => 'Hire a second worker', gear: () => 'Master gear for all three workers', sold: n => `Sell ${fmt(n)} lemons`, earned: n => `Earn ${fmt(n)} coins`,
+      dogs: () => 'Three guard dogs', secrets: n => `Find ${n} secrets`, scrump: n => `${n} kinds in the scrumping book`, neighbors: n => n === 1 ? 'Make your first neighbor' : `${n} neighbors`,
+      acts: n => `Help or gift ${n} times`, gifted: n => `${n} kinds in the gift book`, thanks: n => `Receive ${n} thanks`, land: n => `Expand to ${n} plots`, finds: n => `Dig up ${n} finds`,
+      mentor: n => n === 1 ? 'First student graduates' : `${n} students graduate`},
+    asleepQ: ago => `Your Mac is asleep${ago ? ` (last seen ${ago})` : ''}. What you tap is scheduled and applied at that time when your Mac wakes up.`, queuedN: n => ` Scheduled: ${n}.`,
+    queued: 'Scheduled · applied as of this time when your Mac wakes up', queuedSell: v => `Scheduled · about ${v} coins (estimate) when your Mac wakes up`, late: m => `Scheduled: ${m}`,
+    poorThen: "You didn't have enough coins at that time", expired: 'Dropped after 72 hours',
+    done: {care: 'Field tidied', clear: 'Started clearing', seedling: 'Planted the sapling', theme: 'Theme changed', dye: 'Outfit color changed', decor: 'Prop moved',
+      nb_help: 'Watered', nb_gift: 'Gift sent', nb_add: 'You are neighbors now', nb_name: 'Name changed', nb_dispatch: 'Worker sent', nb_basket: 'Basket sent', nb_sapling: 'Sapling sent',
+      nb_request: 'Request sent', nb_accept: 'You are neighbors now', nb_decline: 'Request declined', nb_block: 'Blocked', raid_send: 'Scrumper sent', raid_revenge: 'Off to pay back', raid_recover: 'Off to get it back'},
+    why: {full: 'Neighbor list is full (10 max)', already: 'Already neighbors', pending: 'Already requested', cooldown: 'You can ask again in a few days', closed: "This orchard isn't taking requests",
+      rate_limited: 'Try again in a moment', too_new: 'New orchards can scrump from the next day.', busy: 'That worker is already out.', no_raids_left: 'No scrumps left today. Try tomorrow.',
+      guarded: 'A dog is barking. Pick another orchard.', empty: 'Nothing to take.', not_found: "That orchard isn't available anymore. Refresh the list.", bad_code: "That code doesn't work",
+      done_today: 'Already done today. Try again later.', not_junior: 'Only juniors can get that', taken_today: 'They already got one today', taken_week: 'They already got a sapling this week',
+      holding: 'They still have a sapling to plant', bad_fruit: "That fruit can't be sent", no_fruit: 'Not enough of that fruit in your crate', bad_kind: "That sapling can't be sent"},
+    adjs: ['Sleepy', 'Busy', 'Shy', 'Lazy', 'Tangy', 'Sparkly', 'Plucky', 'Quiet', 'Hungry', 'Humming', 'Sunny', 'Breezy'], farm: (a, f) => `${a} ${f} orchard`,
   } : {
     crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
     fullIn: t => `가득까지 ${t}`, full: '창고가 가득 찼어요', slow: '천천히 차는 중', field: (n, m) => `밭 ${n} / ${m}칸`, fieldFull: (n, m) => `밭 ${n} / ${m}칸 · 다 차서 바꿔 심을 수 있어요`,
@@ -305,11 +416,52 @@
     chased: (n, ago) => `서리꾼을 쫓아냈어요. ${n}개만 가져갔어요 · ${ago}`,
     clearing: s => `개간 중 · ${s > 0 ? `${dur(s)} 남음` : '곧 끝나요'}`,
     seedling: k => `선배가 보낸 ${k} 묘목이 있어요. 심기는 Mac에서 해요.`,
+    tNb: '이웃', tCol: '모음', decoH: '꾸미기', mapH: '밭 지도', myFarm: '내 과수원', rename: '이름 바꾸기', invite: '초대 링크 복사', addBtn: '이웃 맺기',
+    stampH: '보낼 때 붙일 스탬프', findH: '이웃 찾기', findBtn: '찾기', raidH: '서리', nameIn: '과수원 이름', codeIn: '이웃 코드나 링크', qIn: '과수원 이름 검색',
+    update14: 'Mac의 Lemon Desk를 1.14로 올리면 이 탭을 쓸 수 있어요.', thanks: n => `고마움 ${n}`, nbH: (n, m) => `이웃 ${n} / ${m}`,
+    noNb: '아직 이웃이 없어요. 아래에서 찾거나 초대 링크를 보내 보세요.', copied: '초대 링크를 복사했어요', copyThis: u => `이 링크를 복사해 보내세요: ${u}`,
+    landH: '땅 넓히기', landNow: (n, f) => `지금 ${n}칸` + (f ? ` · ${f}번째 칸에 무언가 묻혀 있어요` : ''), clearBtn: t => `개간 시작 · ${t}`, landMax: '밭을 다 채우면 넓힐 수 있어요',
+    weedsNote: '밭에 잡초와 낙엽이 쌓였어요.', careBtn: '밭 치우기', seedHave: k => `선배가 보낸 ${k} 묘목이 있어요.`, seedBtn: '묘목 심기',
+    theme: '테마', themes: {sunny: '햇살', blossom: '봄빛', sunset: '노을', moon: '달밤', garden: '비밀 정원'}, props: '소품',
+    spots: ['왼쪽', '가운데', '오른쪽', '치우기'], lockedN: n => `아직 열리지 않은 소품 ${n}개(여는 조건은 Mac에서 봐요)`,
+    propNames: {'prop-mailbox': '우편함', 'prop-bench': '벤치', 'prop-flowerpots': '화분 줄', 'prop-birdhouse': '새집', 'prop-giftbasket': '선물 바구니',
+      'prop-signpost': '동네 길 팻말', 'prop-fountain': '레몬 분수', 'prop-scarecrow': '밀짚모자 허수아비', 'prop-sacks': '서리꾼 자루 더미',
+      'prop-clothesline': '복면 빨랫줄', 'prop-oldcan': '녹슨 물뿌리개', 'prop-jar': '옹기 항아리', 'prop-wheelbarrow': '낡은 손수레', 'prop-beehive': '꿀벌통',
+      'prop-well': '옛 돌우물', 'prop-stonelamp': '이끼 낀 석등', 'prop-windmill': '작은 나무 풍차', 'prop-mentorflag': '레몬 선생님 깃발', 'prop-chest': '보물 상자'},
+    outfit: '옷 색', dyes: ['원래 색', '빨강', '주황', '초록', '하늘', '보라', '분홍'],
+    stamps: {heart: '하트', note: '음표', star: '별'}, junior: '후배', senior: '선배', teacher: n => `선생님 ${n}`, seen: a => `${a} 접속`,
+    water: '물 주기', gift: '선물', dispatch: '출장', basket: '큰 바구니', sapling: '묘목', recover: '되찾아 주기',
+    helpDay: (am, pm) => `오늘 물 주기 · 오전 ${am ? '✓' : '–'} · 오후 ${pm ? '✓' : '–'}`, nbWeeds: '밭에 잡초가 있어요. 물 주러 가면 잡초도 뽑아 줘요.',
+    trackLeft: t => `서리를 당했어요. ${t} 안에 되찾아 줄 수 있어요.`, giftWhich: '어떤 과일을 선물할까요?', basketWhich: '바구니에 어떤 과일을 담을까요?', saplingWhich: '어떤 묘목을 보낼까요?',
+    roleWhich: '어느 일꾼을 보낼까요?', planWhich: '얼마나 깊이 들어갈까요?', plans: {light: '살짝', normal: '보통', deep: '깊숙이'},
+    reqIn: n => `이웃 요청 ${n}`, accept: '수락', decline: '거절', block: '차단', reqOut: '보낸 요청', noAnswerYet: '아직 답이 없어요',
+    request: '이웃 요청', requested: '요청함', sorts: {new: '새로 시작한 과수원', similar: '비슷한 레벨', recent: '최근 활동'}, more2: '다음 쪽', none: '찾은 과수원이 없어요.',
+    farmLine: (l, n, a) => `창고 레벨 ${l} · 이웃 ${n}명 · ${a}`, newFarm: '새로 시작', raidLeft: n => `오늘 남은 서리 ${n}번`, raidAwake: 'Mac이 켜져 있을 때만 서리를 보낼 수 있어요.',
+    targetsBtn: '서리할 과수원 보기', raidGo: '서리하기', revenge: '되갚기', revengeLine: t => `서리꾼의 발자국을 따라가요 · ${t} 남음`, fillLine: (f, d) => `창고 ${f}% 참` + (d ? ' · 개가 짖는 중' : ''),
+    noTargets: '지금 서리할 만한 과수원이 없어요.',
+    dexH: (n, m) => `도감 ${n} / ${m}`, goalsH: '목표', secretsH: (n, m) => `비밀 ${n} / ${m}`, scrumpH: (n, m) => `서리 수첩 ${n} / ${m}`, giftedH: (n, m) => `선물 수첩 ${n} / ${m}`,
+    goals: {plant: n => n === 1 ? '첫 나무 심기' : `나무 ${n}그루 심기`, dex: n => `도감 ${n}종 채우기`, rainbow: () => '무지개 레몬 열기', crate: n => `창고 레벨 ${n}`,
+      worker: n => `일꾼 레벨 ${n}`, second: () => '두 번째 일꾼 고용', gear: () => '세 일꾼 모두 명인 장비', sold: n => `레몬 ${fmt(n)}개 팔기`, earned: n => `코인 ${fmt(n)} 벌기`,
+      dogs: () => '집 지키는 개 세 마리', secrets: n => `비밀 ${n}개 찾기`, scrump: n => `서리 수첩 ${n}종`, neighbors: n => n === 1 ? '첫 이웃 맺기' : `이웃 ${n}명`,
+      acts: n => `돕기·선물 ${n}번`, gifted: n => `선물 수첩 ${n}종`, thanks: n => `고마움 ${n}개 받기`, land: n => `땅 ${n}칸까지 넓히기`, finds: n => `발견물 ${n}개 찾기`,
+      mentor: n => n === 1 ? '첫 제자 졸업' : `제자 ${n}명 졸업`},
+    asleepQ: ago => `Mac이 잠자는 중이에요${ago ? `(마지막 연결 ${ago})` : ''}. 누르면 예약되고, Mac이 켜지면 누른 시각 기준으로 반영돼요.`, queuedN: n => ` 예약 ${n}개.`,
+    queued: '예약했어요 · Mac이 켜지면 이 시각 기준으로 반영돼요', queuedSell: v => `예약했어요 · Mac이 켜지면 약 ${v}코인(예상)`, late: m => `예약한 일: ${m}`,
+    poorThen: '그때는 코인이 모자랐어요', expired: '72시간이 지나 버려졌어요',
+    done: {care: '밭을 치웠어요', clear: '개간을 시작했어요', seedling: '묘목을 심었어요', theme: '테마를 바꿨어요', dye: '옷 색을 바꿨어요', decor: '소품을 옮겼어요',
+      nb_help: '물을 줬어요', nb_gift: '선물을 보냈어요', nb_add: '이웃이 됐어요', nb_name: '이름을 바꿨어요', nb_dispatch: '출장 보냈어요', nb_basket: '바구니 보냈어요', nb_sapling: '묘목 보냈어요',
+      nb_request: '이웃 요청을 보냈어요', nb_accept: '이웃이 됐어요', nb_decline: '요청을 거절했어요', nb_block: '차단했어요', raid_send: '서리를 보냈어요', raid_revenge: '되갚으러 갔어요', raid_recover: '되찾으러 갔어요'},
+    why: {full: '이웃은 10명까지예요', already: '이미 이웃이에요', pending: '이미 요청했어요', cooldown: '며칠 뒤에 다시 요청할 수 있어요', closed: '요청을 받지 않는 과수원이에요',
+      rate_limited: '잠시 뒤에 다시 해 보세요.', too_new: '새로 시작한 과수원은 하루 뒤부터 서리할 수 있어요.', busy: '그 일꾼은 이미 나가 있어요.', no_raids_left: '오늘 서리는 다 했어요. 내일 다시 해요.',
+      guarded: '개가 짖고 있어요. 다른 과수원을 골라요.', empty: '가져올 게 없어요.', not_found: '그 과수원은 이제 없어요. 목록을 새로 고쳐요.', bad_code: '쓸 수 없는 코드예요',
+      done_today: '오늘은 이미 했어요. 다음에 또 해요.', not_junior: '후배에게만 보낼 수 있어요', taken_today: '이 이웃은 오늘 이미 받았어요', taken_week: '이 이웃은 이번 주에 묘목을 이미 받았어요',
+      holding: '이 이웃은 아직 심지 않은 묘목을 갖고 있어요', bad_fruit: '그 과일은 보낼 수 없어요', no_fruit: '창고에 그 과일이 모자라요', bad_kind: '그 묘목은 보낼 수 없어요'},
+    adjs: ['졸린', '부지런한', '수줍은', '느긋한', '새콤한', '반짝이는', '씩씩한', '조용한', '배고픈', '콧노래 부르는', '햇살 가득한', '바람 부는'], farm: (a, f) => `${a} ${f} 과수원`,
   };
   // 윈도우판(상태의 platform 이 win)이면 연결 뒤 문구의 'Mac' 을 'PC' 로. 맥 앱은 platform 을 보내지 않는다.
   let pc = false;
   const toPC = t => t.replace(/Mac이/g, 'PC가').replace(/Mac을/g, 'PC를').replace(/Mac/g, 'PC');
-  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling']) {
+  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN']) {
     const v = T[k];
     if (typeof v === 'function') T[k] = (...a) => pc ? toPC(v(...a)) : v(...a);
     else Object.defineProperty(T, k, { get: () => pc ? toPC(v) : v });
@@ -319,12 +471,15 @@
   const fmt = n => new Intl.NumberFormat(en ? 'en' : 'ko').format(n);
   const short = n => n < 100000 ? fmt(n) : new Intl.NumberFormat(en ? 'en' : 'ko', {notation: 'compact', maximumFractionDigits: 1}).format(n);
   const dur = s => { const m = Math.ceil(s / 60), h = Math.floor(m / 60), r = m % 60; return en ? (h ? `${h} h` + (r ? ` ${r} min` : '') : `${m} min`) : (h ? `${h}시간` + (r ? ` ${r}분` : '') : `${m}분`); };
-  const landOf = s => s.land || s.maxTrees || 10; // 1.12 칸 수. 옛 앱은 land 가 없고 maxTrees 가 10
+  // 1.14 앱은 land 가 {plots, cost, seconds, clearing, nextFind}, 1.12~1.13 은 칸 수(숫자)와 따로 clearing
+  const landObj = s => s.land && typeof s.land === 'object' ? s.land : {plots: s.land, clearing: s.clearing};
+  const landOf = s => landObj(s).plots || s.maxTrees || 10; // 1.12 칸 수. 옛 앱은 land 가 없고 maxTrees 가 10
   if (en) {
     document.documentElement.lang = 'en';
     document.querySelectorAll('[data-t]').forEach(e => { if (typeof T[e.dataset.t] === 'string') e.textContent = T[e.dataset.t]; });
     $('pan').setAttribute('aria-label', 'Orchard');
   }
+  $('name-in').placeholder = $('name-in').ariaLabel = T.nameIn; $('code-in').placeholder = $('code-in').ariaLabel = T.codeIn; $('q').placeholder = $('q').ariaLabel = T.qIn;
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   if (!ios) { const l = el('link'); l.rel = 'manifest'; l.href = 'manifest.json'; document.head.append(l); } // Android: 저장소를 같이 써서 키가 이어진다
@@ -360,7 +515,10 @@
   const nowSec = () => (Date.now() + offset) / 1000;
   const state = () => { const s = data && data.state; pc = !!(s && s.platform === 'win'); return s; };
   const moment = () => { const tl = state()?.timeline || []; let m = tl[0]; for (const x of tl) { if (x.t <= nowSec()) m = x; else break; } return m || {crate: 0, value: 0}; };
-  const canAct = () => !!(data && data.online && state() && !failed && !stale);
+  // 1.14: Mac 이 잠들어도 '내 과수원' 명령은 서버에 예약되고(Mac 이 깨면 그 시각에 반영), 이웃 일은 서버가 대신 한다. 서리만 깨어 있을 때.
+  const v14 = () => !!state()?.collections; // 1.14 앱만 보낸다(옛 앱은 잠들면 보기만)
+  const awake = () => !!(data && data.online && state() && !failed && !stale);
+  const canAct = () => awake() || !!(data && state() && !failed && !stale && v14());
   const toast = msg => { $('toast').textContent = msg; clearTimeout(toast.t); toast.t = setTimeout(() => { $('toast').textContent = ''; }, 5000); };
   const clock = s => { s = Math.max(0, Math.ceil(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`; };
   const awayLeft = w => w.away ? state().sent + w.away - nowSec() : 0; // 1.8 서리 나간 일꾼
@@ -369,7 +527,7 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=1130'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=1140'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
@@ -779,7 +937,7 @@
   function renderScene() {
     const s = state(), has = !!(s && s.plots);
     scene.hidden = !has;
-    $('seedling').hidden = !(s && s.seedling); // 1.13 받아 두고 안 심은 선배 묘목(심기는 Mac 에서만)
+    $('seedling').hidden = !(s && s.seedling) || v14(); // 1.13(1.14 앱은 과수원 탭의 [묘목 심기]) 받아 두고 안 심은 선배 묘목(심기는 Mac 에서만)
     if (s && s.seedling) $('seedling').textContent = T.seedling(T.kinds[s.seedling] || s.seedling);
     if (s) $('hint').textContent = has ? T.pan : T.upgrade;
     if (!has || !index) { $('hint').hidden = !(s && !has); return; }
@@ -790,7 +948,7 @@
     if (gk !== tintKey || !built) { clearScene(); tint = g; tintKey = gk; built = 'yes'; }
     // 땅: 심은 칸 + 다음 빈 칸(다 차면 마지막 칸까지). 1.12 앱은 다 찬 밭 끝에 풀숲 한 칸(개간 중이면 일구는 칸)을 더 그린다
     const n = s.plots.length, land = landOf(s);
-    wild = s.land != null && n >= land ? (s.clearing > 0 ? 'land-clearing-0' : `land-wild-${land % 2}`) : '';
+    wild = s.land != null && n >= land ? (landObj(s).clearing > 0 ? 'land-clearing-0' : `land-wild-${land % 2}`) : '';
     fieldEnd = plotX(Math.min(land - 1, n)) + 68;
     groundEnd = fieldEnd + (wild ? 120 : 0);
     world.style.width = groundEnd + 'px';
@@ -955,7 +1113,7 @@
   function tick() {
     const s = state();
     if (!s) { $('sell').disabled = true; return; }
-    if (override && Date.now() > override.until) override = null;
+    if (override && (Date.now() > override.until || (override.sent && s.sent !== override.sent))) override = null; // 예약한 팔기는 Mac 이 새 상태를 올릴 때까지
     const m = override ? {crate: override.crate, value: 0} : moment();
     const cap = s.crate.capacity, ratio = m.crate / Math.max(1, cap);
     $('count').textContent = `${fmt(m.crate)} / ${fmt(cap)}`;
@@ -966,7 +1124,7 @@
     const rd = s.raided, since = rd ? nowSec() - rd.at : Infinity;
     $('raid-note').hidden = !(since < 86400);
     if (since < 86400) $('raid-note').textContent = (rd.caught ? T.chased : T.raided)(fmt(rd.count), T.ago(Math.max(0, since)));
-    const cl = s.clearing > 0 ? s.clearing - (nowSec() - s.sent) : null; // 1.12 개간 중 남은 초(Mac 이 보낸 때부터 센다). 시작은 Mac 에서만
+    const clr = landObj(s).clearing, cl = clr > 0 ? clr - (nowSec() - s.sent) : null; // 1.12 개간 중 남은 초(Mac 이 보낸 때부터 센다). 시작은 Mac 에서만
     $('clear').hidden = cl == null;
     if (cl != null) $('clear').textContent = T.clearing(cl);
     const left = s.fullAt == null ? null : s.fullAt - nowSec();
@@ -1033,7 +1191,7 @@
   }
   function renderCrew() {
     const s = state(); if (!s) return;
-    const sig = s.workers.map(w => `${w.role}${w.crew}${w.tier}${(w.looks || []).join('')}${w.second != null}${!!w.level}`).join() + '|' + s.crate.level;
+    const sig = s.workers.map(w => `${w.role}${w.crew}${w.tier}${(w.looks || []).join('')}${(w.dyes || []).join('')}${w.second != null}${!!w.level}`).join() + '|' + s.crate.level + v14();
     if (sig !== crewSig) {
       crewSig = sig; crewRefs.length = 0;
       $('crew').replaceChildren(...s.workers.map(w => {
@@ -1049,7 +1207,22 @@
         const up = buy('', '', btn => send({action: 'hire', role: w.role}, btn)); acts.append(up);
         let b2 = null;
         if (w.second != null) { b2 = buy('', 'y', btn => send({action: 'hire2', role: w.role}, btn)); acts.append(b2); }
-        c.append(who, info, acts, why); crewRefs.push({role: w.role, lv, up, b2, why});
+        c.append(who, info, acts, why);
+        const sw = []; // 1.14 옷 색: 일꾼마다(두 번째 일꾼도) 7가지
+        if (v14() && w.level) looks.forEach((v, slot) => {
+          const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.style.gridColumn = '1 / -1';
+          const name = T.roles[w.role] + (looks.length > 1 ? ` ${slot + 1}` : '');
+          seg.setAttribute('aria-label', `${name} ${T.outfit}`);
+          DYE_HUES.forEach((hue, i) => {
+            const b = el('button', 'sw'); b.type = 'button'; b.title = T.dyes[i]; b.setAttribute('aria-label', `${name} ${T.outfit}: ${T.dyes[i]}`);
+            b.setAttribute('aria-pressed', ((w.dyes || [])[slot] || 0) === i);
+            b.style.background = hue == null ? 'linear-gradient(135deg, #F2D27A 50%, #8BB84A 50%)' : `hsl(${hue} 62% 56%)`;
+            b.onclick = () => send({action: 'dye', role: w.role, variant: v, slot, dye: i}, null);
+            seg.append(b); sw.push(b);
+          });
+          c.append(seg);
+        });
+        crewRefs.push({role: w.role, lv, up, b2, why, sw});
         return c;
       }));
       const c = el('div', 'panel card'), who = el('div', 'who'), i = el('img'); i.src = S + 'crate-2.png'; i.alt = ''; who.append(i);
@@ -1064,17 +1237,19 @@
       r.lv.textContent = (w.level ? T.level(w.level, w.max) : T.none) + (awayLeft(w) > 0 ? T.away(clock(awayLeft(w))) : '');
       setBuy(r.up, r.why, w.level ? T.upBtn : T.hireBtn, w.cost, T.maxed);
       if (r.b2) { setBuy(r.b2, null, T.hire2Btn, w.second, ''); if (w.second != null && w.second > s.coins) r.why.textContent = T.poor; }
+      for (const b of r.sw) b.disabled = !canAct() || pending.size > 0;
     }
   }
   // 바꿔 심기: 어느 밭과 바꿀지 고른다
-  function pickPlot(kind) {
+  function pickPlot(kind, action = 'replant') {
     const s = state();
+    $('plots').className = 'plots';
     $('sheet-title').textContent = T.swapTitle(T.kinds[kind] || kind);
     $('plots').replaceChildren(...s.plots.map((p, i) => {
       const b = el('button'); b.type = 'button'; b.disabled = p.kind === kind;
       const im = el('img'); im.src = `${S}tree-${p.kind}-${Math.min(7, p.stage)}.png`; im.alt = ''; im.loading = 'lazy';
       b.append(im, document.createTextNode(String(i + 1))); b.setAttribute('aria-label', `${T.plot(i + 1)}, ${T.kinds[p.kind] || p.kind}`);
-      b.onclick = () => { closeSheet(); send({action: 'replant', kind, plot: i}); }; // 1.12: 어느 칸이든(칸 번호 < land)
+      b.onclick = () => { closeSheet(); send(action === 'seedling' ? {action, plot: i} : {action, kind, plot: i}); }; // 1.12: 어느 칸이든(칸 번호 < land)
       return b;
     }));
     $('sheet').showModal(); $('plots').scrollTop = 0; $('sheet-cancel').focus();
@@ -1090,23 +1265,252 @@
     setTimeout(() => box.remove(), 2700);
   };
 
+  // ── 1.14: 땅·밭 치우기·묘목·꾸미기(과수원 탭), 밭 지도(심기 탭), 이웃·모음 탭 ──────────
+  // 내용이 바뀔 때만 통째로 다시 만든다(sig). 입력 칸은 다시 만드는 곳 밖(마크업)에 두어 치던 글자가 사라지지 않게 한다.
+  const sigs = {};
+  const keep = (id, sig, build) => { sig = JSON.stringify([sig, canAct(), awake(), pending.size > 0]); if (sigs[id] === sig) return; sigs[id] = sig; $(id).replaceChildren(...build().filter(Boolean)); };
+  const busy = () => !canAct() || pending.size > 0;
+  const act = (label, cmd, {cls = '', off = false, need = canAct} = {}) => {
+    const b = el('button', 'btn px ' + cls, label); b.type = 'button'; b.disabled = off || !need() || pending.size > 0;
+    b.onclick = () => typeof cmd === 'function' ? cmd(b) : send(cmd, b); return b;
+  };
+  const toggle = (label, on, cmd, img) => {
+    const b = el('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', !!on); b.disabled = busy();
+    if (img) { const i = el('img'); i.src = img; i.alt = ''; b.prepend(i); }
+    b.onclick = () => send(cmd, null); return b;
+  };
+  const row = (...kids) => { const r = el('div', 'row'); r.append(...kids.filter(Boolean)); return r; };
+  const panel = (...kids) => { const p = el('div', 'panel'); p.append(...kids.filter(Boolean)); return p; };
+  const pic = (src, cls) => { const i = el('img', cls); i.src = src; i.alt = ''; i.loading = 'lazy'; return i; };
+  // 고르기 시트(바꿔 심기와 같은 시트): items [{label, img, off, value}]
+  function choose(title, items, pick) {
+    $('sheet-title').textContent = title; $('plots').className = 'plots list';
+    $('plots').replaceChildren(...items.map(it => {
+      const b = el('button'); b.type = 'button'; b.disabled = !!it.off;
+      if (it.img) b.append(pic(it.img));
+      b.append(document.createTextNode(it.label));
+      b.onclick = () => { closeSheet(); pick(it.value); };
+      return b;
+    }));
+    if (!$('sheet').open) $('sheet').showModal();
+    $('plots').scrollTop = 0; $('sheet-cancel').focus();
+  }
+  const kindName = k => T.kinds[k] || k;
+  const PLANS = ['light', 'normal', 'deep'];
+  function chooseRaid(base) { // 서리·되갚기·되찾아 주기: 일꾼 → 작전
+    const ws = state().workers.filter(w => w.level), away = state().raid?.away || {};
+    choose(T.roleWhich, ws.map(w => ({label: T.roles[w.role], value: w.role, off: awayLeft(w) > 0 || away[w.role] > 0})),
+      role => setTimeout(() => choose(T.planWhich, PLANS.map(p => ({label: T.plans[p], value: p})), plan => send({...base, role, plan})), 0));
+  }
+  let stamp = localStorage.getItem('ld-stamp') || 'heart';
+  const STAMPS = ['heart', 'note', 'star'];
+  function renderStamps() {
+    $('stamps').replaceChildren(...STAMPS.map(k => {
+      const b = el('button', '', T.stamps[k]); b.type = 'button'; b.setAttribute('aria-pressed', k === stamp);
+      const i = el('img'); i.src = `${S}emote-${k}.png`; i.alt = ''; b.prepend(i);
+      b.onclick = () => { stamp = k; localStorage.setItem('ld-stamp', k); renderStamps(); };
+      return b;
+    }));
+  }
+  renderStamps();
+
+  function renderFarm() {
+    const s = state(); if (!s) return;
+    const L = landObj(s), q = v14();
+    keep('farm', [L, q && s.weeds, q && s.seedling, s.coins, s.trees, en], () => {
+      const out = [];
+      if (s.land && typeof s.land === 'object' && !(L.clearing > 0)) { // 1.14 앱: 개간 시작(개간 중이면 위의 '개간 중' 줄). cost 가 없으면 아직 못 넓힌다
+        const why = el('span', 'why'), b = buy('', 'y', bb => send({action: 'clear'}, bb));
+        setBuy(b, why, T.clearBtn(dur(L.seconds || 0)), L.cost ?? null, T.landMax);
+        const nf = L.nextFind && typeof L.nextFind === 'object' ? L.nextFind.plots : L.nextFind;
+        out.push(panel(el('b', 'px', T.landH), el('p', 'note num', T.landNow(L.plots, nf)), b, why));
+        b.style.width = '100%'; b.style.marginTop = '6px';
+      }
+      if (q && s.weeds > 0) out.push(panel(el('p', '', T.weedsNote), row(act(T.careBtn, {action: 'care'}, {cls: 'y'}))));
+      if (q && s.seedling) {
+        const full = s.trees >= landOf(s);
+        out.push(panel(el('p', '', T.seedHave(kindName(s.seedling))), row(act(T.seedBtn, b => full && s.plots ? pickPlot(s.seedling, 'seedling') : send({action: 'seedling'}, b), {cls: 'y'}))));
+      }
+      return out;
+    });
+  }
+  const spotOf = at => at == null ? 3 : at < 1 / 3 ? 0 : at < 2 / 3 ? 1 : 2; // 맥 0~1 자리 → 왼·가운데·오른쪽
+  const SPOTS = [0.15, 0.5, 0.85, null];
+  function renderDeco() {
+    const s = state(); $('deco-sec').hidden = !(s && v14()); if ($('deco-sec').hidden) return;
+    const c = s.collections;
+    keep('deco', [s.theme, s.decor, (c.secrets || []).length, en], () => {
+      const themes = ['sunny', 'blossom', 'sunset', 'moon'];
+      if ((c.secrets || []).length >= 20 || s.theme === 'garden') themes.push('garden'); // 비밀 20개를 다 찾으면
+      const seg = el('div', 'seg'); seg.append(...themes.map(t => toggle(T.themes[t], (s.theme || 'sunny') === t, {action: 'theme', theme: t})));
+      const props = panel(el('b', 'px', T.props)), open = (s.decor || []).filter(d => d.open), locked = (s.decor || []).length - open.length;
+      for (const d of open) {
+        const r = el('div', 'prop'), g = el('div', 'seg'), cur = spotOf(d.at);
+        g.setAttribute('role', 'group'); g.setAttribute('aria-label', T.propNames[d.id] || d.id);
+        g.append(...SPOTS.map((at, i) => toggle(T.spots[i], cur === i, {action: 'decor', prop: d.id, pos: at})));
+        r.append(el('span', '', T.propNames[d.id] || d.id), g); props.append(r);
+      }
+      if (locked > 0) props.append(el('p', 'note', T.lockedN(locked)));
+      return [panel(el('b', 'px', T.theme), seg), props];
+    });
+  }
+  function renderMap() {
+    const s = state(); $('map-sec').hidden = !(s && s.plots && v14()); if ($('map-sec').hidden) return;
+    keep('map', [s.plots, landOf(s), en], () => {
+      const cells = s.plots.map((p, i) => { const d = el('div'); d.append(pic(`${S}tree-${p.kind}-${Math.min(7, p.stage)}.png`), document.createTextNode(String(i + 1))); d.title = d.ariaLabel = `${T.plot(i + 1)}, ${kindName(p.kind)}`; d.setAttribute('role', 'img'); return d; });
+      for (let i = s.plots.length; i < landOf(s); i++) { const d = el('div', 'dim', String(i + 1)); d.ariaLabel = T.plot(i + 1); cells.push(d); }
+      return cells;
+    });
+  }
+
+  let found = null, foundSeen = '', sort = 'recent', page = 0;
+  const amNow = () => new Date(Date.now() + offset + 9 * 3600e3).getUTCHours() < 12; // 서버 돕기 칸: 한국 시간 0~12시 오전
+  // 맥 TreeKind.collectible 순서. 이름 없는 과수원은 seed 로 짓는다(맥 Raid.farmName 과 같은 규칙)
+  const ORDER = ['eureka', 'kumquat', 'meyer', 'calamansi', 'lime', 'fingerlime', 'blood', 'trifoliate', 'yuja', 'snowyuja', 'grapefruit', 'redhyang',
+    'moonlemon', 'pink', 'cheonhye', 'hallabong', 'bergamot', 'buddha', 'pomelo', 'golden'];
+  const farmName = seed => { const a = Math.abs(seed); return T.farm(T.adjs[a % 12], T.kinds[ORDER[Math.floor(a / 12) % ORDER.length]]); };
+  const nameOf = f => f.name || (f.seed != null ? farmName(f.seed) : '?');
+  const agoH = sec => T.ago(Math.max(0, sec || 0));
+  function nbCard(n, s) {
+    const tags = [n.junior && T.junior, n.senior && T.senior, n.teacher && T.teacher(n.teacher)].filter(Boolean);
+    const head = el('b', 'px', nameOf(n)); for (const t of tags) head.append(el('span', 'tag', t));
+    const mini = el('div', 'mini'); for (const [k, st] of (n.look?.trees || []).slice(0, 6)) mini.append(pic(`${S}tree-${k}-${Math.min(7, st)}.png`));
+    const am = amNow(), done = [n.helpedAm ?? (am && n.helped), !am && n.helped];
+    const p = panel(head, mini, el('p', 'note num', `${T.seen(agoH(n.seen))} · ${T.helpDay(...done)}`));
+    if (n.weeds > 0) p.append(el('p', 'note', T.nbWeeds));
+    p.append(row(act(T.water, {action: 'nb_help', target: n.id, stamp}, {off: n.helped}),
+      act(T.gift, () => choose(T.giftWhich, s.kinds.map(k => ({label: kindName(k.kind), img: `${S}fruit-${k.kind}.png`, value: k.kind})),
+        fruit => send({action: 'nb_gift', target: n.id, fruit, stamp})), {off: n.gifted})));
+    if (n.junior) p.append(row(
+      act(T.dispatch, () => choose(T.roleWhich, s.workers.filter(w => w.level).map(w => ({label: T.roles[w.role], value: w.role, off: awayLeft(w) > 0})),
+        role => send({action: 'nb_dispatch', target: n.id, role})), {off: !n.canDispatch}),
+      act(T.basket, () => choose(T.basketWhich, s.kinds.filter(k => k.each).map(k => {
+        const count = Math.max(1, Math.floor((n.basketValue || 0) / k.each));
+        return {label: `${kindName(k.kind)} ×${count}`, img: `${S}fruit-${k.kind}.png`, value: [k.kind, count]};
+      }), ([fruit, count]) => send({action: 'nb_basket', target: n.id, fruit, count, stamp})), {off: !n.canBasket}),
+      act(T.sapling, () => choose(T.saplingWhich, (n.saplings || []).map(k => ({label: kindName(k), img: `${S}tree-${k}-1.png`, value: k})),
+        kind => send({action: 'nb_sapling', target: n.id, kind})), {off: !n.canSapling || !(n.saplings || []).length})));
+    if (n.track > 0) p.append(el('p', 'note', T.trackLeft(dur(n.track))), row(act(T.recover, () => chooseRaid({action: 'raid_recover', target: n.id}), {need: awake})));
+    return p;
+  }
+  function renderNb() {
+    const s = state(), on = !!(s && v14());
+    $('nb-old').hidden = !s || on; $('nb-main').hidden = !on; $('nb-old').textContent = T.update14;
+    if (!on) return;
+    const sd = JSON.stringify(s.discover || null); if (sd !== foundSeen) { foundSeen = sd; if (s.discover) found = s.discover; }
+    $('my-name').textContent = s.myName || '';
+    $('my-thanks').textContent = T.thanks(fmt(s.thanks || 0));
+    for (const id of ['name-go', 'code-go', 'find']) $(id).disabled = busy();
+    $('invite').disabled = !s.myCode;
+    const req = s.requests || {}, rin = req.in || [], rout = req.out || [], nbs = s.neighbors || [];
+    keep('nb-req', [rin, rout, en], () => !rin.length && !rout.length ? [] : [
+      rin.length && el('h2', 'sec px num', T.reqIn(rin.length)),
+      ...rin.map(r => {
+        const h = el('b', 'px', nameOf(r)); if (r.stamp) { const i = pic(`${S}emote-${r.stamp}.png`); i.style.cssText = 'height:20px;margin-left:6px;vertical-align:-3px'; h.append(i); }
+        return panel(h, el('p', 'note num', [r.level != null && T.goals.crate(r.level), r.seen != null && T.seen(agoH(r.seen))].filter(Boolean).join(' · ')),
+          row(act(T.accept, {action: 'nb_accept', target: r.id}, {cls: 'y', off: nbs.length >= 10}), act(T.decline, {action: 'nb_decline', target: r.id}), act(T.block, {action: 'nb_block', target: r.id})));
+      }),
+      rout.length && panel(el('b', 'px', T.reqOut), ...rout.map(r => el('p', 'note', `${nameOf(r)} · ${T.noAnswerYet}`))),
+    ]);
+    $('nb-h').textContent = T.nbH(nbs.length, 10);
+    keep('nb-list', [nbs, s.kinds, s.workers.map(w => [w.level, w.away]), stamp, amNow(), en], () => nbs.length ? nbs.map(n => nbCard(n, s)) : [panel(el('p', 'note', T.noNb))]);
+    $('sorts').replaceChildren(...['recent', 'similar', 'new'].map(k => { const b = el('button', '', T.sorts[k]); b.type = 'button'; b.setAttribute('aria-pressed', k === sort); b.onclick = () => { sort = k; page = 0; renderNb(); discover(); }; return b; }));
+    const out = rout.map(r => r.id);
+    keep('found', [found, out, nbs.length, en], () => !found ? [] : !(found.farms || []).length ? [el('p', 'note', T.none)] : [
+      ...found.farms.map(f => {
+        const h = el('b', 'px', nameOf(f)); if (f.junior) h.append(el('span', 'tag', T.newFarm));
+        const mini = el('div', 'mini'); for (const [k, st] of (f.look?.trees || []).slice(0, 6)) mini.append(pic(`${S}tree-${k}-${Math.min(7, st)}.png`));
+        const asked = out.includes(f.id), d = el('div', 'prop');
+        d.append(h, mini, el('span', 'note num', T.farmLine(f.level, f.neighbors, T.seen(agoH(f.seen)))),
+          row(act(asked ? T.requested : T.request, {action: 'nb_request', target: f.id, stamp}, {cls: 'y', off: asked || nbs.length >= 10})));
+        return d;
+      }),
+      found.more && row(act(T.more2, () => { page += 1; discover(); })),
+    ]);
+  }
+  const discover = () => send({action: 'nb_discover', q: $('q').value.trim().slice(0, 20), sort, page}, $('find'));
+  $('find').onclick = () => { page = 0; discover(); };
+  $('q').onkeydown = e => { if (e.key === 'Enter' && !$('find').disabled) $('find').click(); };
+  $('name-go').onclick = () => { const v = $('name-in').value.trim(); if (v) send({action: 'nb_name', name: v.slice(0, 20)}, $('name-go')); };
+  $('code-go').onclick = () => { // 링크(…/n/?c=ABCDEF)든 코드든
+    const v = $('code-in').value.trim(), m = v.match(/[?&]c=([A-Za-z0-9]+)/) || v.match(/([A-Za-z0-9]{4,16})\W*$/);
+    if (m) send({action: 'nb_add', code: m[1].toUpperCase()}, $('code-go')); else toast(T.why.bad_code);
+  };
+  $('invite').onclick = async () => {
+    const u = `https://lemondesk.interaction.hnine.com/n/?c=${state().myCode}`;
+    try { await navigator.clipboard.writeText(u); toast(T.copied); } catch (e) { toast(T.copyThis(u)); }
+  };
+  function renderRaid() {
+    const s = state(), R = s && v14() && s.raid; if (!R) { $('raid').replaceChildren(); return; }
+    keep('raid', [R, s.workers.map(w => [w.level, w.away]), en], () => {
+      const p = panel(el('p', 'num', T.raidLeft(R.left)));
+      if (!awake()) p.append(el('p', 'note', T.raidAwake));
+      p.append(row(act(T.targetsBtn, {action: 'raid_targets'}, {need: awake})));
+      for (const t of R.tracks || []) p.append(el('p', 'note', T.revengeLine(dur(t.left))), row(act(T.revenge, () => chooseRaid({action: 'raid_revenge', track: t.id}), {need: awake})));
+      const out = [p];
+      if (R.targets) out.push(R.targets.length ? panel(...R.targets.map(t => {
+        const d = el('div', 'prop'), ic = el('div', 'icons'); for (const f of t.kinds || []) ic.append(pic(`${S}fruit-${f.kind || f}.png`)); // 맥은 종류 이름 배열
+        d.append(el('b', 'px', nameOf(t)), el('span', 'note num', T.fillLine(Math.round((t.fill || 0) * 100), t.dog)), ic,
+          row(act(T.raidGo, () => chooseRaid({action: 'raid_send', target: t.id}), {cls: 'y', off: t.dog || !R.left, need: awake})));
+        return d;
+      })) : panel(el('p', 'note', T.noTargets)));
+      return out;
+    });
+  }
+
+  function renderCol() {
+    const s = state(), c = s && v14() && s.collections;
+    $('col-old').hidden = !s || !!c; $('col-old').textContent = T.update14;
+    if (!c) { $('col').replaceChildren(); return; }
+    keep('col', [c, en], () => {
+      const kinds = ORDER, dex = c.dex || {}, have = kinds.filter(k => k in dex).length; // 심어 본 종류(딴 개수 0 이어도)
+      const grid = el('div', 'dex');
+      for (const k of kinds) { const on = k in dex, d = el('div', on ? '' : 'off'); d.append(pic(`${S}tree-${k}-6.png`), el('span', '', on ? kindName(k) : '?')); if (on) d.title = `${kindName(k)} ${fmt(dex[k])}`; grid.append(d); }
+      const goals = [...(c.goals || [])].sort((a, b) => a.done - b.done);
+      const gp = panel(el('b', 'px', T.goalsH), ...goals.map(g => {
+        const [pre, n] = [g.id.replace(/-\d+$/, ''), +(g.id.match(/-(\d+)$/) || [])[1] || g.target], d = el('div', 'goal' + (g.done ? ' done' : ''));
+        const bar = el('div', 'bar'), i = el('i'); i.style.width = `${Math.min(100, 100 * g.value / Math.max(1, g.target))}%`; bar.append(i);
+        d.append(el('span', 'num', `${g.done ? '✓ ' : ''}${(T.goals[pre] || (() => g.id))(n)} · ${short(g.value)} / ${short(g.target)}`), bar);
+        return d;
+      }));
+      const book = (title, list) => { const ic = el('div', 'icons'); for (const k of kinds) { const i = pic(`${S}fruit-${k}.png`, list.includes(k) ? '' : 'off'); i.title = list.includes(k) ? kindName(k) : '?'; ic.append(i); } return panel(el('b', 'px', title), ic); };
+      const sc = (c.scrump || []).filter(k => kinds.includes(k)), gf = (c.gifted || []).filter(k => kinds.includes(k));
+      return [panel(el('b', 'px', T.dexH(have, kinds.length)), grid), gp, panel(el('b', 'px num', T.secretsH((c.secrets || []).length, 20))),
+        book(T.scrumpH(sc.length, kinds.length), sc), book(T.giftedH(gf.length, kinds.length), gf)];
+    });
+  }
+
+  // 결과: 누른 명령(pending)이나 예약해 둔 명령(localStorage, Mac 이 깨어 반영하면 결과가 온다)
+  const queuedMap = () => { try { return JSON.parse(localStorage.getItem('ld-queued') || '{}'); } catch (e) { return {}; } };
+  const saveQueued = q => { const t = Date.now() - 72 * 3600e3; for (const k in q) if (q[k].at < t) delete q[k]; try { localStorage.setItem('ld-queued', JSON.stringify(q)); } catch (e) {} };
+  const doneText = (p, r) => p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
+    : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : p.action === 'crate' ? T.grown : T.done[p.action] || '';
+  function settle(r) {
+    let p = pending.get(r.id), late = false;
+    if (p) pending.delete(r.id);
+    else { const q = queuedMap(); p = q[r.id]; if (!p) return; delete q[r.id]; saveQueued(q); late = true; }
+    if (!late) override = null;
+    if (r.discover) found = r.discover;
+    if (r.ok && p.action === 'unlock') party(T.newKind, `${S}tree-${p.kind}-6.png`, T.kinds[p.kind] || p.kind);
+    if (r.ok && p.action === 'sell' && !late) sold();
+    // 실패는 Mac 이 쓴 문장(message, Mac 언어)을 그대로. 옛 앱은 reason 만 보낸다
+    // 서버 대리 결과의 message 는 한국어뿐이라 영어 화면은 code 로 고른다
+    const own = (en && T.why[r.code]) || (late && r.reason === 'poor' ? T.poorThen : T.why[r.code] || T.why[r.reason] || (typeof T[r.reason] === 'string' && T[r.reason]));
+    const msg = r.ok ? (p.action === 'nb_request' && r.added ? T.done.nb_accept : doneText(p, r)) : (en && /[가-힣]/.test(r.message || '') ? own : r.message || own) || T.unavailable;
+    if (msg) toast(late ? T.late(msg) : msg);
+  }
+
   function render() {
     $('gate').hidden = true; $('app').hidden = false; $('tabs').hidden = false; $('chip').hidden = false;
     const s = state();
     const ago = data && data.macSeen ? T.ago(Math.max(0, nowSec() - data.macSeen)) : '';
-    $('chip').className = 'chip' + (canAct() ? ' on' : '');
+    $('chip').className = 'chip' + (awake() ? ' on' : '');
     $('chip').textContent = stale && !failed ? T.staleChip(T.ago((Date.now() - seenAt) / 1000)) : failed ? T.offline : data.online ? T.online : T.asleepChip;
-    const note = failed ? T.offlineText : !s ? T.noState : !data.online && !stale ? T.asleep(ago) : '';
+    const q = Math.max(data.queued ?? s?.queued ?? 0, Object.keys(queuedMap()).length); // 예약 대기 수
+    const note = failed ? T.offlineText : !s ? T.noState : !data.online && !stale ? (v14() ? T.asleepQ(ago) + (q ? T.queuedN(q) : '') : T.asleep(ago)) : '';
     $('banner').hidden = !note; $('banner-text').textContent = note; $('retry').hidden = !failed;
     document.querySelector('.hud').classList.toggle('dim', failed);
-    for (const r of s?.results || []) {
-      const p = pending.get(r.id); if (!p) continue;
-      pending.delete(r.id); override = null;
-      if (r.ok && p.action === 'unlock') party(T.newKind, `${S}tree-${p.kind}-6.png`, T.kinds[p.kind] || p.kind);
-      if (r.ok && p.action === 'sell') sold();
-      toast(!r.ok ? T[r.reason] || T.unavailable : p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
-        : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : T.grown);
-    }
+    for (const r of s?.results || []) settle(r);
     for (const [id, p] of pending) if (Date.now() - p.at > 8000) { pending.delete(id); override = null; toast(T.noAnswer); }
     document.querySelectorAll('.btn[aria-busy="true"]').forEach(b => { if (!pending.size) b.removeAttribute('aria-busy'); });
     $('week').hidden = !(s && s.week);
@@ -1114,7 +1518,7 @@
       $('w-h').textContent = short(s.week.harvested); $('w-s').textContent = short(s.week.sold); $('w-e').textContent = short(s.week.earned);
       $('w-more').textContent = [T.seasons[s.season], s.dex != null && s.secrets != null ? T.dex(s.dex, s.secrets) : ''].filter(Boolean).join(' · ');
     }
-    renderScene(); renderPlant(); renderCrew(); tick();
+    renderScene(); renderPlant(); renderCrew(); renderFarm(); renderDeco(); renderMap(); renderNb(); renderRaid(); renderCol(); tick();
   }
 
   let timer;
@@ -1138,11 +1542,17 @@
     if (navigator.vibrate) navigator.vibrate(12);
     pending.set(id, {...cmd, at: Date.now()});
     try {
-      const d = await api('command', {method: 'POST', body: JSON.stringify({id, ...cmd})});
+      const d = await api('command', {method: 'POST', body: JSON.stringify({id, ...cmd, value: undefined})});
       if (d.now) accept(d);
+      if (d.discover) found = d.discover;
+      if (d.queued) { // 1.14: Mac 이 잠들어 서버에 예약됐다. 결과는 Mac 이 깨어 반영한 뒤에 온다
+        pending.delete(id); const q = queuedMap(); q[id] = {...cmd, at: Date.now()}; saveQueued(q);
+        if (cmd.action === 'sell' && override) { override.until = Infinity; override.sent = state()?.sent; }
+        toast(cmd.action === 'sell' && cmd.value ? T.queuedSell(short(cmd.value)) : T.queued);
+      } else if (d.result) settle(d.result); // 이웃 일은 Mac 이 잠들어도 서버가 바로 처리한다
     } catch (e) {
       pending.delete(id); override = null;
-      toast(e.status === 409 ? T.asleep('') : e.status === 429 ? T.tooMany : T.failed);
+      toast(e.status === 409 ? (/^raid_/.test(cmd.action) ? T.raidAwake : T.asleep('')) : e.status === 429 ? T.tooMany : T.why[e.message] || T.failed);
     }
     if (data) render(); // 결과를 받은 버튼은 render 가 다시 풀어 준다
     clearTimeout(timer); timer = setTimeout(refresh, pending.size ? 1000 : 5000);
@@ -1151,15 +1561,15 @@
     const s = state(), m = moment();
     override = {crate: 0, coins: s.coins + m.value, until: Date.now() + 5000};
     flyCoins(); tick();
-    send({action: 'sell'}, $('sell'));
+    send({action: 'sell', value: m.value}, $('sell')); // value 는 예약됐을 때 안내용(서버는 action 만 본다)
   };
   $('retry').onclick = refresh;
 
   // 탭
-  const tabs = ['orchard', 'plant', 'crew'];
+  const tabs = ['orchard', 'plant', 'crew', 'nb', 'col'];
   const showTab = name => tabs.forEach(t => { $('tab-' + t).hidden = t !== name; $('t-' + t).setAttribute('aria-selected', t === name); });
   tabs.forEach(t => { $('t-' + t).onclick = () => { showTab(t); scrollTo(0, 0); if (t === 'orchard' && data && index) renderScene(); }; }); // 숨어 있던 장면은 보이는 칸을 그때 그린다
-  const startTab = new URLSearchParams(location.search).get('tab'); // 확인·캡처용 ?tab=plant|crew
+  const startTab = new URLSearchParams(location.search).get('tab'); // 확인·캡처용 ?tab=plant|crew|nb|col
   if (tabs.includes(startTab)) showTab(startTab);
 
   // 마지막으로 본 과수원을 바로 그린다(서버가 Mac 을 기다리는 동안 빈 화면이 없게). 타임라인이 있어 숫자는 계속 흐른다.

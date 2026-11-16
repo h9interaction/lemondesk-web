@@ -174,6 +174,15 @@
   @keyframes pop { 0% { transform: translateY(40vh) scale(.3); opacity: 0 } 18% { transform: none; opacity: 1 } 80% { opacity: 1 } 100% { opacity: 0 } }
   .fly { position: fixed; z-index: 15; width: 18px; height: 16px; pointer-events: none; }
 
+  /* 1.15 날씨(흐린 하늘·비·눈·바람 잎·무지개)와 가판대·주문 */
+  .scene.grey { background: linear-gradient(#AFC2CB 0 62%, #CFDCE1 62% 100%); }
+  .scene .rainbow { position: absolute; bottom: 30px; width: 300px; height: 150px; border-radius: 150px 150px 0 0; opacity: .5;
+    background: radial-gradient(circle at 50% 100%, transparent 0 102px, #9B6FD0 102px 108px, #4F86E0 108px 114px, #4FB06A 114px 120px, #F2D23C 120px 126px, #F29A3A 126px 132px, #E2574C 132px 138px, transparent 138px); }
+  .good { width: 22px; height: 22px; vertical-align: -5px; margin-right: 4px; }
+  .prop .row { margin-top: 4px; flex-wrap: nowrap; }
+  .seg + .note { margin-top: 10px; }
+  .prop .grow { flex: 2 1 0; min-width: 0; }
+  .prop .grow + .btn { flex: 0 0 112px; }
   .gate { margin-top: 12px; text-align: center; }
   .gate h1 { font-size: 22px; margin: 6px 0; }
   .gate ol { text-align: left; margin: 10px 0 0; padding-left: 1.3em; }
@@ -209,7 +218,9 @@
         </div>
         <button class="btn px" id="sell" type="button" data-t="sell">모두 팔기</button>
       </div>
+      <div id="suggest"></div>
       <div id="farm"></div>
+      <div id="stand"></div>
       <p class="raid-note" id="raid-note" role="status" hidden></p>
       <div class="panel banner" id="banner" hidden><p id="banner-text"></p><button class="btn y px" id="retry" type="button" hidden></button></div>
       <div class="panel week" id="week" hidden>
@@ -233,6 +244,8 @@
     <section id="tab-crew" role="tabpanel" aria-labelledby="t-crew" hidden>
       <h2 class="sec px" data-t="crew">일꾼</h2>
       <div id="crew"></div>
+      <h2 class="sec px" data-t="mgrH">매니저</h2>
+      <div id="mgr"></div>
       <h2 class="sec px" data-t="crateUp">창고 넓히기</h2>
       <div id="crate"></div>
     </section>
@@ -300,7 +313,7 @@
   </div>
 </dialog>
 
-<script src="motion.js?v=185"></script>
+<script src="motion.js?v=1150"></script>
 <script>
 (() => {
   const LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
@@ -363,7 +376,7 @@
     trackLeft: t => `Got scrumped. You can get it back within ${t}.`, giftWhich: 'Which fruit to gift?', basketWhich: 'Which fruit fills the basket?', saplingWhich: 'Which sapling to send?',
     roleWhich: 'Which worker goes?', planWhich: 'How deep?', plans: {light: 'Quick', normal: 'Normal', deep: 'Deep'},
     reqIn: n => `Neighbor requests ${n}`, accept: 'Accept', decline: 'Decline', block: 'Block', reqOut: 'Sent requests', noAnswerYet: 'No answer yet',
-    request: 'Request', requested: 'Requested', sorts: {new: 'New orchards', similar: 'Similar level', recent: 'Recently active'}, more2: 'Next page', none: 'No orchards found.',
+    request: 'Request', requested: 'Requested', sorts: {new: 'New orchards', similar: 'Similar level', recent: 'Recently active', mentor: 'Seniors & juniors'}, more2: 'Next page', none: 'No orchards found.',
     farmLine: (l, n, a) => `Crate level ${l} · ${n} neighbors · ${a}`, newFarm: 'New', raidLeft: n => `Scrumps left today: ${n}`, raidAwake: 'You can only send scrumpers while your Mac is on.',
     targetsBtn: 'Show targets', raidGo: 'Scrump', revenge: 'Pay back', revengeLine: t => `Follow the scrumper's tracks · ${t} left`, fillLine: (f, d) => `Crate ${f}% full` + (d ? ' · dog barking' : ''),
     noTargets: 'No orchards to scrump right now.',
@@ -378,12 +391,30 @@
     poorThen: "You didn't have enough coins at that time", expired: 'Dropped after 72 hours',
     done: {care: 'Field tidied', clear: 'Started clearing', seedling: 'Planted the sapling', theme: 'Theme changed', dye: 'Outfit color changed', decor: 'Prop moved',
       nb_help: 'Watered', nb_gift: 'Gift sent', nb_add: 'You are neighbors now', nb_name: 'Name changed', nb_dispatch: 'Worker sent', nb_basket: 'Basket sent', nb_sapling: 'Sapling sent',
-      nb_request: 'Request sent', nb_accept: 'You are neighbors now', nb_decline: 'Request declined', nb_block: 'Blocked', raid_send: 'Scrumper sent', raid_revenge: 'Off to pay back', raid_recover: 'Off to get it back'},
+      nb_request: 'Request sent', nb_accept: 'You are neighbors now', nb_decline: 'Request declined', nb_block: 'Blocked', raid_send: 'Scrumper sent', raid_revenge: 'Off to pay back', raid_recover: 'Off to get it back',
+      mgr_set: "Changed Dodam's settings"},
     why: {full: 'Neighbor list is full (10 max)', already: 'Already neighbors', pending: 'Already requested', cooldown: 'You can ask again in a few days', closed: "This orchard isn't taking requests",
       rate_limited: 'Try again in a moment', too_new: 'New orchards can scrump from the next day.', busy: 'That worker is already out.', no_raids_left: 'No scrumps left today. Try tomorrow.',
       guarded: 'A dog is barking. Pick another orchard.', empty: 'Nothing to take.', not_found: "That orchard isn't available anymore. Refresh the list.", bad_code: "That code doesn't work",
       done_today: 'Already done today. Try again later.', not_junior: 'Only juniors can get that', taken_today: 'They already got one today', taken_week: 'They already got a sapling this week',
       holding: 'They still have a sapling to plant', bad_fruit: "That fruit can't be sent", no_fruit: 'Not enough of that fruit in your crate', bad_kind: "That sapling can't be sent"},
+    mgrH: 'Manager', mgrName: 'Dodam', mgrJob: r => `Sells for you when the crate is full (${r}% of the price)`, mgrLockedBtn: 'Crate level 6',
+    mgrLocked: 'You can hire Dodam at crate level 6.', mgrLevel: (l, m, r) => `Level ${l} / ${m} · sells at ${r}%`,
+    mgrSold: n => `Sold ${n} times so far`, mgrJobs: 'Jobs', mgrDo: {sell: 'Sell', plant: 'Plant', buy: 'Buy'}, lv: l => `Lv ${l}`,
+    buyAt: 'At level 10 Dodam can also buy things for you.', planH: 'What to buy first', mgrPlans: {cheap: 'Cheapest', fruit: 'Trees first', crew: 'Workers first'},
+    keepH: 'Coins to keep', keepV: n => n ? `Keep ${n}%` : 'Spend all',
+    update15: 'Update Lemon Desk on your Mac to 1.15 to hire Dodam the manager and open the lemonade stand.',
+    suggestH: 'Good to buy next', sug: {tree: k => `Plant a ${k}`, unlock: k => `Unlock ${k}`, replant: (k, n) => `Replant plot ${n} with ${k}`,
+      worker: (r, l) => l ? `Level up the ${r.toLowerCase()}` : `Hire a ${r.toLowerCase()}`, second: r => `One more ${r.toLowerCase()}`, crate: () => 'Expand the crate', land: () => 'Clear more land'},
+    standH: 'Lemonade stand', standLocked: 'You can open the stand at crate level 6.', standNone: 'Turn crate fruit into bottles that sell for more.', openBtn: 'Open the stand',
+    standLevel: (l, m, n) => `Level ${l} / ${m} · makes ${n} at a time`, recipes: {lemonade: 'Lemonade', syrup: 'Fruit syrup', jam: 'Marmalade'},
+    making: (r, t) => `Making ${r} · ${t}`, almost: 'almost done', leftT: t => `${t} left`, shelf: 'Shelf', shelfEmpty: 'The shelf is empty.',
+    shelfNote: 'Bottles on the shelf sell with Sell all.', needLine: (k, n, t, v) => `${n} ${k} · ${t} · ${v} coins a bottle`, makeBtn: 'Make',
+    noFruitFor: 'Unlock a fruit for this first.', slotsFull: 'Every slot is busy.', lowFruit: 'Not enough of that fruit in the crate.',
+    ordersH: 'Customer orders', noOrders: 'No orders yet. A customer stops by every 3 hours.', orderBottle: (r, n) => `${r} × ${n}`, orderFruit: (k, n) => `${k} × ${n}`,
+    orderLeft: t => `Leaves in ${t}`, fillBtn: 'Fill', cantFill: "You don't have enough yet.",
+    mgrHired: 'Dodam joined your orchard', mgrUp: 'Dodam leveled up', standOpen: 'The stand is open', standUp: 'Stand leveled up', started: r => `Started making ${r}`,
+    filled: e => `Order filled · +${fmt(e)} coins`,
     adjs: ['Sleepy', 'Busy', 'Shy', 'Lazy', 'Tangy', 'Sparkly', 'Plucky', 'Quiet', 'Hungry', 'Humming', 'Sunny', 'Breezy'], farm: (a, f) => `${a} ${f} orchard`,
   } : {
     crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
@@ -435,7 +466,7 @@
     trackLeft: t => `서리를 당했어요. ${t} 안에 되찾아 줄 수 있어요.`, giftWhich: '어떤 과일을 선물할까요?', basketWhich: '바구니에 어떤 과일을 담을까요?', saplingWhich: '어떤 묘목을 보낼까요?',
     roleWhich: '어느 일꾼을 보낼까요?', planWhich: '얼마나 깊이 들어갈까요?', plans: {light: '살짝', normal: '보통', deep: '깊숙이'},
     reqIn: n => `이웃 요청 ${n}`, accept: '수락', decline: '거절', block: '차단', reqOut: '보낸 요청', noAnswerYet: '아직 답이 없어요',
-    request: '이웃 요청', requested: '요청함', sorts: {new: '새로 시작한 과수원', similar: '비슷한 레벨', recent: '최근 활동'}, more2: '다음 쪽', none: '찾은 과수원이 없어요.',
+    request: '이웃 요청', requested: '요청함', sorts: {new: '새로 시작한 과수원', similar: '비슷한 레벨', recent: '최근 활동', mentor: '선배·후배'}, more2: '다음 쪽', none: '찾은 과수원이 없어요.',
     farmLine: (l, n, a) => `창고 레벨 ${l} · 이웃 ${n}명 · ${a}`, newFarm: '새로 시작', raidLeft: n => `오늘 남은 서리 ${n}번`, raidAwake: 'Mac이 켜져 있을 때만 서리를 보낼 수 있어요.',
     targetsBtn: '서리할 과수원 보기', raidGo: '서리하기', revenge: '되갚기', revengeLine: t => `서리꾼의 발자국을 따라가요 · ${t} 남음`, fillLine: (f, d) => `창고 ${f}% 참` + (d ? ' · 개가 짖는 중' : ''),
     noTargets: '지금 서리할 만한 과수원이 없어요.',
@@ -450,18 +481,36 @@
     poorThen: '그때는 코인이 모자랐어요', expired: '72시간이 지나 버려졌어요',
     done: {care: '밭을 치웠어요', clear: '개간을 시작했어요', seedling: '묘목을 심었어요', theme: '테마를 바꿨어요', dye: '옷 색을 바꿨어요', decor: '소품을 옮겼어요',
       nb_help: '물을 줬어요', nb_gift: '선물을 보냈어요', nb_add: '이웃이 됐어요', nb_name: '이름을 바꿨어요', nb_dispatch: '출장 보냈어요', nb_basket: '바구니 보냈어요', nb_sapling: '묘목 보냈어요',
-      nb_request: '이웃 요청을 보냈어요', nb_accept: '이웃이 됐어요', nb_decline: '요청을 거절했어요', nb_block: '차단했어요', raid_send: '서리를 보냈어요', raid_revenge: '되갚으러 갔어요', raid_recover: '되찾으러 갔어요'},
+      nb_request: '이웃 요청을 보냈어요', nb_accept: '이웃이 됐어요', nb_decline: '요청을 거절했어요', nb_block: '차단했어요', raid_send: '서리를 보냈어요', raid_revenge: '되갚으러 갔어요', raid_recover: '되찾으러 갔어요',
+      mgr_set: '도담 설정을 바꿨어요'},
     why: {full: '이웃은 10명까지예요', already: '이미 이웃이에요', pending: '이미 요청했어요', cooldown: '며칠 뒤에 다시 요청할 수 있어요', closed: '요청을 받지 않는 과수원이에요',
       rate_limited: '잠시 뒤에 다시 해 보세요.', too_new: '새로 시작한 과수원은 하루 뒤부터 서리할 수 있어요.', busy: '그 일꾼은 이미 나가 있어요.', no_raids_left: '오늘 서리는 다 했어요. 내일 다시 해요.',
       guarded: '개가 짖고 있어요. 다른 과수원을 골라요.', empty: '가져올 게 없어요.', not_found: '그 과수원은 이제 없어요. 목록을 새로 고쳐요.', bad_code: '쓸 수 없는 코드예요',
       done_today: '오늘은 이미 했어요. 다음에 또 해요.', not_junior: '후배에게만 보낼 수 있어요', taken_today: '이 이웃은 오늘 이미 받았어요', taken_week: '이 이웃은 이번 주에 묘목을 이미 받았어요',
       holding: '이 이웃은 아직 심지 않은 묘목을 갖고 있어요', bad_fruit: '그 과일은 보낼 수 없어요', no_fruit: '창고에 그 과일이 모자라요', bad_kind: '그 묘목은 보낼 수 없어요'},
+    mgrH: '매니저', mgrName: '도담', mgrJob: r => `창고가 가득 차면 대신 팔아요(제값의 ${r}%)`, mgrLockedBtn: '창고 레벨 6',
+    mgrLocked: '창고 레벨 6이 되면 도담을 고용할 수 있어요.', mgrLevel: (l, m, r) => `레벨 ${l} / ${m} · 판매율 ${r}%`,
+    mgrSold: n => `지금까지 ${n}번 팔았어요`, mgrJobs: '할 일', mgrDo: {sell: '팔기', plant: '심기', buy: '사기'}, lv: l => `레벨 ${l}`,
+    buyAt: '레벨 10이 되면 도담이 대신 사 주기도 해요.', planH: '먼저 살 것', mgrPlans: {cheap: '가장 싼 것', fruit: '나무 먼저', crew: '일꾼 먼저'},
+    keepH: '남겨 둘 코인', keepV: n => n ? `${n}% 남기기` : '다 쓰기',
+    update15: 'Mac의 Lemon Desk를 1.15로 올리면 매니저 도담과 가판대를 쓸 수 있어요.',
+    suggestH: '다음에 사면 좋은 것', sug: {tree: k => `${obj(k)} 심기`, unlock: k => `${k} 해금`, replant: (k, n) => `${n}번 밭을 ${ro(k)} 바꿔 심기`,
+      worker: (r, l) => l ? `${r} 레벨업` : `${r} 고용`, second: r => `${r} 한 명 더`, crate: () => '창고 넓히기', land: () => '땅 넓히기'},
+    standH: '가판대', standLocked: '창고 레벨 6이 되면 가판대를 열 수 있어요.', standNone: '창고 과일로 병을 만들어 더 비싸게 팔아요.', openBtn: '가판대 열기',
+    standLevel: (l, m, n) => `레벨 ${l} / ${m} · 한 번에 ${n}병`, recipes: {lemonade: '레모네이드', syrup: '과일청', jam: '마멀레이드'},
+    making: (r, t) => `${r} 만드는 중 · ${t}`, almost: '곧 다 돼요', leftT: t => `${t} 남음`, shelf: '선반', shelfEmpty: '선반이 비어 있어요.',
+    shelfNote: '선반의 병은 모두 팔기 때 같이 팔려요.', needLine: (k, n, t, v) => `${k} ${n}개 · ${t} · 한 병 ${v}코인`, makeBtn: '만들기',
+    noFruitFor: '이 병에 쓸 과일을 먼저 열어요.', slotsFull: '만드는 칸이 다 찼어요.', lowFruit: '창고에 그 과일이 모자라요.',
+    ordersH: '손님 주문', noOrders: '아직 주문이 없어요. 3시간마다 손님이 와요.', orderBottle: (r, n) => `${r} ${n}병`, orderFruit: (k, n) => `${k} ${n}개`,
+    orderLeft: t => `${t} 뒤 떠나요`, fillBtn: '채우기', cantFill: '아직 모자라요.',
+    mgrHired: '도담이 과수원에 왔어요', mgrUp: '도담 레벨이 올랐어요', standOpen: '가판대를 열었어요', standUp: '가판대 레벨이 올랐어요', started: r => `${r} 만들기를 시작했어요`,
+    filled: e => `주문을 채웠어요 · +${fmt(e)} 코인`,
     adjs: ['졸린', '부지런한', '수줍은', '느긋한', '새콤한', '반짝이는', '씩씩한', '조용한', '배고픈', '콧노래 부르는', '햇살 가득한', '바람 부는'], farm: (a, f) => `${a} ${f} 과수원`,
   };
   // 윈도우판(상태의 platform 이 win)이면 연결 뒤 문구의 'Mac' 을 'PC' 로. 맥 앱은 platform 을 보내지 않는다.
   let pc = false;
   const toPC = t => t.replace(/Mac이/g, 'PC가').replace(/Mac을/g, 'PC를').replace(/Mac/g, 'PC');
-  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN']) {
+  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN', 'update15']) {
     const v = T[k];
     if (typeof v === 'function') T[k] = (...a) => pc ? toPC(v(...a)) : v(...a);
     else Object.defineProperty(T, k, { get: () => pc ? toPC(v) : v });
@@ -517,6 +566,7 @@
   const moment = () => { const tl = state()?.timeline || []; let m = tl[0]; for (const x of tl) { if (x.t <= nowSec()) m = x; else break; } return m || {crate: 0, value: 0}; };
   // 1.14: Mac 이 잠들어도 '내 과수원' 명령은 서버에 예약되고(Mac 이 깨면 그 시각에 반영), 이웃 일은 서버가 대신 한다. 서리만 깨어 있을 때.
   const v14 = () => !!state()?.collections; // 1.14 앱만 보낸다(옛 앱은 잠들면 보기만)
+  const v15 = () => !!state()?.manager; // 1.15 앱: 도담·추천 구매·가판대·주문·날씨
   const awake = () => !!(data && data.online && state() && !failed && !stale);
   const canAct = () => awake() || !!(data && state() && !failed && !stale && v14());
   const toast = msg => { $('toast').textContent = msg; clearTimeout(toast.t); toast.t = setTimeout(() => { $('toast').textContent = ''; }, 5000); };
@@ -527,7 +577,7 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=1140'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=1150'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
@@ -686,7 +736,7 @@
     constructor(v, x) {
       Object.assign(this, v, {x, facing: 1, steps: [], token: 0, playing: '', sheetName: '', once: false, last: null, lastTree: null, streak: 0, sitLift: 0, liftPx: 0});
       this.speed = Motion.speed(this.role, this.slot);
-      const e = ent(20 + ROLES.indexOf(this.role) * 2 + this.slot, WORKER_Y);
+      const e = ent(20 + ROLES.indexOf(this.role) * 2 + this.slot, WORKER_Y, this.host || world);
       Object.assign(this, e);
       this.sh = el('div', 'sh'); this.lift.prepend(this.sh); show(this.sh, 'fx-shadow-0', {center: false});
       this.el.style.transform = `translateX(${x}px)`;
@@ -732,12 +782,12 @@
     }
     next() {
       if (this.dead) return;
-      if (!this.steps.length) this.steps = plan(this);
+      if (!this.steps.length) this.steps = (this.planner || plan)(this);
       if (!this.steps.length) return this.wait(1);
       const st = this.steps.shift();
       if (st.t === 'walk') {
         this.setLift(0);
-        enter(this);
+        if (!this.host) enter(this); // 창고 자리(yard)는 화면에 붙어 있다
         const target = Math.round(typeof st.x === 'function' ? st.x() : st.x), dist = Math.abs(target - this.x); // 함수: 걷기 시작할 때 자리(화면에 붙은 창고)
         if (dist < 1) return this.next();
         const dir = target > this.x ? 1 : -1;
@@ -760,6 +810,27 @@
     }
   }
 
+  // 1.15 도담: 창고와 가판대 사이에 서 있다가 가끔 클립보드를 보고(버릇), 창고가 차서 팔면 상자를 들고 와 종을 울린다(코인 튐).
+  // 창고 자리(yard)에 있어 밭을 밀어도 창고 옆이다. 장비 단계·옷 색 없음
+  class Manager extends Worker {
+    constructor(x) { super({role: 'manager', slot: 0, variant: 0, tier: 0, dye: 0, host: yard, planner: managerPlan}, x); }
+    sheet(anim) { return 'manager-' + anim; }
+    owns(anim) { return !!index['manager-' + anim]; }
+  }
+  // 맥 OrchardView 와 같은 자리(1pt = 2px): 가판대 originX+76pt, 도담 +106pt(가판대 없으면 +64pt), 랜턴은 가판대·도담이 있으면 +4pt
+  const STAND_X = O + 152, mgrX = () => stand ? O + 212 : O + 128;
+  function managerPlan(m) {
+    if (quiet || calm || resting()) return [idle(4)];
+    if (Math.abs(m.x - mgrX()) > 2) return [{t: 'walk', x: mgrX(), anim: 'walk'}, {t: 'run', f: () => m.face(1)}, idle(1)];
+    return Math.random() < 0.3 && m.owns('habit') ? [rest(m, 'habit'), idle(rnd(4, 8))] : [idle(rnd(5, 10))];
+  }
+  function managerSells() { // 창고 → 상자 들고 제자리 → 종 두 번 + 코인
+    if (!mgr || calm || quiet || resting()) return;
+    const bell = {t: 'clip', anim: 'sell'};
+    mgr.interrupt([{t: 'walk', x: CRATE_X + 34, anim: 'walk'}, {t: 'run', f: bumpCrate}, {t: 'walk', x: mgrX(), anim: mgr.owns('carry') ? 'carry' : 'walk'},
+      {t: 'run', f: () => { mgr.face(1); coinBurst(); emote('note', mgr); }}, bell, bell, idle(2)]);
+  }
+
   // 할 일이 끝난 일꾼이 다음에 할 일(맥 OrchardView.plan·steps). 무엇을 할지는 Motion.choose
   const idle = secs => ({t: 'act', anim: 'idle', secs});
   const rest = (w, anim) => Motion.clip(anim, frames(w.sheet(anim))).loops ? {t: 'act', anim, secs: 1.44} : {t: 'clip', anim};
@@ -780,7 +851,7 @@
     // 1.12: 보이는 칸 ± 1칸에서만 고른다(Motion.choose 는 그대로, 칸 번호만 구간 기준으로 바꿔 넘긴다)
     const [a, b] = plotsIn(1, s.plots.length), near = s.plots.slice(a, b + 1), rel = c => c && c.tree != null ? {...c, tree: c.tree - a} : c;
     const c = Motion.choose({role: w.role, fruit: near.map(p => p.fruit), young: near.map(p => p.stage < 3), crateFull: moment().crate >= s.crate.capacity,
-      night: period === 'night', season: s.season, streak: w.streak, last: rel(w.last), lastTree: w.lastTree == null ? null : w.lastTree - a, has});
+      night: period === 'night', season: s.season, streak: w.streak, last: rel(w.last), lastTree: w.lastTree == null ? null : w.lastTree - a, has, rain: wx.now === 'rain'});
     if (c.tree != null) c.tree += a;
     w.remember(c);
     switch (c.kind) {
@@ -877,9 +948,10 @@
     const s = state();
     if (calm || resting() || !s || !s.plots || !s.plots.length || !index) return;
     const W = pan.clientWidth; // 구름·새는 화면 기준(1.12: 밭을 밀어도 하늘은 그대로)
-    if (clouds.length < Math.max(1, Math.floor(W / 440))) addCloud(skyStarted ? -28 : rnd(0, W - 80), W);
+    const dull = wx.now === 'cloud' || wx.now === 'rain' || wx.now === 'snow';
+    if (clouds.length < Math.max(1, Math.floor(W / 440)) * (dull ? 3 : 1)) addCloud(skyStarted ? -28 : rnd(0, W - 80), W);
     skyStarted = true;
-    if (period === 'night') return;
+    if (period === 'night' || wx.now === 'rain' || wx.now === 'snow') return;
     if (Date.now() > nextBird) { nextBird = Date.now() + rnd(18000, 45000); flyBirds(W); }
     const [a, b] = plotsIn(0, s.plots.length); // 나비는 보이는 칸의 꽃에(보이는 칸 수에 맞춰 마릿수도)
     if (s.season !== 'winter' && b >= a && butterflies.length < Math.min(s.plots.length > 3 ? 5 : 4, Math.ceil((b - a + 1) / 2) + 1)) addButterfly(s.plots, a, b);
@@ -922,6 +994,57 @@
     butterflies.push(b.el); later(pts.length / hz, () => { b.el.remove(); butterflies = butterflies.filter(e => e !== b.el); });
   }
 
+  // ── 1.15 날씨: 상태의 weather(Mac 이 만든 순간). Mac 이 잠들었거나 상태가 오래되면 같은 규칙(motion.js)으로 지금 시각에서 계산 ──
+  let wx = {now: 'clear', rainbow: false}, wxKey = '', wxEls = [];
+  function syncWeather() {
+    const s = state();
+    wx = !s || !v15() ? {now: 'clear', rainbow: false} : data.online && !stale && s.weather && Math.floor(nowSec() / Motion.weatherBlock) === Math.floor(s.sent / Motion.weatherBlock)
+      ? s.weather : Motion.weatherAt(nowSec());
+    const day = period !== 'night', W = pan.clientWidth;
+    scene.classList.toggle('grey', day && (wx.now === 'cloud' || wx.now === 'rain' || wx.now === 'snow'));
+    const key = [wx.now, wx.rainbow && day, period, W, calm, scene.hidden].join();
+    if (key === wxKey || !index) return;
+    wxKey = key; wxEls.forEach(e => e.remove()); wxEls = [];
+    if (scene.hidden) return;
+    if (wx.rainbow && day) { const r = el('div', 'rainbow'); r.style.left = Math.round(W * 0.55 - 150) + 'px'; sky.prepend(r); wxEls.push(r); } // 구름 뒤
+    const name = {rain: 'fx-rain', snow: 'fx-snow', wind: 'fx-leaf'}[wx.now];
+    if (!name || calm || !index[name]) return; // 동작 줄이기: 입자 없이 하늘색만
+    const n = wx.now === 'rain' ? Math.round(W / 12) : wx.now === 'snow' ? Math.round(W / 22) : Math.max(4, Math.round(W / 70)), dim = day ? 1 : 0.55;
+    for (let k = 0; k < n; k++) {
+      const e = sp(2, 0, 0, '', sky2); show(e, name, {center: false}); e.style.opacity = dim; wxEls.push(e);
+      const x = rnd(-20, W + 20), y = rnd(6, 26);
+      if (wx.now === 'wind') { // 잎은 왼쪽에서 오른쪽으로 흔들리며 날아간다
+        const ys = Array.from({length: 7}, (_, i) => Math.round(rnd(40, 130) + (i % 2 ? 8 : -8))), dur = rnd(3500, 6000);
+        e.animate(ys.map((yy, i) => ({transform: `translate(${Math.round(-30 + (W + 60) * i / 6)}px, ${-yy}px) rotate(${i * 60}deg)`})), {duration: dur, iterations: Infinity, delay: -rnd(0, dur)});
+      } else { // 비는 비스듬히 빨리, 눈은 천천히 흔들리며 땅까지
+        const dur = wx.now === 'rain' ? rnd(550, 800) : rnd(4500, 7500), dx = wx.now === 'rain' ? -14 : Math.round(rnd(-16, 16));
+        const kf = wx.now === 'rain' ? [{transform: `translate(${Math.round(x)}px, ${-H}px)`}, {transform: `translate(${Math.round(x + dx)}px, ${-y}px)`}]
+          : [0, 1, 2, 3, 4].map(i => ({transform: `translate(${Math.round(x + (i % 2 ? dx : 0))}px, ${Math.round(-H + (H - y) * i / 4)}px)`}));
+        e.animate(kf, {duration: dur, iterations: Infinity, delay: -rnd(0, dur), easing: wx.now === 'rain' ? 'linear' : 'ease-in-out'});
+      }
+    }
+  }
+  // 가판대(열었으면)·선반 병(앞 땅에 늘어놓는다, 5병까지)·만드는 중 표시·도담(고용했으면)
+  let mgr = null, stand = null, shelfEls = [], shelfSig = '', standBusy = null, crateWas = null;
+  function syncStandScene(s) {
+    const st = s.stand, open = !!(st && st.level > 0 && index['prop-stand-0']);
+    if (open && !stand) { stand = sp(13, STAND_X, 8, '', yard); show(stand, 'prop-stand-0'); }
+    else if (!open && stand) { stand.remove(); stand = null; }
+    const bottles = open ? ['lemonade', 'syrup', 'jam'].flatMap(r => Array(Math.min(5, (st.shelf || {})[r] || 0)).fill(r)).slice(0, 5) : [];
+    if (bottles.join() !== shelfSig) {
+      shelfSig = bottles.join(); shelfEls.forEach(e => e.remove());
+      shelfEls = bottles.map((r, i) => { const e = sp(14, STAND_X - 22 + i * 10, 4, '', yard); show(e, 'good-' + r); return e; });
+    }
+    const making = open && st.jobs.length > 0 && !calm;
+    if (making && !standBusy) { standBusy = sp(16, STAND_X + 18, 8 + 62, '', yard); show(standBusy, 'emote-dots', {lit: true}); }
+    else if (!making && standBusy) { standBusy.remove(); standBusy = null; }
+    const hired = !!(s.manager && s.manager.level > 0 && index['manager-idle']);
+    if (hired && !mgr) { const m = mgr = new Manager(mgrX()); later(0.8, () => { if (mgr === m) m.next(); }); }
+    else if (!hired && mgr) { mgr.stop(); mgr = null; }
+    if (lantern) lantern.style.left = (hired || open ? O + 8 : O + 128) + 'px'; // 맥: 창고 오른쪽이 가판대·도담 자리면 랜턴은 왼쪽
+    if (mgr) { mgr.zzz(quiet); if (quiet && mgr.playing !== 'idle' && mgr.standing()) mgr.interrupt([idle(4)]); }
+  }
+
   // ── 상태 → 장면 ─────────────────────────────
   let trees = [], crew = new Map(), dogs = [], decor = [], lantern = null, crateEl = null, sparkle = null, crateIdx = -1; // trees: 칸 번호 → 나무(보이는 칸 ± 2칸만, 나머지는 빈칸)
   let weeds = new Map(), weedStage = 0; // 1.13 칸 번호 → 잡초·낙엽 더미 {el, name}
@@ -929,7 +1052,8 @@
   let restore = +localStorage.getItem('ld-remote-scroll') || 0; // 밭을 민 위치(1.12): 다시 열면 처음 그릴 때 되돌린다
   const crateH = () => (index['crate-0'] || [0, 50])[1];
   function clearScene() { // 색 보정이 바뀌면 그림을 전부 새로 건다(맥 redrawAll)
-    for (const w of crew.values()) w.stop(); for (const d of dogs) d.stop();
+    for (const w of crew.values()) w.stop(); for (const d of dogs) d.stop(); if (mgr) mgr.stop();
+    mgr = stand = standBusy = null; shelfEls = []; shelfSig = ''; wxEls = []; wxKey = '';
     crew = new Map(); dogs = []; trees = []; decor = []; weeds = new Map(); clouds = []; butterflies = []; lantern = crateEl = sparkle = null; crateIdx = -1; treesBuilt = false; skyStarted = false; laidOut = '';
     world.replaceChildren(ground, yard); yard.replaceChildren(); sky.replaceChildren(); sky2.replaceChildren();
     for (const [k, p] of looks) if (!k.endsWith('|-')) { looks.delete(k); p.then(u => u.startsWith('blob:') && URL.revokeObjectURL(u)); }
@@ -957,7 +1081,7 @@
     if (laidOut !== `${n}|${land}|${s.season}|${wild}`) { laidOut = `${n}|${land}|${s.season}|${wild}`; layout(s); }
     if (treesBuilt && landSeen && land > landSeen) puff('fx-sparkle', plotX(land - 1), TREE_Y + 20); // 개간이 끝나 새 칸이 열린 순간
     landSeen = land;
-    syncTrees(s); syncWeeds(s); syncWorkers(s); syncDogs(s); syncCrate();
+    syncTrees(s); syncWeeds(s); syncWorkers(s); syncDogs(s); syncCrate(); syncStandScene(s); syncWeather();
     lantern.hidden = period !== 'night';
   }
   function layout(s) { // 땅·계절 소품·밭 끝 풀숲·랜턴(나무 수·칸 수·계절이 바뀔 때만)
@@ -1093,7 +1217,7 @@
   // 일꾼·개를 누르면 반응한다(맥에서 클릭 통과를 끈 띠처럼). 몸 폭의 가운데 60% 만 받는다
   scene.addEventListener('click', e => {
     const hit = x => { const r = x.getBoundingClientRect(); return e.clientX >= r.left + r.width * .2 && e.clientX <= r.right - r.width * .2 && e.clientY >= r.top + r.height * .04 && e.clientY <= r.bottom; };
-    const w = [...crew.values()].filter(w => hit(w.body)).sort((a, b) => b.el.style.zIndex - a.el.style.zIndex)[0];
+    const w = [...crew.values(), ...(mgr ? [mgr] : [])].filter(w => hit(w.body)).sort((a, b) => b.el.style.zIndex - a.el.style.zIndex)[0];
     if (w) return poke(w);
     const d = [...dogs].reverse().find(d => hit(d.body));
     if (d) { d.pet(); emote('heart', d); }
@@ -1121,6 +1245,9 @@
     const pic = `${S}crate-${m.crate === 0 ? 0 : ratio < .7 ? 1 : 2}.png`;
     if ($('crate-pic').dataset.src !== pic) { $('crate-pic').dataset.src = pic; $('crate-pic').src = pic; }
     syncCrate();
+    if (crateWas != null && !override && crateWas >= cap * 0.9 && m.crate < crateWas * 0.5 && s.manager?.level > 0 && s.manager.sell) managerSells();
+    crateWas = override ? null : m.crate;
+    if (index && !scene.hidden) syncWeather();
     const rd = s.raided, since = rd ? nowSec() - rd.at : Infinity;
     $('raid-note').hidden = !(since < 86400);
     if (since < 86400) $('raid-note').textContent = (rd.caught ? T.chased : T.raided)(fmt(rd.count), T.ago(Math.max(0, since)));
@@ -1363,6 +1490,101 @@
     });
   }
 
+  // ── 1.15: 다음 추천 구매(과수원 탭 머리), 가판대·손님 주문(과수원 탭), 도담(일꾼 탭) ──────────
+  const leftOf = (s, x) => x - (nowSec() - s.sent); // Mac 이 보낸 때부터 센 남은 초
+  const SUGGEST = { // 추천 → 이미 있는 명령
+    tree: g => ({action: 'plant', kind: g.tree}), unlock: g => ({action: 'unlock', kind: g.tree}), replant: g => ({action: 'replant', kind: g.tree, plot: g.plot}),
+    worker: g => ({action: 'hire', role: g.role}), second: g => ({action: 'hire2', role: g.role}), crate: () => ({action: 'crate'}), land: () => ({action: 'clear'})};
+  function renderSuggest() {
+    const s = state(), g = s && v15() && s.suggest;
+    keep('suggest', [g || null, s && s.coins, s && s.workers.map(w => w.level), en], () => {
+      if (!g || !SUGGEST[g.kind] || !T.sug[g.kind]) return []; // 모르는 종류(새 앱)는 안 보인다
+      const k = g.tree && kindName(g.tree), r = g.role && T.roles[g.role], lv = g.role && s.workers.find(w => w.role === g.role)?.level;
+      const label = T.sug[g.kind](g.kind === 'worker' || g.kind === 'second' ? r : k, g.kind === 'replant' ? g.plot + 1 : lv);
+      const why = el('span', 'why'), b = buy('', 'y', bb => send(SUGGEST[g.kind](g), bb));
+      setBuy(b, why, label, g.cost, ''); b.style.width = '100%'; b.style.marginTop = '6px';
+      return [panel(el('b', 'px', T.suggestH), b, why)];
+    });
+  }
+  const goodPic = r => pic(`${S}good-${r}.png`, 'good');
+  function renderStand() {
+    const s = state(); if (!s) return;
+    const st = s.stand, os = (s.orders || []).filter(o => leftOf(s, o.left) > 0), min = x => Math.ceil(Math.max(0, leftOf(s, x)) / 60);
+    keep('stand', [!!s.manager, st && {...st, jobs: st.jobs.map(j => [j.recipe, min(j.left)])}, os.map(o => [o.id, o.can, min(o.left)]), s.coins, en], () => {
+      if (!s.manager) return [panel(el('p', 'note', T.update15))]; // 옛 앱(1.14 이하)
+      if (!st) return [];
+      const head = panel(el('b', 'px', T.standH)), why = el('span', 'why'), up = buy('', 'y', b => send({action: 'stand_up'}, b));
+      up.style.width = '100%'; up.style.marginTop = '6px';
+      if (!st.level) {
+        head.append(el('p', 'note', st.locked ? T.standLocked : T.standNone));
+        if (!st.locked) { setBuy(up, why, T.openBtn, st.cost ?? null, T.maxed); head.append(up, why); }
+        return [head];
+      }
+      head.append(el('p', 'note num', T.standLevel(st.level, st.max, st.slots)));
+      setBuy(up, why, T.upBtn, st.cost ?? null, T.maxed); head.append(up, why);
+      for (const j of st.jobs) { const l = leftOf(s, j.left), p = el('p', 'num'); p.append(goodPic(j.recipe), T.making(T.recipes[j.recipe], l > 0 ? T.leftT(dur(l)) : T.almost)); head.append(p); }
+      const shelf = ['lemonade', 'syrup', 'jam'].filter(r => (st.shelf || {})[r] > 0), sp2 = el('p', 'num');
+      sp2.append(`${T.shelf} `); for (const r of shelf) sp2.append(goodPic(r), `×${st.shelf[r]}  `);
+      head.append(shelf.length ? sp2 : el('p', 'note', T.shelfEmpty), el('p', 'note', T.shelfNote));
+      const busySlots = st.jobs.length >= st.slots;
+      for (const r of st.recipes) {
+        const [k, n] = Object.entries(r.need || {})[0] || [], d = el('div', 'prop'), h = el('b', 'px', T.recipes[r.recipe] || r.recipe), w2 = el('span', 'why');
+        h.prepend(goodPic(r.recipe));
+        const b = act(T.makeBtn, {action: 'make', recipe: r.recipe}, {off: !r.can});
+        if (!r.can) w2.textContent = !k ? '' : busySlots ? T.slotsFull : T.lowFruit;
+        const txt = el('div', 'grow'); txt.append(h, el('div', 'note num', k ? T.needLine(kindName(k), fmt(n), dur(r.seconds), fmt(r.value)) : T.noFruitFor), w2);
+        d.append(row(txt, b));
+        head.append(d);
+      }
+      const op = panel(el('b', 'px', T.ordersH));
+      if (!os.length) op.append(el('p', 'note', T.noOrders));
+      for (const o of os) {
+        const d = el('div', 'prop'), h = el('b', 'px num', o.recipe ? T.orderBottle(T.recipes[o.recipe] || o.recipe, fmt(o.count)) : T.orderFruit(kindName(o.fruit), fmt(o.count))), w2 = el('span', 'why');
+        h.prepend(o.recipe ? goodPic(o.recipe) : pic(`${S}fruit-${o.fruit}.png`, 'good'));
+        const b = buy(T.fillBtn, 'y', bb => send({action: 'fill', order: o.id}, bb));
+        b.price.append(coin(), `+${short(o.reward)}`); b.setAttribute('aria-label', `${T.fillBtn}, +${fmt(o.reward)} ${en ? 'coins' : '코인'}`);
+        b.disabled = !o.can || busy(); if (!o.can) w2.textContent = T.cantFill;
+        const txt = el('div', 'grow'); txt.append(h, el('div', 'note num', T.orderLeft(dur(leftOf(s, o.left)))), w2);
+        d.append(row(txt, b));
+        op.append(d);
+      }
+      return [head, op];
+    });
+  }
+  function renderMgr() {
+    const s = state(); if (!s) return;
+    const M = s.manager;
+    keep('mgr', [M || null, s.coins, en], () => {
+      if (!M) return [panel(el('p', 'note', T.update15))];
+      const c = el('div', 'panel card'), who = el('div', 'who'), e = el('div', 'spr'); who.append(e);
+      ready.then(() => index && index['manager-idle'] && show(e, 'manager-idle', {clip: Motion.clip('idle', frames('manager-idle')), offset: rnd(0, 3), lit: true, center: false}));
+      if (!M.level) who.style.opacity = .35;
+      const pct = Math.round(M.rate * 100), info = el('div'), acts = el('div', 'acts'), why = el('span', 'why');
+      info.append(el('b', 'px', T.mgrName), el('div', 'sub num', M.locked ? T.mgrLocked : M.level ? T.mgrLevel(M.level, M.max, pct) : T.none), el('div', 'sub', T.mgrJob(pct)));
+      if (M.sold) info.append(el('div', 'sub num', T.mgrSold(fmt(M.sold))));
+      const up = buy('', '', b => send({action: 'mgr_hire'}, b)); acts.append(up);
+      setBuy(up, why, M.level ? T.upBtn : T.hireBtn, M.cost ?? null, M.locked ? T.mgrLockedBtn : T.maxed);
+      c.append(who, info, acts, why);
+      if (!M.level) return [c];
+      const jobs = el('div', 'seg'); jobs.setAttribute('role', 'group'); jobs.setAttribute('aria-label', T.mgrJobs);
+      for (const [k, at] of [['sell', 1], ['plant', 5], ['buy', 10]]) { // 레벨이 모자란 일은 잠겨 있다
+        const b = toggle(M.level >= at ? T.mgrDo[k] : `${T.mgrDo[k]} · ${T.lv(at)}`, M.level >= at && M[k], {action: 'mgr_set', [k]: !M[k]});
+        if (M.level < at) b.disabled = true;
+        jobs.append(b);
+      }
+      const set = panel(el('b', 'px', T.mgrJobs), jobs);
+      if (M.level < 10) set.append(el('p', 'note', T.buyAt));
+      else {
+        const plans = el('div', 'seg'), keeps = el('div', 'seg');
+        plans.setAttribute('role', 'group'); plans.setAttribute('aria-label', T.planH); keeps.setAttribute('role', 'group'); keeps.setAttribute('aria-label', T.keepH);
+        plans.append(...['cheap', 'fruit', 'crew'].map(p => toggle(T.mgrPlans[p], M.plan === p, {action: 'mgr_set', plan: p})));
+        keeps.append(...[0, 30, 50].map(n => toggle(T.keepV(n), M.keep === n, {action: 'mgr_set', keep: n})));
+        set.append(el('p', 'note', T.planH), plans, el('p', 'note', T.keepH), keeps);
+      }
+      return [c, set];
+    });
+  }
+
   let found = null, foundSeen = '', sort = 'recent', page = 0;
   const amNow = () => new Date(Date.now() + offset + 9 * 3600e3).getUTCHours() < 12; // 서버 돕기 칸: 한국 시간 0~12시 오전
   // 맥 TreeKind.collectible 순서. 이름 없는 과수원은 seed 로 짓는다(맥 Raid.farmName 과 같은 규칙)
@@ -1414,11 +1636,12 @@
     ]);
     $('nb-h').textContent = T.nbH(nbs.length, 10);
     keep('nb-list', [nbs, s.kinds, s.workers.map(w => [w.level, w.away]), stamp, amNow(), en], () => nbs.length ? nbs.map(n => nbCard(n, s)) : [panel(el('p', 'note', T.noNb))]);
-    $('sorts').replaceChildren(...['recent', 'similar', 'new'].map(k => { const b = el('button', '', T.sorts[k]); b.type = 'button'; b.setAttribute('aria-pressed', k === sort); b.onclick = () => { sort = k; page = 0; renderNb(); discover(); }; return b; }));
+    $('sorts').replaceChildren(...['recent', 'similar', 'new', ...(v15() ? ['mentor'] : [])].map(k => { const b = el('button', '', T.sorts[k]); b.type = 'button'; b.setAttribute('aria-pressed', k === sort); b.onclick = () => { sort = k; page = 0; renderNb(); discover(); }; return b; }));
     const out = rout.map(r => r.id);
-    keep('found', [found, out, nbs.length, en], () => !found ? [] : !(found.farms || []).length ? [el('p', 'note', T.none)] : [
+    keep('found', [found, out, nbs.length, sort, en], () => !found ? [] : !(found.farms || []).length ? [el('p', 'note', T.none)] : [
       ...found.farms.map(f => {
-        const h = el('b', 'px', nameOf(f)); if (f.junior) h.append(el('span', 'tag', T.newFarm));
+        const h = el('b', 'px', nameOf(f)), tag = sort === 'mentor' ? (f.junior ? T.junior : T.senior) : f.junior && T.newFarm; // 1.15 선배·후배: junior 가 거짓이면 내 선배
+        if (tag) h.append(el('span', 'tag', tag));
         const mini = el('div', 'mini'); for (const [k, st] of (f.look?.trees || []).slice(0, 6)) mini.append(pic(`${S}tree-${k}-${Math.min(7, st)}.png`));
         const asked = out.includes(f.id), d = el('div', 'prop');
         d.append(h, mini, el('span', 'note num', T.farmLine(f.level, f.neighbors, T.seen(agoH(f.seen)))),
@@ -1484,7 +1707,9 @@
   const queuedMap = () => { try { return JSON.parse(localStorage.getItem('ld-queued') || '{}'); } catch (e) { return {}; } };
   const saveQueued = q => { const t = Date.now() - 72 * 3600e3; for (const k in q) if (q[k].at < t) delete q[k]; try { localStorage.setItem('ld-queued', JSON.stringify(q)); } catch (e) {} };
   const doneText = (p, r) => p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
-    : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : p.action === 'crate' ? T.grown : T.done[p.action] || '';
+    : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : p.action === 'crate' ? T.grown
+    : p.action === 'mgr_hire' ? (state()?.manager?.level === 1 ? T.mgrHired : T.mgrUp) : p.action === 'stand_up' ? (state()?.stand?.level === 1 ? T.standOpen : T.standUp)
+    : p.action === 'make' ? T.started(T.recipes[p.recipe] || p.recipe) : p.action === 'fill' ? T.filled(r.earned || 0) : T.done[p.action] || '';
   function settle(r) {
     let p = pending.get(r.id), late = false;
     if (p) pending.delete(r.id);
@@ -1518,7 +1743,7 @@
       $('w-h').textContent = short(s.week.harvested); $('w-s').textContent = short(s.week.sold); $('w-e').textContent = short(s.week.earned);
       $('w-more').textContent = [T.seasons[s.season], s.dex != null && s.secrets != null ? T.dex(s.dex, s.secrets) : ''].filter(Boolean).join(' · ');
     }
-    renderScene(); renderPlant(); renderCrew(); renderFarm(); renderDeco(); renderMap(); renderNb(); renderRaid(); renderCol(); tick();
+    renderScene(); renderPlant(); renderCrew(); renderMgr(); renderSuggest(); renderFarm(); renderStand(); renderDeco(); renderMap(); renderNb(); renderRaid(); renderCol(); tick();
   }
 
   let timer;

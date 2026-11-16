@@ -163,6 +163,9 @@ def land_total(plots, stop=float("inf")):
     return total
 
 
+GOODS = 1.5 * 1.45  # 1.15 병 값 배율 × 주문 보상 최대 배율(앱 Balance.Stand)
+
+
 def plausible(post, baskets=0, dispatches=0):
     """올린 일꾼 레벨로 일주일에 나올 수 있는 최대치 안인지. 레벨은 오르기만 하므로 지금 레벨이 그 주의 상한이다.
     나무는 주중에 바꿔 심을 수 있어 가장 빠른 나무가 밭 칸 수만큼 있다고 본다(손으로 따면 수확 일꾼 속도와 무관).
@@ -183,7 +186,8 @@ def plausible(post, baskets=0, dispatches=0):
     if card["harvested"] > harvest_max + lifted + baskets or card["sold"] > card["harvested"] + MAX_CRATE + baskets:
         return False
     extra = dispatches * (MAX_CRATE + lifted) * MAX_FRUIT_PRICE * (1 + PRICE_PER_LEVEL * DISPATCH_LEVEL_CAP * CREW2) * SEASON_PRICE * SLACK
-    if card["earned"] > card["sold"] * MAX_FRUIT_PRICE * boost("planter", PRICE_PER_LEVEL) * SEASON_PRICE * SLACK + extra:
+    # 1.15 가판대: 병은 제값의 1.5배, 병 주문 보상은 그 1.45배까지(Balance.Stand) → 레몬 하나당 최대 GOODS 배
+    if card["earned"] > card["sold"] * MAX_FRUIT_PRICE * GOODS * boost("planter", PRICE_PER_LEVEL) * SEASON_PRICE * SLACK + extra:
         return False
     kinds = set(orch["trees"]) - {"rainbow"}
     if len(kinds) > orch["dex"] or (orch["rainbow"] and orch["dex"] < 12) or ("rainbow" in orch["trees"] and not orch["rainbow"]):

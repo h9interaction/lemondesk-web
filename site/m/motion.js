@@ -53,7 +53,7 @@
     workAnims(role, young) { return role === 'planter' ? (young ? ['dig'] : ['tamp', 'dig']) : role === 'caretaker' ? ['water'] : ['pick']; },
     plantingOrder: ['dig', 'seed', 'tamp'],
 
-    /** 다음 행동(Motion.choose). s: {role, fruit[], young[], crateFull, night, season, streak, last, lastTree, has: Set}.
+    /** 다음 행동(Motion.choose). s: {role, fruit[], young[], crateFull, night, season, streak, last, lastTree, has: Set, rain}.
      *  돌려주는 값: {kind: 'work', tree, anim, reps} | {kind: 'rest', anim} | {kind: 'idle', secs} | {kind: 'look'} | {kind: 'stroll', tree} | {kind: 'sit'} */
     choose(s, rng = Math.random) {
       const roll = p => rng() < p;
@@ -79,7 +79,7 @@
       const trees = fruit.map((_, i) => i);
       let targets, chance;
       if (s.role === 'harvester') { targets = s.crateFull ? [] : trees.filter(i => fruit[i] > 0); chance = 1; }
-      else if (s.role === 'caretaker') { targets = trees; chance = 0.82; }
+      else if (s.role === 'caretaker') { targets = s.rain ? [] : trees; chance = 0.82; } // 1.15 비 오면 물 주기 대신 쉰다(후보가 비면 일 확률 난수도 안 뽑는다)
       else { const y = trees.filter(i => young[i]); targets = y.length ? y : trees; chance = y.length ? 1 : 0.4; }
       if (s.night) chance *= 0.6;
       let lastTree = s.lastTree ?? null, lastAnim = null;
@@ -101,6 +101,32 @@
         if (t !== undefined && !(last && last.kind === 'stroll')) options.push([{kind: 'stroll', tree: t}, 1.3]);
       }
       return pick(options) || {kind: 'idle', secs: 3};
+    },
+
+    // 1.15 날씨(맥 Weather.swift·윈도우 Weather.cs 와 같은 규칙): 1970 기준 3시간 칸마다 칸 번호 해시(0~99)로 계절 비율표에서 고른다.
+    // 계절은 그 시각의 이 기기 달. 무지개: 앞 칸이 비, 이 칸이 비·눈이 아니고 칸 안에서 1시간 전.
+    weatherBlock: 10800, rainbowFor: 3600,
+    weatherWeights: {spring: [['clear', 45], ['cloud', 25], ['rain', 20], ['wind', 10]], summer: [['clear', 40], ['cloud', 20], ['rain', 32], ['wind', 8]],
+      autumn: [['clear', 50], ['cloud', 20], ['rain', 12], ['wind', 18]], winter: [['clear', 40], ['cloud', 25], ['snow', 22], ['wind', 13]]},
+    weatherRoll(b) {
+      let h = b >>> 0; // 하위 32비트(음수도 Swift UInt32(truncatingIfNeeded:) 와 같게)
+      h = (h ^ (h >>> 16)) >>> 0; h = Math.imul(h, 0x7feb352d) >>> 0;
+      h = (h ^ (h >>> 15)) >>> 0; h = Math.imul(h, 0x846ca68b) >>> 0;
+      h = (h ^ (h >>> 16)) >>> 0;
+      return h % 100;
+    },
+    weatherKind(b, season) {
+      let r = Motion.weatherRoll(b);
+      for (const [k, w] of Motion.weatherWeights[season]) { r -= w; if (r < 0) return k; }
+      return 'clear';
+    },
+    /** 달(1~12) → 계절(맥 Season(date:)) */
+    season(month) { return ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'][month - 1]; },
+    /** t(1970 기준 초)의 날씨 {now, rainbow}. 계절은 이 기기 달 */
+    weatherAt(t) {
+      const B = Motion.weatherBlock, b = Math.floor(t / B), seasonAt = x => Motion.season(new Date(x * 1000).getMonth() + 1);
+      const now = Motion.weatherKind(b, seasonAt(t)), before = Motion.weatherKind(b - 1, seasonAt(t - B));
+      return {now, rainbow: before === 'rain' && now !== 'rain' && now !== 'snow' && t - b * B < Motion.rainbowFor};
     },
 
     // 강아지: 0 진돗개, 1 웰시코기, 2 삽살개. 행동 kind: 0 sit, 1 wag, 2 trot, 3 trick, 4 bark

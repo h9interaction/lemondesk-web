@@ -259,9 +259,24 @@
 24,
 4
 ],
+"fx-leaf": [
+16,
+14,
+1
+],
+"fx-rain": [
+16,
+14,
+1
+],
 "fx-shadow-0": [
 34,
 10,
+1
+],
+"fx-snow": [
+16,
+14,
 1
 ],
 "fx-sparkle": [
@@ -278,6 +293,21 @@
 44,
 24,
 4
+],
+"good-jam": [
+22,
+22,
+1
+],
+"good-lemonade": [
+22,
+22,
+1
+],
+"good-syrup": [
+22,
+22,
+1
 ],
 "ground-0": [
 434,
@@ -339,6 +369,31 @@
 148,
 1
 ],
+"manager-carry": [
+42,
+64,
+8
+],
+"manager-habit": [
+44,
+64,
+8
+],
+"manager-idle": [
+42,
+64,
+8
+],
+"manager-sell": [
+42,
+64,
+8
+],
+"manager-walk": [
+42,
+64,
+8
+],
 "prop-beehive-0": [
 38,
 48,
@@ -367,6 +422,11 @@
 "prop-sign-0": [
 62,
 64,
+1
+],
+"prop-stand-0": [
+70,
+66,
 1
 ],
 "prop-stonelamp-0": [

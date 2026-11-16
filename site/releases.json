@@ -1,5 +1,26 @@
 [
   {
+    "version": "1.14.0",
+    "date": "2026-11-16",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.14.0/LemonDesk-1.14.0.dmg",
+    "notes": {
+      "ko": [
+        "폰으로 보기에서도 Mac 에서 하던 일을 거의 다 할 수 있어요. 이웃·모음 탭이 생겼고, 서리 보내기·이웃 찾기·출장·바구니·묘목, 소품 자리·테마·옷 색 바꾸기도 폰에서 돼요",
+        "Mac 이 잠들거나 꺼져 있어도 폰에서 팔기·심기·고용 같은 일을 예약해 두면, Mac 이 깨어날 때 그 시각에 한 것처럼 반영돼요(최대 50개, 72시간)",
+        "Mac 이 꺼져 있어도 폰에서 이웃 물 주기·선물·출장·바구니·묘목을 바로 보낼 수 있어요",
+        "이웃 찾기가 생겼어요. 코드를 주고받지 않아도 과수원 목록에서 이웃 요청을 보내고, 받은 요청은 수락·거절·차단할 수 있어요. 찾기에 보이지 않게 끌 수도 있어요",
+        "초대 링크를 보내면, 받은 사람은 누르기만 해도 앱에서 바로 이웃을 맺을 수 있어요"
+      ],
+      "en": [
+        "Phone view now does almost everything the Mac app does: new Neighbors and Book tabs, plus scrumping, finding neighbors, worker loans, baskets, saplings, decor spots, themes and outfit colors",
+        "Even while your Mac is asleep or off, queue up selling, planting or hiring from your phone. When the Mac wakes up, they're applied as if done at that moment (up to 50, within 72 hours)",
+        "Water, gifts, worker loans, baskets and saplings for neighbors go out right away from your phone, even with the Mac off",
+        "Find Neighbors: send a neighbor request from the orchard list without swapping codes, and accept, decline or block requests you get. You can hide yourself from the list too",
+        "Send an invite link: your friend taps it and becomes your neighbor right in the app"
+      ]
+    }
+  },
+  {
     "version": "1.13.0",
     "date": "2026-11-16",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.13.0/LemonDesk-1.13.0.dmg",

@@ -1,5 +1,30 @@
 [
   {
+    "version": "1.11.0",
+    "date": "2026-11-16",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.11.0/LemonDesk-1.11.0.dmg",
+    "notes": {
+      "ko": [
+        "이웃이 생겼어요. 이웃 탭에서 내 코드를 나누거나 받은 코드를 넣으면 서로 이웃이 되고, 이웃 과수원을 엽서처럼 구경할 수 있어요",
+        "이웃을 도와주세요. 하루 한 번 물을 주러 가면 이웃 과수원이 30분 동안 빨리 자라고, 그쪽 띠에 내 일꾼이 찾아가 물을 주고 인사해요. 과일 한 개를 선물할 수도 있어요",
+        "고마움이 쌓이면 벤치·화분·새집 같은 소품이 열리고, 꾸미기 탭에서 띠 원하는 자리에 놓을 수 있어요. 받은 선물은 선물 수첩에 모여요",
+        "이웃이 지켜 줘요. 개를 키우는 이웃이 있으면 서리 피해가 줄고, 이웃이 깨어 있으면 서리꾼이 들켜요. 이웃이 서리당하면 대신 되찾아 줄 수도 있어요",
+        "이웃이 없어도 동네 과수원 두 곳이 하루 한 번 놀러 와요",
+        "기록 탭에 목표가 생기고, 처음 시작하는 분을 위한 안내를 더했어요. 귀여운 효과음과 잔잔한 배경음도 생겼어요(설정 › 소리에서 켤 수 있어요)",
+        "서리는 정식 규칙으로 돌아왔어요: 하루 3번, 새로 시작한 과수원은 3일 동안 보호돼요"
+      ],
+      "en": [
+        "Neighbors are here. Share your code or enter a friend's on the Neighbors tab to become neighbors, and peek at their orchard like a postcard",
+        "Lend a hand: water a neighbor's orchard once a day to make it grow faster for 30 minutes, and your worker visits their strip to water and wave. You can also gift them one fruit",
+        "Thanks you earn unlock decorations like a bench, flower pots and a birdhouse that you can place anywhere on your strip from the Decorate tab. Gifts you receive fill a gift album",
+        "Neighbors watch your back: neighbors with dogs reduce scrumping losses, an awake neighbor catches scrumpers, and you can win back what was taken from a neighbor",
+        "Even without neighbors, two village orchards drop by once a day",
+        "Goals on the Record tab and a short guide for new players, plus cute sound effects and gentle background music (turn them on in Settings › Sound)",
+        "Scrumping is back to its full rules: three a day, and new orchards are protected for three days"
+      ]
+    }
+  },
+  {
     "version": "1.8.5",
     "date": "2026-11-15",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.5/LemonDesk-1.8.5.dmg",

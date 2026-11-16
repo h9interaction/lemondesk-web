@@ -10,14 +10,15 @@
 - 서리(1.8, raid/…): 1.8 이상 모든 설치가 창고 상태(정원·종류별 개수·탱자 수·창고 레벨)를 알리고, 남의 창고에서 과일을 조금 가져온다.
   키는 자랑 소유 키(X-Owner-Key)와 같다. 한 사람은 늘 '누군가'로 숨기고, 기록은 8주 뒤 지운다.
 - 이웃(1.11, neighbors/…): 같은 소유 키로 초대 코드를 넣으면 바로 양쪽 이웃. 이웃마다 하루 한 번씩 돕기·선물(과일 한 개)을 보내고,
-  받는 쪽은 raid/status 의 inbox 로 받는다. 이웃 관계·코드·돕기 기록·과수원 모습(look)·고마움 수만 저장하고, 돕기 기록은 8주 뒤 지운다.
+  받는 쪽은 raid/status 의 inbox 로 받는다. 이웃 관계·코드·돕기 기록·과수원 모습(look)·고마움 수·내가 정한 과수원 이름(1.12)만 저장하고,
+  돕기 기록은 8주 뒤 지운다.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
   --raid-fast YES 는 로컬 확인용: 베타 때처럼 새 키·초보 보호·창고 20%·하루 3번·손실 상한·당한 뒤 개 없이 바로 서리하고, 작전이 6~10초
   회사 인프라: python brag.py --host 0.0.0.0 --prefix /api/ --board https://lemondesk.interaction.hnine.com/brag/ --cors https://lemondesk.interaction.hnine.com
               (PORT, IX_DATA_DIR 은 인프라가 넣어 준다)
-관리: python3 brag.py admin list|hide ID|unhide ID|delete ID
+관리: python3 brag.py admin list|hide ID|unhide ID|delete ID|clear-name 과수원 이름
 """
 import hashlib
 import hmac
@@ -55,7 +56,7 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
           "raid_active": (4, 3600),
           # 이웃(1.11): 소유 키당, neighbor_add_ip 는 IP 당(키를 바꿔 가며 코드를 마구 넣어 보지 못하게)
           "neighbors": (120, 3600), "neighbor_code": (10, 3600), "neighbor_add": (20, 3600), "neighbor_add_ip": (30, 3600),
-          "neighbor_send": (60, 3600)}
+          "neighbor_send": (60, 3600), "neighbor_name": (10, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -72,7 +73,7 @@ THEMES = {"sunny", "blossom", "sunset", "moon", "garden"}
 # ponytail: 짧은 금칙어 목록. 공백을 지우고 소문자로 비교한다. 신고 3건 자동 숨김이 나머지를 맡는다.
 BANNED = ["시발", "씨발", "ㅅㅂ", "병신", "ㅂㅅ", "개새", "좆", "섹스", "fuck", "shit", "bitch", "sex", "porn", "nigger"]
 # 폰으로 보기(1.6)
-RELAY_STATE_MAX = 24 * 1024  # Mac 이 올리는 상태 크기(v2 는 후반 과수원에서 15KB 안팎)
+RELAY_STATE_MAX = 64 * 1024  # Mac 이 올리는 상태 크기(v2 는 후반 과수원에서 15KB 안팎, 1.12 부터 넓힌 칸까지 전부 보낸다)
 RELAY_WAIT = 25              # Mac 롱폴링 최대 초(앞단 프록시 시간 제한보다 짧게)
 RELAY_WAITERS = 2            # 한 기기가 동시에 열 수 있는 대기(잠자기에서 깨면 끊긴 대기가 하나 남아 있다)
 RELAY_WAITERS_ALL = 2000     # 서버 전체 동시 대기. 넘으면 기다리지 않고 바로 답한다(스레드 고갈 방지)
@@ -89,7 +90,7 @@ ACTIONS = {"sell", "plant", "unlock", "hire", "crate", "hire2", "replant"}  # hi
 # 자랑 게시판 조작 방지(1.7.1): 올린 숫자가 게임에서 나올 수 있는 범위인지 본다. 앱 Balance.swift 와 같은 값(test_brag 가 대조한다).
 # 게임 저장은 서버로 옮기지 않는다. 가능한 최대치 바로 아래로 꾸민 숫자는 못 막고, 신고·관리 명령이 나머지를 맡는다.
 WEEK = 7 * 86400
-MAX_TREES = 10
+MAX_TREES = 10               # 앞 10칸: 이웃 모습(look)·자랑 게시물의 나무 줄 상한(1.12 부터 땅은 끝이 없고 앱은 앞 10칸만 보낸다)
 MIN_FRUIT_INTERVAL = 20      # 가장 빨리 열리는 나무(핑거라임)의 열매 간격(초)
 MAX_FRUIT_PRICE = 900        # 가장 비싼 열매(포멜로)
 GROW_PER_LEVEL = 0.15        # 돌보기 레벨당 성장 배율
@@ -99,17 +100,59 @@ SEASON_GROW, FENCE_GROW, SEASON_PRICE = 1.15, 1.4, 1.5  # 봄 성장, 탱자 양
 MAX_CRATE = round(40 * 1.5 ** 12 * 1.25 ** 6)            # 창고 최대(레벨 18)
 SLACK = 1.2                  # 여유(시계 오차·주 경계)
 
+# 끝없는 땅(1.12). 앱 Balance.Land 와 같은 값. 맥이 밸런스로 바꾸면 여기 숫자만 고치고 python3 server/land_cases.py 로
+# server/land_cases.json 을 다시 만든다(앱·윈도우·서버 테스트가 그 파일로 대조한다).
+LAND_START = 10              # 처음 칸 수
+LAND_BASE = 10_000           # 11번째 칸 값
+LAND_GROWTH, LAND_KNEE, LAND_GROWTH_AFTER = 2.0, 22, 1.07  # 22칸이 될 때까지 칸마다 2배, 그 뒤로는 1.07배(맥 BalanceTests 로 고름)
+LAND_COST_MAX = 10**18       # 앱처럼 여기서 멈춘다(Int 넘침 방지, 그 전에 코인이 모자란다)
+LAND_SECONDS, LAND_STEP, LAND_SECONDS_MAX = 3_600, 0.5, 28_800  # 개간 시간: 1시간에서 칸마다 30분씩, 8시간까지
+MAX_PLOTS = 100_000          # 받는 칸 수·칸 번호·탱자 수 상한(땅은 끝이 없지만 받는 숫자에는 둔다)
+MAX_EARNED = 10**15          # 지금까지 번 코인 상한
+
+
+def land_cost(plots):
+    """지금 칸 수가 plots 일 때 다음 한 칸 값. 앱 Balance.Land.cost 와 같은 순서로 곱하고, 앱 .rounded() 처럼 0.5 는 올린다
+    (Python round 는 짝수 쪽이라 안 쓴다). 너무 크면 LAND_COST_MAX(앱의 min(1e18, …))."""
+    try:
+        x = LAND_BASE * LAND_GROWTH ** (min(plots, LAND_KNEE) - LAND_START) * LAND_GROWTH_AFTER ** max(0, plots - LAND_KNEE)
+    except OverflowError:
+        return LAND_COST_MAX
+    if x >= LAND_COST_MAX:
+        return LAND_COST_MAX
+    return min(LAND_COST_MAX, int(x) + (x % 1 >= 0.5))
+
+
+def land_seconds(plots):
+    """지금 칸 수가 plots 일 때 다음 칸 개간 시간(초, 앱처럼 실수)"""
+    return float(min(LAND_SECONDS_MAX, LAND_SECONDS * (1 + LAND_STEP * (plots - LAND_START))))
+
+
+def land_total(plots, stop=float("inf")):
+    """11번째부터 plots 번째 칸까지 값 합(plots ≤ 10 이면 0). 합이 stop 을 넘으면 거기서 멈춘다
+    (지어 낸 큰 칸 수도 금방 끝난다)."""
+    total = 0
+    for p in range(LAND_START, plots):
+        total += land_cost(p)
+        if total > stop:
+            break
+    return total
+
 
 def plausible(post):
     """올린 일꾼 레벨로 일주일에 나올 수 있는 최대치 안인지. 레벨은 오르기만 하므로 지금 레벨이 그 주의 상한이다.
-    나무는 주중에 바꿔 심을 수 있어 가장 빠른 나무 10그루로 본다(손으로 따면 수확 일꾼 속도와 무관)."""
-    card, orch = post["card"], post["orchard"]
+    나무는 주중에 바꿔 심을 수 있어 가장 빠른 나무가 밭 칸 수만큼 있다고 본다(손으로 따면 수확 일꾼 속도와 무관).
+    밭 칸 수(1.12)는 넓힌 칸 값의 합이 지금까지 번 코인 안이어야 한다(옛 앱은 안 보내 10칸)."""
+    card, orch, land = post["card"], post["orchard"], post["land"]
+    spendable = land["earned"] * SLACK
+    if land_total(land["plots"], spendable) > spendable:
+        return False
 
     def boost(role, per):
         w = orch["workers"].get(role)
         return 1 + per * w["level"] * (CREW2 if len(w["looks"]) >= 2 else 1) if w else 1
 
-    harvest_max = WEEK * MAX_TREES * boost("caretaker", GROW_PER_LEVEL) * SEASON_GROW * FENCE_GROW / MIN_FRUIT_INTERVAL * SLACK + 500
+    harvest_max = WEEK * land["plots"] * boost("caretaker", GROW_PER_LEVEL) * SEASON_GROW * FENCE_GROW / MIN_FRUIT_INTERVAL * SLACK + 500
     if card["harvested"] > harvest_max or card["sold"] > card["harvested"] + MAX_CRATE:
         return False
     if card["earned"] > card["sold"] * MAX_FRUIT_PRICE * boost("planter", PRICE_PER_LEVEL) * SEASON_PRICE * SLACK:
@@ -244,7 +287,7 @@ def clean_farm(b):
         raise BadRequest()
     if b.get("best") not in PRICE:
         raise BadRequest()
-    return {"cap": cap, "level": level, "crate": crate, "fences": _int(b.get("fences"), 0, MAX_TREES),
+    return {"cap": cap, "level": level, "crate": crate, "fences": _int(b.get("fences"), 0, MAX_PLOTS),
             "dogs": _int(b.get("dogs", 0), 0, MAX_DOGS), "best": b["best"],
             "active": b.get("active") is True, "ack": [_match(a, RAID_ID) for a in ack],
             "look": clean_look(b.get("look"))}  # 1.11. 옛 앱은 안 보낸다(None: 저장된 모습을 그대로 둔다)
@@ -377,7 +420,7 @@ def clean_post(body):
         raise BadRequest()
     trees = orch.get("trees")
     workers = orch.get("workers")
-    if not isinstance(trees, list) or len(trees) > 10 or any(t not in KINDS for t in trees):
+    if not isinstance(trees, list) or len(trees) > MAX_TREES or any(t not in KINDS for t in trees):
         raise BadRequest()
     if not isinstance(workers, dict) or any(r not in ROLES for r in workers):
         raise BadRequest()
@@ -398,6 +441,9 @@ def clean_post(body):
         "orchard": {"trees": trees, "workers": crew, "dex": _int(orch.get("dex"), 0, 20),
                     "secrets": _int(orch.get("secrets"), 0, 20), "rainbow": orch["rainbow"], "theme": orch["theme"],
                     "scrump": _int(orch.get("scrump", 0), 0, 20)},  # 1.8 서리 수첩
+        # 1.12 끝없는 땅: 밭 칸 수와 지금까지 번 코인(Orchard.totals.earned). 조작 방지 검사에만 쓰고 저장하지 않는다(옛 앱은 안 보낸다 → 10칸)
+        "land": {"plots": _int(orch.get("plots", LAND_START), LAND_START, MAX_PLOTS),
+                 "earned": _int(orch.get("totalEarned", 0), 0, MAX_EARNED)},
     }
     if not plausible(post):
         raise BadRequest("implausible")
@@ -462,10 +508,11 @@ class Board:
             CREATE INDEX IF NOT EXISTS gifts_sender ON gifts(sender, day);
         """)
         # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
-        # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by)
+        # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by). 1.12: 내 과수원 이름
         for table, col, decl in (("install_counts", "platform", "TEXT NOT NULL DEFAULT 'mac'"), ("pings", "platform", "TEXT NOT NULL DEFAULT 'mac'"),
                                  ("pings", "nb", "INTEGER NOT NULL DEFAULT 0"), ("pings", "rb", "INTEGER NOT NULL DEFAULT 0"),
                                  ("farms", "look", "TEXT NOT NULL DEFAULT '{}'"), ("farms", "thanks", "INTEGER NOT NULL DEFAULT 0"),
+                                 ("farms", "name", "TEXT NOT NULL DEFAULT ''"),
                                  ("raids", "beneficiary", "TEXT NOT NULL DEFAULT ''"), ("raids", "beneficiary_done", "INTEGER NOT NULL DEFAULT 0"),
                                  ("raids", "caught_by", "INTEGER NOT NULL DEFAULT 0")):
             if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
@@ -585,23 +632,38 @@ class Board:
         return {"post": {"id": r[0], "stars": r[5], "url": BOARD_URL + "?p=" + r[0]}}
 
     @locked
-    def delete_mine(self, owner_key):
+    def _drop_posts(self, owner):
+        """내 게시물과 거기 받은 별·신고, 하이라이트 기록(잠금 안에서 부른다)."""
+        ids = [r[0] for r in self.db.execute("SELECT id FROM posts WHERE owner=?", (owner,))]
+        for pid in ids:
+            self.db.execute("DELETE FROM stars WHERE post=?", (pid,))
+            self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
+        self.db.execute("DELETE FROM posts WHERE owner=?", (owner,))
+        self.db.execute("DELETE FROM highlights WHERE owner=?", (owner,))
+        return len(ids)
+
+    def delete_posts(self, owner_key):
+        """'내 자랑 지우기'(1.11.1): 게시물·별·하이라이트만. 서리·이웃 기록과 초대 코드는 그대로 둔다.
+        1.11 까지는 앱이 delete_mine 만 불러서, 게시물을 고치려고 지운 사람이 이웃까지 잃었다."""
         owner = self.owner(owner_key)
         with self.lock:
-            ids = [r[0] for r in self.db.execute("SELECT id FROM posts WHERE owner=?", (owner,))]
-            for pid in ids:
-                self.db.execute("DELETE FROM stars WHERE post=?", (pid,))
-                self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
-            self.db.execute("DELETE FROM posts WHERE owner=?", (owner,))
+            n = self._drop_posts(owner)
+            self.db.commit()
+        return n
+
+    def delete_mine(self, owner_key):
+        """'서버의 내 기록 모두 지우기': 게시물에 더해 서리·이웃 참여 정보와 기록까지(개인정보 처리방침의 약속)."""
+        owner = self.owner(owner_key)
+        with self.lock:
+            n = self._drop_posts(owner)
             self.db.execute("DELETE FROM farms WHERE owner=?", (owner,))  # 1.8 서리 참여·기록도 함께
             self.db.execute("DELETE FROM raids WHERE raider=? OR victim=? OR beneficiary=?", (owner, owner, owner))
             # 1.11 이웃: 코드, 이웃 관계(양쪽), 보내고 받은 돕기·선물
             self.db.execute("DELETE FROM codes WHERE owner=?", (owner,))
             self.db.execute("DELETE FROM neighbors WHERE owner=? OR other=?", (owner, owner))
             self.db.execute("DELETE FROM gifts WHERE sender=? OR receiver=?", (owner, owner))
-            self.db.execute("DELETE FROM highlights WHERE owner=?", (owner,))
             self.db.commit()
-        return len(ids)
+        return n
 
     # 통계
 
@@ -772,12 +834,12 @@ class Board:
 
     # 서리 (1.8). 한 사람(raider)은 당한 쪽 응답 어디에도 넣지 않는다.
 
-    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best, thanks FROM farms"
+    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best, thanks, name FROM farms"
 
     @staticmethod
     def _farm_row(r):
         return {"owner": r[0], "cap": r[1], "crate": json.loads(r[2]), "fences": r[3], "level": r[4], "first": r[5],
-                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11], "thanks": r[12]}
+                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11], "thanks": r[12], "name": r[13]}
 
     def _farm(self, owner):
         r = self.db.execute(self.FARM + " WHERE owner=?", (owner,)).fetchone()
@@ -788,7 +850,9 @@ class Board:
         return hmac.new(self.salt, (me + "|" + owner).encode(), hashlib.sha256).hexdigest()[:16]
 
     def _nick(self, owner):
-        r = self.db.execute("SELECT nickname FROM posts WHERE owner=? AND hidden=0 ORDER BY created DESC LIMIT 1", (owner,)).fetchone()
+        """남에게 보이는 이름: 내가 정한 과수원 이름(1.12) → 마지막 게시물 닉네임 → None(앱이 seed 로 짓는다)"""
+        r = (self.db.execute("SELECT name FROM farms WHERE owner=? AND name<>''", (owner,)).fetchone()
+             or self.db.execute("SELECT nickname FROM posts WHERE owner=? AND hidden=0 ORDER BY created DESC LIMIT 1", (owner,)).fetchone())
         return r[0] if r else None
 
     def _seed(self, owner):
@@ -1037,7 +1101,9 @@ class Board:
                         "helped": (other, "help") in done, "gifted": (other, "gift") in done, "dogs": dogs,
                         # 24시간 안에 당하고 아직 아무도 되갚지 않았으면 남은 초(내가 되찾아 줄 수 있다)
                         "track": int(fp[2] + TRACKS - t) if fp else 0})
-        return {"code": self._code(me, now), "max": MAX_NEIGHBORS, "thanks": mine["thanks"], "neighbors": out}
+        return {"code": self._code(me, now), "max": MAX_NEIGHBORS, "thanks": mine["thanks"], "neighbors": out,
+                # 1.12 내가 정한 과수원 이름(없으면 null)과 앱이 이름을 지을 seed
+                "me": {"name": mine["name"] or None, "seed": self._seed(me)}}
 
     @locked
     def neighbor_list(self, owner_key, now):
@@ -1045,6 +1111,24 @@ class Board:
         out = self._neighbor_view(me, mine, now)
         self.db.commit()  # 처음 보면 코드를 만든다
         return out
+
+    @locked
+    def neighbor_name(self, owner_key, body, now):
+        """내 과수원 이름(1.12): 이웃 카드·방문·서리 대상 목록에 보인다. 게시물 닉네임과 같은 검사, 비우면 지운다
+        (그러면 마지막 게시물 닉네임, 그것도 없으면 앱이 seed 로 지은 이름)."""
+        me, _ = self._member(owner_key, "neighbor_name", now)
+        name = body.get("name") if isinstance(body, dict) else None
+        name = "" if isinstance(name, str) and not name.strip() else clean_nickname(name)
+        self.db.execute("UPDATE farms SET name=? WHERE owner=?", (name, me))
+        self.db.commit()
+        return {"name": name or None}
+
+    @locked
+    def clear_name(self, name):
+        """관리(1.12, 욕설 신고 대응): 그 이름인 과수원 이름을 모두 지운다. 지운 수를 돌려준다."""
+        n = self.db.execute("UPDATE farms SET name='' WHERE name=? AND name<>''", (" ".join(name.split()),)).rowcount
+        self.db.commit()
+        return n
 
     @locked
     def neighbor_code(self, owner_key, body, now):
@@ -1288,7 +1372,8 @@ class Relay:
             cmd["role"] = body["role"]
         if action == "replant":
             plot = body.get("plot")
-            if body.get("kind") not in KINDS or isinstance(plot, bool) or not isinstance(plot, int) or not 0 <= plot < MAX_TREES:
+            # 1.12: 넓힌 칸도. 실제 칸 수 안인지는 Mac 이 본다(서버는 칸 수를 모른다)
+            if body.get("kind") not in KINDS or isinstance(plot, bool) or not isinstance(plot, int) or not 0 <= plot < MAX_PLOTS:
                 raise BadRequest()
             cmd["kind"], cmd["plot"] = body["kind"], plot
         with self.lock:
@@ -1420,6 +1505,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                     return self.neighbors(method, parts[1:], owner, now)
                 if method == "GET" and parts == ["me"]:
                     return self.send(200, board.me(owner, now))
+                if method == "DELETE" and parts == ["me", "posts"]:  # 1.11.1 게시물만
+                    return self.send(200, {"deleted": board.delete_posts(owner)})
                 if method == "DELETE" and parts == ["me"]:
                     return self.send(200, {"deleted": board.delete_mine(owner)})
                 return self.send(404, {"error": "not_found"})
@@ -1473,6 +1560,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, board.neighbor_remove(owner, self.body(), now))
             if method == "POST" and parts in (["help"], ["gift"]):
                 return self.send(200, board.neighbor_send(owner, parts[0], self.body(), now))
+            if method == "POST" and parts == ["name"]:
+                return self.send(200, board.neighbor_name(owner, self.body(), now))
             return self.send(404, {"error": "not_found"})
 
         def serve_static(self, rel):
@@ -1560,6 +1649,8 @@ def main(argv):
             board.db.execute("DELETE FROM highlights WHERE post=?", (pid,))
             board.db.execute("DELETE FROM posts WHERE id=?", (pid,))
             board.db.commit()
+        elif cmd == "clear-name":  # 이름에 띄어쓰기가 있어도 따옴표 없이 된다
+            print(board.clear_name(" ".join(argv[3:])), "cleared")
         else:
             print(__doc__)
         return

@@ -43,20 +43,25 @@
   .chip::before { content: ""; width: 8px; height: 8px; background: #A89A78; }
   .chip.on::before { background: #58B02C; }
 
-  /* 과수원 장면: Mac 띠와 같은 그림·움직임(아트 픽셀 1칸 = 1px, 맥 1pt = 2px). 옆으로 밀어 본다. */
-  .scene { position: relative; height: 172px; overflow-x: auto; overflow-y: hidden; border: 3px solid #5B3A1A; scrollbar-width: none;
-           background: linear-gradient(#BFE3F2 0 62%, #DDF1F8 62% 100%); -webkit-overflow-scrolling: touch; }
-  .scene::-webkit-scrollbar { display: none; }
+  /* 과수원 장면: Mac 띠와 같은 그림·움직임(아트 픽셀 1칸 = 1px, 맥 1pt = 2px). 밭은 손가락으로 옆으로 민다(브라우저 스크롤, 1.12).
+     창고·랜턴(.yard)은 왼쪽에 붙어 있고, 하늘(.sky 구름, .sky.front 새)은 화면 기준이라 밀어도 그 자리다. */
+  .scene { position: relative; height: 172px; overflow: hidden; border: 3px solid #5B3A1A; background: linear-gradient(#BFE3F2 0 62%, #DDF1F8 62% 100%); }
   .scene.dawn { background: linear-gradient(#F7CDB8 0 62%, #FCE6D6 62% 100%); }
   .scene.dusk { background: linear-gradient(#F3B57E 0 62%, #FADBB0 62% 100%); }
   .scene.night { background: linear-gradient(#141B36 0 62%, #222D55 62% 100%); }
-  .world { position: relative; height: 100%; min-width: 100%; overflow: hidden; } /* 과수원 밖으로 날아가는 새·구름이 스크롤 범위를 늘리지 않게 */
+  .pan { position: absolute; inset: 0; z-index: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+  .pan::-webkit-scrollbar { display: none; }
+  .sky { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .sky.front { z-index: 1; }
+  /* 과수원 밖으로 나간 것이 스크롤 범위를 늘리지 않게. clip 이어야 창고가 붙는다(hidden 은 옛 브라우저용: 창고도 같이 밀린다) */
+  .world { position: relative; height: 100%; min-width: 100%; overflow: hidden; overflow: clip; }
+  .yard { position: sticky; left: 0; width: 0; height: 100%; z-index: 15; }
   /* 그림은 아래 가운데가 기준점. 시간대·테마 색 보정과 옷 염색은 불러올 때 캔버스로 한 번 입힌다(맥 Sprite.image 처럼) */
   .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background-repeat: repeat-x; background-position: left bottom; image-rendering: pixelated; }
-  .world .sp, .world .bd { position: absolute; left: 0; bottom: 0; background-repeat: no-repeat; image-rendering: pixelated; }
-  .world .ent, .world .lift { position: absolute; left: 0; bottom: 0; width: 0; height: 0; }
-  .world .tl { position: absolute; inset: 0; background-repeat: no-repeat; image-rendering: pixelated; }
-  .world .sh { position: absolute; left: -17px; bottom: -3px; opacity: .35; background-repeat: no-repeat; image-rendering: pixelated; }
+  .scene .sp, .scene .bd { position: absolute; left: 0; bottom: 0; background-repeat: no-repeat; image-rendering: pixelated; }
+  .scene .ent, .scene .lift { position: absolute; left: 0; bottom: 0; width: 0; height: 0; }
+  .scene .tl { position: absolute; inset: 0; background-repeat: no-repeat; image-rendering: pixelated; }
+  .scene .sh { position: absolute; left: -17px; bottom: -3px; opacity: .35; background-repeat: no-repeat; image-rendering: pixelated; }
   .hint { margin: 6px 2px 0; font-size: 14px; color: var(--page-soft); }
 
   /* 픽셀 UI 틀(9-slice) */
@@ -124,7 +129,7 @@
   dialog.sheet { margin: auto auto 0; padding: 0; border: 0; background: none; width: 100%; max-width: 480px; }
   dialog.sheet::backdrop { background: rgba(20, 14, 6, .55); }
   .sheet .panel { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-  .plots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; }
+  .plots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; max-height: 52vh; overflow-y: auto; } /* 1.12: 칸이 많으면 안에서 스크롤 */
   .plots button { background: none; border: 2px solid #C9A56B; padding: 2px 0 0; min-height: 76px; font-size: 14px; color: var(--ink); cursor: pointer; }
   .plots button img { width: 62px; height: 55px; display: block; margin: 0 auto; }
   .plots button:disabled { opacity: .4; }
@@ -156,7 +161,8 @@
 
   <main id="app" hidden>
     <section id="tab-orchard" role="tabpanel" aria-labelledby="t-orchard">
-      <div class="scene" id="scene" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div></div></div>
+      <div class="scene" id="scene"><div class="sky" id="sky"></div><div class="pan" id="pan" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div><div class="yard" id="yard"></div></div></div><div class="sky front" id="sky2"></div></div>
+      <p class="hint num" id="clear" hidden></p>
       <p class="hint" id="hint" hidden></p>
       <div class="panel hud">
         <img class="crate" id="crate-pic" src="sprites/crate-0.png" alt="" width="104" height="100">
@@ -265,6 +271,7 @@
     ago: s => s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`,
     away: t => ` · Out scrumping, back in ${t}`, raided: (n, ago) => `Someone scrumped ${n} lemons from your crate · ${ago}`,
     chased: (n, ago) => `You chased off a scrumper. They only got ${n} · ${ago}`,
+    clearing: s => `Clearing land · ${s > 0 ? `${dur(s)} left` : 'almost done'}`,
   } : {
     crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
     fullIn: t => `가득까지 ${t}`, full: '창고가 가득 찼어요', slow: '천천히 차는 중', field: (n, m) => `밭 ${n} / ${m}칸`, fieldFull: (n, m) => `밭 ${n} / ${m}칸 · 다 차서 바꿔 심을 수 있어요`,
@@ -294,6 +301,7 @@
     ago: s => s < 60 ? '방금' : s < 3600 ? `${Math.round(s / 60)}분 전` : `${Math.round(s / 3600)}시간 전`,
     away: t => ` · 서리 나감, ${t} 뒤 돌아와요`, raided: (n, ago) => `누군가 레몬 ${n}개를 서리해 갔어요 · ${ago}`,
     chased: (n, ago) => `서리꾼을 쫓아냈어요. ${n}개만 가져갔어요 · ${ago}`,
+    clearing: s => `개간 중 · ${s > 0 ? `${dur(s)} 남음` : '곧 끝나요'}`,
   };
   // 윈도우판(상태의 platform 이 win)이면 연결 뒤 문구의 'Mac' 을 'PC' 로. 맥 앱은 platform 을 보내지 않는다.
   let pc = false;
@@ -307,10 +315,12 @@
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const fmt = n => new Intl.NumberFormat(en ? 'en' : 'ko').format(n);
   const short = n => n < 100000 ? fmt(n) : new Intl.NumberFormat(en ? 'en' : 'ko', {notation: 'compact', maximumFractionDigits: 1}).format(n);
+  const dur = s => { const m = Math.ceil(s / 60), h = Math.floor(m / 60), r = m % 60; return en ? (h ? `${h} h` + (r ? ` ${r} min` : '') : `${m} min`) : (h ? `${h}시간` + (r ? ` ${r}분` : '') : `${m}분`); };
+  const landOf = s => s.land || s.maxTrees || 10; // 1.12 칸 수. 옛 앱은 land 가 없고 maxTrees 가 10
   if (en) {
     document.documentElement.lang = 'en';
     document.querySelectorAll('[data-t]').forEach(e => { if (typeof T[e.dataset.t] === 'string') e.textContent = T[e.dataset.t]; });
-    $('scene').setAttribute('aria-label', 'Orchard');
+    $('pan').setAttribute('aria-label', 'Orchard');
   }
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -321,7 +331,7 @@
   // 키: QR 주소의 # 뒤 → localStorage. 저장된 키로 열었으면 주소에 다시 붙여 iOS 홈 화면에 추가할 때 따라가게 한다.
   const hashKey = new URLSearchParams(location.hash.slice(1)).get('k');
   if (hashKey && /^[0-9a-f]{64}$/.test(hashKey) && hashKey !== localStorage.getItem('ld-remote')) {
-    localStorage.setItem('ld-remote', hashKey); localStorage.removeItem('ld-remote-last'); // 다른 Mac 의 QR: 이전 과수원 캐시는 버린다
+    localStorage.setItem('ld-remote', hashKey); localStorage.removeItem('ld-remote-last'); localStorage.removeItem('ld-remote-scroll'); // 다른 Mac 의 QR: 이전 과수원 캐시는 버린다
   }
   const key = localStorage.getItem('ld-remote');
   if (key && hashKey !== key) history.replaceState(null, '', location.pathname + location.search + '#k=' + key);
@@ -356,14 +366,21 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=185'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=1120'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
   const ANIMS = ['idle', 'walk', 'carry', 'dig', 'seed', 'tamp', 'water', 'pick', 'wipe', 'wave', 'habit', 'yawn', 'sniff', 'sit'];
   const DYE_HUES = [null, 355, 25, 125, 200, 275, 325], BUTTERFLY_HUES = [null, 200, 330, 25, 280]; // 맥 Palette.dyeHues, 나비 날개 색
-  const world = $('world'), scene = $('scene'), ground = world.querySelector('.ground');
+  const world = $('world'), scene = $('scene'), pan = $('pan'), yard = $('yard'), sky = $('sky'), sky2 = $('sky2'), ground = world.querySelector('.ground');
   const rnd = (a, b) => a + Math.random() * (b - a), anyOf = a => a[Math.floor(Math.random() * a.length)];
+  // 1.12 끝없는 땅: 밭이 화면보다 넓으면 민다. 좌표는 밭(world) 기준이고, 화면에 보이는 구간은 [l, r]
+  const view = () => ({l: pan.scrollLeft, r: pan.scrollLeft + pan.clientWidth});
+  /** 보이는 칸(가운데가 화면 안)에 양쪽으로 pad 칸씩 더한 칸 번호 [a, b](0 ~ n-1, 비면 b < a). 그리기·일하기는 이 구간만(100칸이어도 가볍게) */
+  const plotsIn = (pad, n) => { const v = view(); return [Math.max(0, Math.ceil((v.l - plotX(0)) / 120) - pad), Math.min(n - 1, Math.floor((v.r - plotX(0)) / 120) + pad)]; };
+  const pickIn = ([a, b]) => a + Math.floor(Math.random() * Math.max(1, b - a + 1));
+  /** 화면 밖에 남은 일꾼·개는 가까운 가장자리 바로 밖으로 옮겨 두고 걸어 들어오게 한다(맥 1.12 띠와 같은 규칙) */
+  function enter(m) { const v = view(); if (m.x < v.l - 40 || m.x > v.r + 40) { m.x = m.x < v.l ? v.l - 40 : v.r + 40; m.el.style.transform = `translateX(${m.x}px)`; } }
   let index = null; // sprites/index.json: 이름 → [프레임 폭, 높이, 프레임 수, 염색할 색?]
   const ready = fetch(S + 'index.json' + V).then(r => r.json()).then(d => {
     index = d;
@@ -428,9 +445,9 @@
   }
   const frames = name => index[name] ? index[name][2] : 0;
   const loop = (e, name, perFrame, opt = {}) => show(e, name, {...opt, clip: Motion.even(frames(name), perFrame)});
-  // 장면 요소: 고정된 것은 left/bottom, 움직이는 것은 빈 그릇(ent, transform 으로 옮김) 안의 몸(bd)
-  function sp(z, x, y, cls) { const e = el('div', 'sp' + (cls ? ' ' + cls : '')); Object.assign(e.style, {zIndex: z, left: x + 'px', bottom: y + 'px'}); world.append(e); return e; }
-  function ent(z, y) { const e = el('div', 'ent'), lift = el('div', 'lift'), body = el('div', 'bd'); lift.append(body); e.append(lift); Object.assign(e.style, {zIndex: z, bottom: y + 'px'}); world.append(e); return {el: e, lift, body}; }
+  // 장면 요소: 고정된 것은 left/bottom, 움직이는 것은 빈 그릇(ent, transform 으로 옮김) 안의 몸(bd). host: 밭(world)·창고 자리(yard)·하늘(sky, sky2)
+  function sp(z, x, y, cls, host = world) { const e = el('div', 'sp' + (cls ? ' ' + cls : '')); Object.assign(e.style, {zIndex: z, left: x + 'px', bottom: y + 'px'}); host.append(e); return e; }
+  function ent(z, y, host = world) { const e = el('div', 'ent'), lift = el('div', 'lift'), body = el('div', 'bd'); lift.append(body); e.append(lift); Object.assign(e.style, {zIndex: z, bottom: y + 'px'}); host.append(e); return {el: e, lift, body}; }
   const atX = e => { const m = getComputedStyle(e).transform; return m && m !== 'none' ? Math.round(new DOMMatrixReadOnly(m).m41) : 0; };
   /** 1px(0.5pt)씩 끊어 옮긴다(맥 position.x discrete). times: Motion.walkTimes(초). 걸린 시간(초)을 돌려준다 */
   function walk(e, from, to, times) {
@@ -492,7 +509,7 @@
   function coinBurst() { // 팔면 창고에서 동전이 튄다
     const n = frames('fx-coin'); if (calm || !n || !crateEl) return;
     for (let k = 0; k < 6; k++) {
-      const x = CRATE_X + Math.round(rnd(-20, 20)), e = sp(30, x, 58); loop(e, 'fx-coin', 0.06);
+      const x = view().l + CRATE_X + Math.round(rnd(-20, 20)), e = sp(30, x, 58); loop(e, 'fx-coin', 0.06);
       e.animate([{transform: 'translate(0, 0)', opacity: 1}, {opacity: 1, offset: .75}, {transform: `translate(${Math.round(rnd(-28, 28))}px, -60px)`, opacity: 0}], {duration: 900, delay: k * 70, fill: 'both'});
       later(1.4, () => e.remove());
     }
@@ -559,7 +576,8 @@
       const st = this.steps.shift();
       if (st.t === 'walk') {
         this.setLift(0);
-        const target = Math.round(st.x), dist = Math.abs(target - this.x);
+        enter(this);
+        const target = Math.round(typeof st.x === 'function' ? st.x() : st.x), dist = Math.abs(target - this.x); // 함수: 걷기 시작할 때 자리(화면에 붙은 창고)
         if (dist < 1) return this.next();
         const dir = target > this.x ? 1 : -1;
         if (dir !== this.facing && dist > 8) { this.steps.unshift(st); this.play('idle'); this.face(dir); return this.wait(0.14); } // 돌아설 때 한 박자
@@ -588,16 +606,26 @@
   function plan(w) {
     const s = state();
     if (quiet || calm || resting() || !s || !s.plots || !s.plots.length) return [idle(4)];
+    const land = landOf(s), digger = crew.get('planter-0') || crew.get('planter-1') || crew.get('caretaker-0') || crew.get('harvester-0');
+    const job = s.clearing > 0 && w === digger && Math.random() < 0.45 && ['dig', 'tamp', 'water'].find(a => index[w.sheet(a)]);
+    if (job) { // 1.12 개간 중(맥 clearWork): 끝 칸이 보이면 한 일꾼이 가끔 가서 삽질·다지기·물 주기
+      const [a, b] = plotsIn(0, land + 1);
+      if (land >= a && land <= b) return [{t: 'walk', x: plotX(land) - (job === 'water' ? 44 : 40), anim: 'walk'},
+        ...Array(1 + Math.floor(Math.random() * 2)).fill(job === 'dig' ? dig(land) : {t: 'clip', anim: job}), idle(rnd(1, 3))];
+    }
     if (w.slot === 0 && staffOf(w.role) === 2 && Math.random() < 0.06) { const mine = meetUp(w); if (mine) return mine; }
     const hello = greet(w); if (hello) return hello;
     const has = new Set(['dig', 'water', 'pick'].filter(a => index[w.sheet(a)]).concat(['seed', 'tamp', 'wipe', 'wave', 'yawn', 'sniff', 'habit', 'sit'].filter(a => w.owns(a))));
-    const c = Motion.choose({role: w.role, fruit: s.plots.map(p => p.fruit), young: s.plots.map(p => p.stage < 3), crateFull: moment().crate >= s.crate.capacity,
-      night: period === 'night', season: s.season, streak: w.streak, last: w.last, lastTree: w.lastTree, has});
+    // 1.12: 보이는 칸 ± 1칸에서만 고른다(Motion.choose 는 그대로, 칸 번호만 구간 기준으로 바꿔 넘긴다)
+    const [a, b] = plotsIn(1, s.plots.length), near = s.plots.slice(a, b + 1), rel = c => c && c.tree != null ? {...c, tree: c.tree - a} : c;
+    const c = Motion.choose({role: w.role, fruit: near.map(p => p.fruit), young: near.map(p => p.stage < 3), crateFull: moment().crate >= s.crate.capacity,
+      night: period === 'night', season: s.season, streak: w.streak, last: rel(w.last), lastTree: w.lastTree == null ? null : w.lastTree - a, has});
+    if (c.tree != null) c.tree += a;
     w.remember(c);
     switch (c.kind) {
       case 'work':
         if (c.anim === 'pick') return [{t: 'walk', x: plotX(c.tree) - 28, anim: 'walk'}, {t: 'clip', anim: 'pick', cues: {pluck: () => { shake(c.tree); dropFruit(c.tree, w); }}},
-          {t: 'walk', x: CRATE_X + 36, anim: 'carry'}, {t: 'run', f: () => { puff('fx-sparkle', CRATE_X, 58); bumpCrate(); }}, idle(0.6)];
+          {t: 'walk', x: () => view().l + CRATE_X + 36, anim: 'carry'}, {t: 'run', f: () => { puff('fx-sparkle', view().l + CRATE_X, 58); bumpCrate(); }}, idle(0.6)];
         if (c.anim === 'water') return [{t: 'walk', x: plotX(c.tree) - 44, anim: 'walk'},
           ...Array(c.reps).fill({t: 'clip', anim: 'water', cues: {pour: () => { puff('fx-water', plotX(c.tree) - 8, TREE_Y + 4); shake(c.tree); }}}), idle(rnd(1.5, 4))];
         if (c.anim === 'dig') return [{t: 'walk', x: plotX(c.tree) - 40, anim: 'walk'}, ...Array(c.reps).fill(dig(c.tree)), idle(rnd(1, 3))];
@@ -612,15 +640,15 @@
       case 'stroll': return [{t: 'walk', x: plotX(c.tree) - 52 + Math.round(rnd(-12, 12)), anim: 'walk'}, idle(rnd(2, 4))];
       case 'sit': // 창고가 가득: 창고에 걸터앉아 기다린다(둘이 겹쳐 앉지 않게)
         w.sitLift = Math.max(0, crateH() - 24);
-        return [{t: 'walk', x: CRATE_X + 16 - w.slot * 20, anim: 'walk'}, {t: 'act', anim: 'sit', secs: 8}];
+        return [{t: 'walk', x: () => view().l + CRATE_X + 16 - w.slot * 20, anim: 'walk'}, {t: 'act', anim: 'sit', secs: 8}];
     }
     return [idle(3)];
   }
   const staffOf = role => [...crew.values()].filter(w => w.role === role).length;
   function meetUp(w) { // 1.7: 같은 역할 두 일꾼이 가운데에서 만나 건배
     const b = crew.get(w.role + '-1'); if (calm || !b) return null;
-    const [l, r] = w.x <= b.x ? [w, b] : [b, w], mid = Math.round((l.x + r.x) / 2);
-    if (r.x - l.x <= 48) return null;
+    const [l, r] = w.x <= b.x ? [w, b] : [b, w], mid = Math.round((l.x + r.x) / 2), v = view();
+    if (r.x - l.x <= 48 || l.x < v.l || r.x > v.r) return null; // 둘 다 화면 안에 있을 때만
     const cheer = {t: 'run', f: () => { puff('fx-cheers', mid, WORKER_Y + l.h() + 2, 0.15); hop(l); hop(r); }};
     const left = [{t: 'walk', x: mid - 18, anim: 'walk'}, idle(0.4), cheer, idle(2)], right = [{t: 'walk', x: mid + 18, anim: 'walk'}, idle(2.4)];
     b.interrupt(b === l ? left : right);
@@ -644,7 +672,7 @@
   // ── 강아지(맥 Dog): 0 진돗개, 1 웰시코기, 2 삽살개 ─────────────────────────────
   class Dog {
     constructor(kind, x) {
-      Object.assign(this, ent(16, WORKER_Y), {kind, x, last: null, token: 0, barking: false, range: [x, x]});
+      Object.assign(this, ent(16, WORKER_Y), {kind, x, last: null, token: 0, barking: false});
       this.el.style.transform = `translateX(${x}px)`; this.still('sit', 0);
     }
     get pre() { return 'dog-' + 'abc'[Math.min(this.kind, 2)]; }
@@ -669,7 +697,10 @@
         else this.loop('trick', this.kind === 1 ? 0.18 : 0.1);
         return this.wait(a.secs);
       }
-      const [l, r] = this.range, target = Math.round(l + (r - l) * a.at), dist = Math.abs(target - this.x);
+      enter(this);
+      // 자기 구역: 보이는 구간의 왼쪽(창고 쪽)에서 품종마다 다른 폭(1.12 전에는 과수원 전체 기준)
+      const v = view(), l = v.l + O + 8, r = l + Math.max(88, (Math.max(l + 88, v.r - 24) - l) * Motion.dogRange(this.kind));
+      const target = Math.round(l + (r - l) * a.at), dist = Math.abs(target - this.x);
       if (dist < 6) { this.still('sit', 0); return this.wait(0.8); }
       const pace = Motion.dogPace(this.kind), dir = target > this.x ? 1 : -1;
       this.body.style.transform = `scaleX(${dir})`;
@@ -684,33 +715,35 @@
   function syncSky() {
     const s = state();
     if (calm || resting() || !s || !s.plots || !s.plots.length || !index) return;
-    if (clouds.length < Math.max(1, Math.floor(groundEnd / 440))) addCloud(skyStarted ? -28 : rnd(0, groundEnd - 80));
+    const W = pan.clientWidth; // 구름·새는 화면 기준(1.12: 밭을 밀어도 하늘은 그대로)
+    if (clouds.length < Math.max(1, Math.floor(W / 440))) addCloud(skyStarted ? -28 : rnd(0, W - 80), W);
     skyStarted = true;
     if (period === 'night') return;
-    if (Date.now() > nextBird) { nextBird = Date.now() + rnd(18000, 45000); flyBirds(); }
-    if (s.season !== 'winter' && butterflies.length < (s.plots.length > 3 ? 5 : 4)) addButterfly(s.plots);
+    if (Date.now() > nextBird) { nextBird = Date.now() + rnd(18000, 45000); flyBirds(W); }
+    const [a, b] = plotsIn(0, s.plots.length); // 나비는 보이는 칸의 꽃에(보이는 칸 수에 맞춰 마릿수도)
+    if (s.season !== 'winter' && b >= a && butterflies.length < Math.min(s.plots.length > 3 ? 5 : 4, Math.ceil((b - a + 1) / 2) + 1)) addButterfly(s.plots, a, b);
   }
-  function addCloud(x) {
+  function addCloud(x, W) {
     const name = 'cloud-' + Math.floor(rnd(0, 3)); if (!index[name]) return;
-    const top = H - index[name][1] - 2, e = sp(3, 0, Math.round(rnd(top - 20, top))); show(e, name);
-    const s = drift(e, Math.round(x), groundEnd + 28, rnd(2.8, 5.2), period === 'night' ? 0.35 : 0.92);
+    const top = H - index[name][1] - 2, e = sp(3, 0, Math.round(rnd(top - 20, top)), '', sky); show(e, name);
+    const s = drift(e, Math.round(x), W + 28, rnd(2.8, 5.2), period === 'night' ? 0.35 : 0.92);
     clouds.push(e); later(s, () => { e.remove(); clouds = clouds.filter(c => c !== e); });
   }
-  function flyBirds() {
+  function flyBirds(W) {
     if (!index.bird) return;
     const right = Math.random() < .5, y = rnd(96, 116), n = anyOf([1, 1, 2, 2, 3]), f = right ? 1 : -1;
     for (let k = 0; k < n; k++) {
-      const by = Math.round(y + (k % 2) * 10 - k * 4), lag = 26 * k, b = ent(12, by);
+      const by = Math.round(y + (k % 2) * 10 - k * 4), lag = 26 * k, b = ent(12, by, sky2);
       loop(b.body, 'bird', 0.09, {offset: k * 0.13});
       b.body.animate(discrete([0, -1, -2, -1, 0, 1], 'transform', v => `translateY(${v}px) scaleX(${f})`), {duration: 720, iterations: Infinity});
-      const s = drift(b.el, right ? -40 - lag : groundEnd + 40 + lag, right ? groundEnd + 40 : -40, rnd(84, 100));
+      const s = drift(b.el, right ? -40 - lag : W + 40 + lag, right ? W + 40 : -40, rnd(84, 100));
       later(s, () => b.el.remove());
     }
   }
-  function addButterfly(plots) {
+  function addButterfly(plots, lo, hi) { // lo~hi: 보이는 칸
     if (!index.butterfly) return;
-    const weights = plots.map(p => p.stage === 3 ? 6 : p.stage === 2 ? 2 : p.stage === 5 || p.stage === 6 ? 1 : 0.2);
-    let r = rnd(0, weights.reduce((a, b) => a + b, 0)), i = Math.max(0, weights.findIndex(w => (r -= w) < 0));
+    const weights = plots.slice(lo, hi + 1).map(p => p.stage === 3 ? 6 : p.stage === 2 ? 2 : p.stage === 5 || p.stage === 6 ? 1 : 0.2);
+    let r = rnd(0, weights.reduce((x, y) => x + y, 0)), i = lo + Math.max(0, weights.findIndex(w => (r -= w) < 0));
     const blooming = plots[i].stage === 3, cx = plotX(i), top = H + 12, stops = [[cx + rnd(-88, 88), top]];
     for (let k = 0, n = 5 + Math.floor(rnd(0, 4)); k < n; k++) stops.push(blooming ? [cx + rnd(-44, 44), rnd(52, 112)] : [cx + rnd(-60, 60), rnd(28, 92)]);
     stops.push([stops[stops.length - 1][0] + rnd(-60, 60), top]);
@@ -729,13 +762,14 @@
   }
 
   // ── 상태 → 장면 ─────────────────────────────
-  let trees = [], crew = new Map(), dogs = [], decor = [], lantern = null, crateEl = null, sparkle = null, crateIdx = -1;
-  let groundEnd = 0, built = '', laidOut = '', treesBuilt = false, wasAway = new Set();
+  let trees = [], crew = new Map(), dogs = [], decor = [], lantern = null, crateEl = null, sparkle = null, crateIdx = -1; // trees: 칸 번호 → 나무(보이는 칸 ± 2칸만, 나머지는 빈칸)
+  let groundEnd = 0, fieldEnd = 0, wild = '', built = '', laidOut = '', treesBuilt = false, plotCount = 0, landSeen = 0, wasAway = new Set();
+  let restore = +localStorage.getItem('ld-remote-scroll') || 0; // 밭을 민 위치(1.12): 다시 열면 처음 그릴 때 되돌린다
   const crateH = () => (index['crate-0'] || [0, 50])[1];
   function clearScene() { // 색 보정이 바뀌면 그림을 전부 새로 건다(맥 redrawAll)
     for (const w of crew.values()) w.stop(); for (const d of dogs) d.stop();
     crew = new Map(); dogs = []; trees = []; decor = []; clouds = []; butterflies = []; lantern = crateEl = sparkle = null; crateIdx = -1; treesBuilt = false; skyStarted = false; laidOut = '';
-    world.replaceChildren(ground);
+    world.replaceChildren(ground, yard); yard.replaceChildren(); sky.replaceChildren(); sky2.replaceChildren();
     for (const [k, p] of looks) if (!k.endsWith('|-')) { looks.delete(k); p.then(u => u.startsWith('blob:') && URL.revokeObjectURL(u)); }
   }
   function renderScene() {
@@ -748,53 +782,63 @@
     scene.className = 'scene ' + period;
     const g = then(THEME[s.theme] || null, PERIOD[period] || null), gk = g ? g.join() : '';
     if (gk !== tintKey || !built) { clearScene(); tint = g; tintKey = gk; built = 'yes'; }
-    const n = s.plots.length;
-    groundEnd = plotX(Math.min((s.maxTrees || 10) - 1, n)) + 68;
+    // 땅: 심은 칸 + 다음 빈 칸(다 차면 마지막 칸까지). 1.12 앱은 다 찬 밭 끝에 풀숲 한 칸(개간 중이면 일구는 칸)을 더 그린다
+    const n = s.plots.length, land = landOf(s);
+    wild = s.land != null && n >= land ? (s.clearing > 0 ? 'land-clearing-0' : `land-wild-${land % 2}`) : '';
+    fieldEnd = plotX(Math.min(land - 1, n)) + 68;
+    groundEnd = fieldEnd + (wild ? 120 : 0);
     world.style.width = groundEnd + 'px';
-    $('hint').hidden = groundEnd <= scene.clientWidth;
-    if (laidOut !== `${n}|${s.season}`) { laidOut = `${n}|${s.season}`; layout(s); }
+    if (restore && pan.clientWidth) { pan.scrollLeft = restore; restore = 0; } // 땅이 넓어져도 저절로 밀지 않는다(맥 띠와 같게)
+    $('hint').hidden = groundEnd <= pan.clientWidth;
+    if (laidOut !== `${n}|${land}|${s.season}|${wild}`) { laidOut = `${n}|${land}|${s.season}|${wild}`; layout(s); }
+    if (treesBuilt && landSeen && land > landSeen) puff('fx-sparkle', plotX(land - 1), TREE_Y + 20); // 개간이 끝나 새 칸이 열린 순간
+    landSeen = land;
     syncTrees(s); syncWorkers(s); syncDogs(s); syncCrate();
     lantern.hidden = period !== 'night';
   }
-  function layout(s) { // 땅·계절 소품·랜턴(나무 수나 계절이 바뀔 때만)
+  function layout(s) { // 땅·계절 소품·밭 끝 풀숲·랜턴(나무 수·칸 수·계절이 바뀔 때만)
     art('ground-pair').then(u => { ground.style.backgroundImage = `url("${u}")`; });
     for (const d of decor) d.remove();
-    const n = s.plots.length, season = s.season || 'spring', spots = season === 'summer' ? [O + 192] : season === 'winter' ? [groundEnd - 36]
-      : [O + 200, ...Array.from({length: Math.max(0, Math.ceil((n - 3) / 3))}, (_, k) => plotX(2 + k * 3) + 60), groundEnd - 28];
+    const n = s.plots.length, season = s.season || 'spring', spots = season === 'summer' ? [O + 192] : season === 'winter' ? [fieldEnd - 36]
+      : [O + 200, ...Array.from({length: Math.max(0, Math.ceil((n - 3) / 3))}, (_, k) => plotX(2 + k * 3) + 60), fieldEnd - 28];
     decor = index['season-' + season] ? spots.map(x => { const e = sp(5, x, 8); show(e, 'season-' + season); return e; }) : [];
-    if (!lantern) { lantern = sp(6, O + 128, 8); loop(lantern, 'lantern', 0.7, {lit: true}); }
-    if (!crateEl) { crateEl = sp(15, CRATE_X, 8); crateIdx = -1; }
+    if (wild && index[wild]) { const e = sp(10, plotX(landOf(s)), TREE_Y, 'tree'); show(e, wild); decor.push(e); } // 그림이 없으면 빈 자리
+    if (!lantern) { lantern = sp(6, O + 128, 8, '', yard); loop(lantern, 'lantern', 0.7, {lit: true}); }
+    if (!crateEl) { crateEl = sp(15, CRATE_X, 8, '', yard); crateIdx = -1; }
   }
-  function syncTrees(s) {
-    const n = s.plots.length;
-    if (treesBuilt && n > trees.length) { const w = crew.get('planter-0'); if (w) w.interrupt([{t: 'walk', x: plotX(n - 1) - 40, anim: 'walk'}, dig(n - 1), dig(n - 1), idle(1)]); } // 1.7: 막 심은 자리를 판다
-    while (trees.length < n) {
-      const i = trees.length, e = sp(10, plotX(i), TREE_Y, 'tree'), a = el('div', 'tl'), b = el('div', 'tl');
-      b.style.opacity = 0; e.append(a, b); trees.push({el: e, a, b, kind: null, stage: -1});
-      if (treesBuilt) puff('fx-dust', plotX(i), TREE_Y);
-    }
-    while (trees.length > n) trees.pop().el.remove();
-    s.plots.forEach((p, i) => {
-      const t = trees[i], stage = Math.min(7, Math.max(0, p.stage));
-      if (t.stage === stage && t.kind === p.kind) return;
-      const prev = t.kind === p.kind ? t.stage : -1, name = `tree-${p.kind}-${stage}`, swayName = `tree-${p.kind}-${stage + 1}`;
-      Object.assign(t, {kind: p.kind, stage});
-      const [w, h] = index[name] || [124, 110];
-      Object.assign(t.el.style, {width: w + 'px', height: h + 'px', marginLeft: -w / 2 + 'px'});
-      art(name).then(u => { if (t.stage === stage) t.a.style.backgroundImage = `url("${u}")`; });
-      for (const x of [t.a, t.b]) x.getAnimations().forEach(a => a.cancel());
-      t.swayable = (stage === 3 || stage === 6) && !!index[swayName];
-      if (t.swayable) { // 다 큰 나무는 가끔 바람에 흔들린다
-        art(swayName).then(u => { if (t.stage === stage) t.b.style.backgroundImage = `url("${u}")`; });
-        if (!calm) {
-          const ms = rnd(7000, 12000), delay = rnd(0, 6000);
-          t.a.animate([{opacity: 1, easing: 'steps(1, end)'}, {opacity: 0, offset: .95, easing: 'steps(1, end)'}, {opacity: 1, offset: .98}, {opacity: 1}], {duration: ms, delay, iterations: Infinity});
-          t.b.animate([{opacity: 0, easing: 'steps(1, end)'}, {opacity: 1, offset: .95, easing: 'steps(1, end)'}, {opacity: 0, offset: .98}, {opacity: 0}], {duration: ms, delay, iterations: Infinity});
-        }
+  function syncTrees(s) { // 보이는 칸 ± 2칸만 그린다(1.12: 100칸이어도 나무 층 수는 10칸과 같다). 밭을 밀 때마다 부른다
+    const n = s.plots.length, [a, b] = plotsIn(2, n), fresh = treesBuilt ? plotCount : n; // fresh 번 칸부터는 막 심은 나무
+    if (n > fresh && n - 1 >= a && n - 1 <= b) { const w = crew.get('planter-0'); if (w) w.interrupt([{t: 'walk', x: plotX(n - 1) - 40, anim: 'walk'}, dig(n - 1), dig(n - 1), idle(1)]); } // 1.7: 막 심은 자리를 판다(보일 때만)
+    trees.forEach((t, i) => { if (i < a || i > b) { t.el.remove(); delete trees[i]; } });
+    for (let i = a; i <= b; i++) {
+      if (!trees[i]) {
+        const e = sp(10, plotX(i), TREE_Y, 'tree'), ta = el('div', 'tl'), tb = el('div', 'tl');
+        tb.style.opacity = 0; e.append(ta, tb); trees[i] = {el: e, a: ta, b: tb, kind: null, stage: -1};
+        if (i >= fresh) puff('fx-dust', plotX(i), TREE_Y);
       }
-      if (prev >= 0 && ((prev < 3 && stage >= 3) || (stage === 6 && prev !== 6))) puff('fx-sparkle', plotX(i) + 16, TREE_Y + Math.round(h * 0.6)); // 다 자랐거나 열매가 익은 순간
-    });
-    treesBuilt = true;
+      paintTree(trees[i], s.plots[i], i);
+    }
+    plotCount = n; treesBuilt = true;
+  }
+  function paintTree(t, p, i) { // 칸 하나의 나무 그림(단계·종류가 바뀔 때만)
+    const stage = Math.min(7, Math.max(0, p.stage));
+    if (t.stage === stage && t.kind === p.kind) return;
+    const prev = t.kind === p.kind ? t.stage : -1, name = `tree-${p.kind}-${stage}`, swayName = `tree-${p.kind}-${stage + 1}`;
+    Object.assign(t, {kind: p.kind, stage});
+    const [w, h] = index[name] || [124, 110];
+    Object.assign(t.el.style, {width: w + 'px', height: h + 'px', marginLeft: -w / 2 + 'px'});
+    art(name).then(u => { if (t.stage === stage) t.a.style.backgroundImage = `url("${u}")`; });
+    for (const x of [t.a, t.b]) x.getAnimations().forEach(a => a.cancel());
+    t.swayable = (stage === 3 || stage === 6) && !!index[swayName];
+    if (t.swayable) { // 다 큰 나무는 가끔 바람에 흔들린다
+      art(swayName).then(u => { if (t.stage === stage) t.b.style.backgroundImage = `url("${u}")`; });
+      if (!calm) {
+        const ms = rnd(7000, 12000), delay = rnd(0, 6000);
+        t.a.animate([{opacity: 1, easing: 'steps(1, end)'}, {opacity: 0, offset: .95, easing: 'steps(1, end)'}, {opacity: 1, offset: .98}, {opacity: 1}], {duration: ms, delay, iterations: Infinity});
+        t.b.animate([{opacity: 0, easing: 'steps(1, end)'}, {opacity: 1, offset: .95, easing: 'steps(1, end)'}, {opacity: 0, offset: .98}, {opacity: 0}], {duration: ms, delay, iterations: Infinity});
+      }
+    }
+    if (prev >= 0 && ((prev < 3 && stage >= 3) || (stage === 6 && prev !== 6))) puff('fx-sparkle', plotX(i) + 16, TREE_Y + Math.round(h * 0.6)); // 다 자랐거나 열매가 익은 순간
   }
   function syncCrate() { // 창고 그림(채운 정도)과 가득 찼을 때의 반짝임. tick 이 매초 부른다
     const s = state(); if (!crateEl || !s) return;
@@ -802,7 +846,7 @@
     if (i !== crateIdx) { crateIdx = i; show(crateEl, 'crate-' + i); }
     const full = m.crate >= s.crate.capacity, n = frames('fx-sparkle');
     if (full && !sparkle && n && !calm) { // 반짝 4프레임 + 쉬는 4프레임을 되풀이
-      sparkle = sp(16, CRATE_X + 16, 46);
+      sparkle = sp(16, CRATE_X + 16, 46, '', yard);
       show(sparkle, 'fx-sparkle');
       const w = index['fx-sparkle'][0], kf = [];
       for (let k = 0; k < n; k++) kf.push({backgroundPosition: `${-k * w}px 0`, opacity: 1, offset: k / (n + 4), easing: 'steps(1, end)'});
@@ -819,15 +863,15 @@
     }
     for (const [k, w] of crew) if (!want.has(k)) { // 서리 나가는 일꾼은 오른쪽 밖으로 걸어 나간다
       crew.delete(k);
-      if (awayNow.has(w.role) && !calm) w.interrupt([{t: 'walk', x: groundEnd + 60, anim: 'walk'}, {t: 'run', f: () => w.stop()}]); else w.stop();
+      if (awayNow.has(w.role) && !calm) w.interrupt([{t: 'walk', x: () => view().r + 60, anim: 'walk'}, {t: 'run', f: () => w.stop()}]); else w.stop();
     }
     for (const [k, v] of want) {
       const w = crew.get(k);
       if (w) { if (w.update(v)) celebrate(w); continue; }
       const back = treesBuilt && wasAway.has(v.role) && v.slot === v.crew - 1 && !calm; // 서리에서 돌아와 창고 옆으로
-      const x = back ? groundEnd + 40 : v.role === 'harvester' ? CRATE_X + 36 + v.slot * 20 : plotX(Math.floor(rnd(0, Math.max(1, s.plots.length)))) - 40;
+      const vw = view(), x = back ? vw.r + 40 : v.role === 'harvester' ? vw.l + CRATE_X + 36 + v.slot * 20 : plotX(pickIn(plotsIn(0, s.plots.length))) - 40;
       const nw = new Worker(v, x); crew.set(k, nw);
-      if (back) nw.interrupt([{t: 'walk', x: CRATE_X + 52, anim: index[nw.sheet('carry')] ? 'carry' : 'walk'}, idle(1.5)]);
+      if (back) nw.interrupt([{t: 'walk', x: () => view().l + CRATE_X + 52, anim: index[nw.sheet('carry')] ? 'carry' : 'walk'}, idle(1.5)]);
       else later(0.3 + crew.size * 0.4, () => nw.next());
     }
     wasAway = awayNow;
@@ -836,10 +880,19 @@
   function syncDogs(s) { // 들인 개만큼 창고 둘레를 돌아다니고, 서리를 당한 뒤에는 짖는다(들인 개가 없으면 동네 개가 와서)
     const barking = !!(s.bark && s.sent + s.bark > nowSec()), want = Math.min(3, Math.max(s.dogs || 0, barking ? 1 : 0));
     while (dogs.length > want) dogs.pop().stop();
-    while (dogs.length < want) { const k = dogs.length, d = new Dog(k, CRATE_X - 28 + k * 22); dogs.push(d); later(0.5 + k * 0.6, () => d.next()); }
-    const left = O + 8, right = Math.max(left + 88, groundEnd - 24);
-    dogs.forEach((d, k) => { d.range = [left, left + Math.max(88, (right - left) * Motion.dogRange(k))]; d.setBarking(barking); });
+    while (dogs.length < want) { const k = dogs.length, d = new Dog(k, view().l + CRATE_X - 28 + k * 22); dogs.push(d); later(0.5 + k * 0.6, () => d.next()); }
+    for (const d of dogs) d.setBarking(barking);
   }
+  // 밭을 밀면(1.12): 보이는 칸 ± 2칸을 다시 맞추고, 창고는 화면에 붙어 있으니 걸터앉은 일꾼은 내려온다. 민 위치는 다시 열어도 남는다
+  let panQueued = false, panSave = 0;
+  pan.addEventListener('scroll', () => {
+    if (!panQueued) { panQueued = true; requestAnimationFrame(() => { panQueued = false; const s = state(); if (!treesBuilt || !s || !s.plots) return; syncTrees(s); for (const w of crew.values()) if (w.playing === 'sit') w.interrupt([idle(0.4)]); }); }
+    clearTimeout(panSave); panSave = setTimeout(() => { // 다 밀고 나서: 위치를 적고, 앉으러 가던 일꾼은 지금 창고 자리로 다시 간다(관성 중에 고른 자리는 허공이라)
+      try { localStorage.setItem('ld-remote-scroll', String(Math.round(pan.scrollLeft))); } catch (e) {}
+      for (const w of crew.values()) if (w.steps.some(st => st.anim === 'sit')) w.interrupt([idle(0.4)]);
+    }, 300);
+  }, {passive: true});
+  addEventListener('resize', () => { if (data && index) renderScene(); }); // 폰을 돌리면 보이는 칸이 바뀐다
   // 일꾼·개를 누르면 반응한다(맥에서 클릭 통과를 끈 띠처럼). 몸 폭의 가운데 60% 만 받는다
   scene.addEventListener('click', e => {
     const hit = x => { const r = x.getBoundingClientRect(); return e.clientX >= r.left + r.width * .2 && e.clientX <= r.right - r.width * .2 && e.clientY >= r.top + r.height * .04 && e.clientY <= r.bottom; };
@@ -874,6 +927,9 @@
     const rd = s.raided, since = rd ? nowSec() - rd.at : Infinity;
     $('raid-note').hidden = !(since < 86400);
     if (since < 86400) $('raid-note').textContent = (rd.caught ? T.chased : T.raided)(fmt(rd.count), T.ago(Math.max(0, since)));
+    const cl = s.clearing > 0 ? s.clearing - (nowSec() - s.sent) : null; // 1.12 개간 중 남은 초(Mac 이 보낸 때부터 센다). 시작은 Mac 에서만
+    $('clear').hidden = cl == null;
+    if (cl != null) $('clear').textContent = T.clearing(cl);
     const left = s.fullAt == null ? null : s.fullAt - nowSec();
     $('full').textContent = m.crate >= cap || (!override && left != null && left <= 0) ? T.full : left == null ? T.slow : T.fullIn(clock(left));
     $('sell').textContent = m.value > 0 ? T.sellFor(short(m.value)) : T.sell;
@@ -906,8 +962,8 @@
   const plantRefs = [], crewRefs = [];
   function renderPlant() {
     const s = state(); if (!s) return;
-    const full = s.trees >= s.maxTrees, v2 = !!s.plots;
-    $('field').textContent = full && v2 ? T.fieldFull(s.trees, s.maxTrees) : T.field(s.trees, s.maxTrees);
+    const land = landOf(s), full = s.trees >= land, v2 = !!s.plots;
+    $('field').textContent = full && v2 ? T.fieldFull(s.trees, land) : T.field(s.trees, land);
     const sig = s.kinds.map(k => k.kind).join() + '|' + (s.unlock ? s.unlock.kind : '') + '|' + full + v2;
     if (sig !== plantSig) {
       plantSig = sig; plantRefs.length = 0;
@@ -977,12 +1033,12 @@
     $('sheet-title').textContent = T.swapTitle(T.kinds[kind] || kind);
     $('plots').replaceChildren(...s.plots.map((p, i) => {
       const b = el('button'); b.type = 'button'; b.disabled = p.kind === kind;
-      const im = el('img'); im.src = `${S}tree-${p.kind}-${Math.min(7, p.stage)}.png`; im.alt = '';
+      const im = el('img'); im.src = `${S}tree-${p.kind}-${Math.min(7, p.stage)}.png`; im.alt = ''; im.loading = 'lazy';
       b.append(im, document.createTextNode(String(i + 1))); b.setAttribute('aria-label', `${T.plot(i + 1)}, ${T.kinds[p.kind] || p.kind}`);
-      b.onclick = () => { closeSheet(); send({action: 'replant', kind, plot: i}); };
+      b.onclick = () => { closeSheet(); send({action: 'replant', kind, plot: i}); }; // 1.12: 어느 칸이든(칸 번호 < land)
       return b;
     }));
-    $('sheet').showModal(); $('sheet-cancel').focus();
+    $('sheet').showModal(); $('plots').scrollTop = 0; $('sheet-cancel').focus();
   }
   const closeSheet = () => $('sheet').close(); // 포커스는 브라우저가 눌렀던 버튼으로 되돌린다
   $('sheet-cancel').onclick = closeSheet;
@@ -1063,7 +1119,7 @@
   // 탭
   const tabs = ['orchard', 'plant', 'crew'];
   const showTab = name => tabs.forEach(t => { $('tab-' + t).hidden = t !== name; $('t-' + t).setAttribute('aria-selected', t === name); });
-  tabs.forEach(t => { $('t-' + t).onclick = () => { showTab(t); scrollTo(0, 0); }; });
+  tabs.forEach(t => { $('t-' + t).onclick = () => { showTab(t); scrollTo(0, 0); if (t === 'orchard' && data && index) renderScene(); }; }); // 숨어 있던 장면은 보이는 칸을 그때 그린다
   const startTab = new URLSearchParams(location.search).get('tab'); // 확인·캡처용 ?tab=plant|crew
   if (tabs.includes(startTab)) showTab(startTab);
 

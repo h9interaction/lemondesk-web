@@ -12,6 +12,8 @@
 - 이웃(1.11, neighbors/…): 같은 소유 키로 초대 코드를 넣으면 바로 양쪽 이웃. 이웃마다 하루 한 번씩 돕기·선물(과일 한 개)을 보내고,
   받는 쪽은 raid/status 의 inbox 로 받는다. 이웃 관계·코드·돕기 기록·과수원 모습(look)·고마움 수·내가 정한 과수원 이름(1.12)만 저장하고,
   돕기 기록은 8주 뒤 지운다.
+- 쩔(1.13, neighbors/dispatch|basket|sapling): 창고 레벨이 4 이상 높은 선배가 후배 이웃에게 일꾼 출장·큰 바구니·묘목을 보낸다.
+  받는 쪽 상한은 모든 선배를 합쳐 센다. 쩔 기록(carries)은 8주 뒤 지우고, 사제 단계는 이웃 관계(neighbors.steps)에 비트로 남긴다.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -85,7 +87,7 @@ RELAY_QUEUE = 10
 RELAY_KEEP_DAYS = 90         # 쓰지 않는 페어링 보관
 RELAY_RESULT = 3             # 폰 명령이 Mac 의 처리 결과를 기다리는 초(넘으면 폰이 다시 묻는다)
 RELAY_ASKERS = 4             # 한 기기에서 동시에 결과를 기다릴 수 있는 명령 수
-ACTIONS = {"sell", "plant", "unlock", "hire", "crate", "hire2", "replant"}  # hire2·replant: 1.7.1
+ACTIONS = {"sell", "plant", "unlock", "hire", "crate", "hire2", "replant", "care"}  # hire2·replant: 1.7.1, care: 1.13 밭 치우기
 
 # 자랑 게시판 조작 방지(1.7.1): 올린 숫자가 게임에서 나올 수 있는 범위인지 본다. 앱 Balance.swift 와 같은 값(test_brag 가 대조한다).
 # 게임 저장은 서버로 옮기지 않는다. 가능한 최대치 바로 아래로 꾸민 숫자는 못 막고, 신고·관리 명령이 나머지를 맡는다.
@@ -139,10 +141,12 @@ def land_total(plots, stop=float("inf")):
     return total
 
 
-def plausible(post):
+def plausible(post, baskets=0, dispatches=0):
     """올린 일꾼 레벨로 일주일에 나올 수 있는 최대치 안인지. 레벨은 오르기만 하므로 지금 레벨이 그 주의 상한이다.
     나무는 주중에 바꿔 심을 수 있어 가장 빠른 나무가 밭 칸 수만큼 있다고 본다(손으로 따면 수확 일꾼 속도와 무관).
-    밭 칸 수(1.12)는 넓힌 칸 값의 합이 지금까지 번 코인 안이어야 한다(옛 앱은 안 보내 10칸)."""
+    밭 칸 수(1.12)는 넓힌 칸 값의 합이 지금까지 번 코인 안이어야 한다(옛 앱은 안 보내 10칸).
+    쩔(1.13): 이번 주 받은 바구니 과일 수(baskets)만큼 수확·판매 상한을 넓히고, 받은 출장(dispatches)마다
+    4시간 동안 상한 레벨 일꾼(돌보기·심기)이 더 있었다고 본다."""
     card, orch, land = post["card"], post["orchard"], post["land"]
     spendable = land["earned"] * SLACK
     if land_total(land["plots"], spendable) > spendable:
@@ -153,9 +157,11 @@ def plausible(post):
         return 1 + per * w["level"] * (CREW2 if len(w["looks"]) >= 2 else 1) if w else 1
 
     harvest_max = WEEK * land["plots"] * boost("caretaker", GROW_PER_LEVEL) * SEASON_GROW * FENCE_GROW / MIN_FRUIT_INTERVAL * SLACK + 500
-    if card["harvested"] > harvest_max or card["sold"] > card["harvested"] + MAX_CRATE:
+    lifted = dispatches * DISPATCH_SECONDS * land["plots"] * (1 + GROW_PER_LEVEL * DISPATCH_LEVEL_CAP * CREW2) * SEASON_GROW * FENCE_GROW / MIN_FRUIT_INTERVAL * SLACK
+    if card["harvested"] > harvest_max + lifted + baskets or card["sold"] > card["harvested"] + MAX_CRATE + baskets:
         return False
-    if card["earned"] > card["sold"] * MAX_FRUIT_PRICE * boost("planter", PRICE_PER_LEVEL) * SEASON_PRICE * SLACK:
+    extra = dispatches * (MAX_CRATE + lifted) * MAX_FRUIT_PRICE * (1 + PRICE_PER_LEVEL * DISPATCH_LEVEL_CAP * CREW2) * SEASON_PRICE * SLACK
+    if card["earned"] > card["sold"] * MAX_FRUIT_PRICE * boost("planter", PRICE_PER_LEVEL) * SEASON_PRICE * SLACK + extra:
         return False
     kinds = set(orch["trees"]) - {"rainbow"}
     if len(kinds) > orch["dex"] or (orch["rainbow"] and orch["dex"] < 12) or ("rainbow" in orch["trees"] and not orch["rainbow"]):
@@ -203,6 +209,61 @@ TREE_LOOK = (KINDS, (0, 7))                    # 과수원 모습의 나무: 종
 WORKER_LOOK = (ROLES, (0, 1), (0, 4), (0, 6))  # 일꾼: 역할, variant, 장비 단계, 염색
 LOOK_MAX = 2048
 INBOX = 20                   # raid/status 한 번에 주는 받은 돕기·선물 수
+
+# 선배·후배(1.13, docs/research/carry-1.13.md). 앱 Balance.Carry 와 같은 값.
+JUNIOR_GAP = 4               # 내 창고 레벨 − 이웃 창고 레벨 ≥ 4 이고
+GRADUATE_LEVEL = 12          # 이웃이 아직 졸업(창고 레벨 12) 전이면 그 이웃은 내 후배(그때그때 계산, 저장 안 함)
+BASKET_SHARE, BASKET_FLOOR = 0.25, 3_000.0  # 큰 바구니 값 상한 = max(3,000, 다음 해금 값 × 0.25)
+DISPATCH_SECONDS = 14_400    # 일꾼 출장 4시간
+DISPATCH_LEVEL_CAP = 20      # 출장 일꾼 레벨 상한
+CARRY_THANKS = {"dispatch": 2, "basket": 1, "sapling": 1, "step": 3}  # 받은 쪽이 반영(ack)하면 선배 고마움
+# 앱 Balance.spec 의 unlockCost(test_brag 가 Balance.swift 와 대조한다). 무지개 레몬은 황금 레몬과 한 묶음
+UNLOCK = {"eureka": 0, "kumquat": 60, "meyer": 150, "calamansi": 450, "lime": 1_200, "fingerlime": 2_000, "blood": 3_200,
+          "trifoliate": 5_000, "yuja": 8_000, "snowyuja": 12_000, "grapefruit": 30_000, "redhyang": 60_000, "moonlemon": 90_000,
+          "pink": 120_000, "cheonhye": 450_000, "hallabong": 2_000_000, "bergamot": 5_000_000, "buddha": 12_000_000,
+          "pomelo": 22_000_000, "golden": 42_000_000, "rainbow": 42_000_000}
+COLLECTIBLE = [k for k, _ in FRUITS if k != "rainbow"]  # 해금 순서(앱 TreeKind 순서)
+SAPLING_RANGE = 2            # 묘목: 후배 best 다음 두 종류(해금 순서) 안
+
+
+def _twin(k):
+    return "golden" if k == "rainbow" else k  # 무지개 레몬은 황금 레몬과 한 묶음(앱 priceTwin)
+
+
+# 사제 단계(neighbors.steps 비트, 앱 Balance.Carry.Step 순서): 후배가 이 조건을 처음 넘으면 그 이웃 사이에서 한 번.
+# crate12(창고 레벨 12)가 졸업. 유자·핑크 레몬은 가장 비싼 과일(farms.best)의 해금 순서로 본다(앱 reached 와 같게).
+STEPS = (("crate6", 1, lambda lv, best: lv >= 6), ("crate12", 2, lambda lv, best: lv >= 12),
+         ("yuja", 4, lambda lv, best: ORDER[_twin(best)] >= ORDER["yuja"]), ("pink", 8, lambda lv, best: ORDER[_twin(best)] >= ORDER["pink"]))
+GRAD = 2
+
+
+def is_junior(mine, theirs):
+    """앱 Balance.Carry.isJunior: 창고 레벨이 4 이상 낮고 아직 졸업 전인 이웃이 후배(졸업 뒤까지 받으면 끝판이 빨라진다)"""
+    return mine - theirs >= JUNIOR_GAP and theirs < GRADUATE_LEVEL
+
+
+def next_unlock_value(best):
+    """후배가 연 가장 비싼 과일(best)의 해금 순서 다음 종류 unlockCost(마지막이면 그 종류 값)"""
+    i = COLLECTIBLE.index(_twin(best))
+    return UNLOCK[COLLECTIBLE[min(i + 1, len(COLLECTIBLE) - 1)]]
+
+
+def basket_value(best):
+    """큰 바구니 값 상한(앱 Balance.Carry.basketValue): max(3,000, 다음 해금 값 × 0.25). 앱 .rounded() 처럼 0.5 는 올린다."""
+    return int(max(BASKET_FLOOR, next_unlock_value(best) * BASKET_SHARE) + 0.5)
+
+
+def sapling_kinds(junior_best, senior_best):
+    """보낼 수 있는 묘목(앱 Balance.Carry.saplingKinds): 해금 순서로 후배 best 다음 두 종류 중 best 보다 비싼 것,
+    그중 선배 best 값 이하(서버는 선배가 연 종류 목록을 모른다)"""
+    b = _twin(junior_best)
+    return [k for k in COLLECTIBLE if ORDER[b] < ORDER[k] <= ORDER[b] + SAPLING_RANGE and PRICE[b] < PRICE[k] <= PRICE[_twin(senior_best)]]
+
+
+def week_start(now):
+    """그 주(KST 월요일 0시) 시작 시각"""
+    d = now.astimezone(KST)
+    return (d - timedelta(days=d.weekday())).replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
 
 
 def crate_capacity(level):
@@ -290,7 +351,9 @@ def clean_farm(b):
     return {"cap": cap, "level": level, "crate": crate, "fences": _int(b.get("fences"), 0, MAX_PLOTS),
             "dogs": _int(b.get("dogs", 0), 0, MAX_DOGS), "best": b["best"],
             "active": b.get("active") is True, "ack": [_match(a, RAID_ID) for a in ack],
-            "look": clean_look(b.get("look"))}  # 1.11. 옛 앱은 안 보낸다(None: 저장된 모습을 그대로 둔다)
+            "look": clean_look(b.get("look")),  # 1.11. 옛 앱은 안 보낸다(None: 저장된 모습을 그대로 둔다)
+            # 1.13: 받아 두고 아직 안 심은 묘목 종류(없으면 null). 있으면 새 묘목은 holding 으로 거절
+            "seedling": isinstance(b.get("seedling"), str) and b["seedling"] in KINDS}
 
 
 def _one(v, allowed):
@@ -323,7 +386,8 @@ def clean_look(v):
     if not isinstance(v, dict) or len(json.dumps(v, separators=(",", ":")).encode()) > LOOK_MAX:
         return None
     checks = {"trees": lambda x: _rows(x, MAX_TREES, *TREE_LOOK), "workers": lambda x: _rows(x, 6, *WORKER_LOOK),
-              "dogs": lambda x: _int(x, 0, MAX_DOGS), "theme": lambda x: _one(x, THEMES), "season": lambda x: _one(x, SEASONS)}
+              "dogs": lambda x: _int(x, 0, MAX_DOGS), "theme": lambda x: _one(x, THEMES), "season": lambda x: _one(x, SEASONS),
+              "weeds": lambda x: _int(x, 0, 3)}  # 1.13 잡초·낙엽 단계
     out = {}
     for k, check in checks.items():
         try:
@@ -390,6 +454,11 @@ def clean_install(b):
             "platform": b.get("platform", "mac")}
 
 
+def slot_key(dt):
+    """돕기 칸(1.13, 이웃마다 하루 2번): 한국 시간 0~12시 오전, 12~24시 오후. 예: 2026-11-16am"""
+    return day_key(dt) + ("am" if dt.astimezone(KST).hour < 12 else "pm")
+
+
 def week_key(dt):
     y, w, _ = dt.astimezone(KST).isocalendar()
     return "%04d-W%02d" % (y, w)
@@ -411,7 +480,7 @@ def clean_nickname(v):
     return n
 
 
-def clean_post(body):
+def clean_post(body, baskets=0, dispatches=0):
     """앱이 보낸 내용을 검사해 저장할 형태로. 범위를 벗어나면 BadRequest."""
     if not isinstance(body, dict):
         raise BadRequest()
@@ -445,7 +514,7 @@ def clean_post(body):
         "land": {"plots": _int(orch.get("plots", LAND_START), LAND_START, MAX_PLOTS),
                  "earned": _int(orch.get("totalEarned", 0), 0, MAX_EARNED)},
     }
-    if not plausible(post):
+    if not plausible(post, baskets, dispatches):
         raise BadRequest("implausible")
     return post
 
@@ -506,15 +575,25 @@ class Board:
                 done INTEGER NOT NULL DEFAULT 0);
             CREATE INDEX IF NOT EXISTS gifts_receiver ON gifts(receiver, done);
             CREATE INDEX IF NOT EXISTS gifts_sender ON gifts(sender, day);
+            -- 1.13 쩔: dispatch(출장, start~end 4시간)·basket(fruit, count, stamp)·sapling(fruit 에 나무 종류)·
+            -- step(사제 단계 알림, fruit 에 단계 이름). done: 받은 쪽이 반영(선배 고마움), seen: 선배가 단계 알림을 봄
+            CREATE TABLE IF NOT EXISTS carries(id TEXT PRIMARY KEY, sender TEXT NOT NULL, receiver TEXT NOT NULL, day TEXT NOT NULL,
+                week TEXT NOT NULL, kind TEXT NOT NULL, role TEXT, level INTEGER, fruit TEXT, count INTEGER, stamp TEXT, worker TEXT,
+                start REAL NOT NULL, end REAL NOT NULL, done INTEGER NOT NULL DEFAULT 0, seen INTEGER NOT NULL DEFAULT 0);
+            CREATE INDEX IF NOT EXISTS carries_receiver ON carries(receiver, kind, day);
+            CREATE INDEX IF NOT EXISTS carries_sender ON carries(sender, kind, end);
         """)
         # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
         # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by). 1.12: 내 과수원 이름
+        # 1.13 쩔: 사제 단계 비트(선배 쪽 행 owner=선배, other=후배), 선배의 1시간 돕기, 받아 둔 묘목
         for table, col, decl in (("install_counts", "platform", "TEXT NOT NULL DEFAULT 'mac'"), ("pings", "platform", "TEXT NOT NULL DEFAULT 'mac'"),
                                  ("pings", "nb", "INTEGER NOT NULL DEFAULT 0"), ("pings", "rb", "INTEGER NOT NULL DEFAULT 0"),
                                  ("farms", "look", "TEXT NOT NULL DEFAULT '{}'"), ("farms", "thanks", "INTEGER NOT NULL DEFAULT 0"),
                                  ("farms", "name", "TEXT NOT NULL DEFAULT ''"),
                                  ("raids", "beneficiary", "TEXT NOT NULL DEFAULT ''"), ("raids", "beneficiary_done", "INTEGER NOT NULL DEFAULT 0"),
-                                 ("raids", "caught_by", "INTEGER NOT NULL DEFAULT 0")):
+                                 ("raids", "caught_by", "INTEGER NOT NULL DEFAULT 0"),
+                                 ("neighbors", "steps", "INTEGER NOT NULL DEFAULT 0"), ("gifts", "long", "INTEGER NOT NULL DEFAULT 0"),
+                                 ("farms", "seedling", "INTEGER NOT NULL DEFAULT 0")):
             if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
                 self.db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
         self.db.execute("CREATE INDEX IF NOT EXISTS raids_beneficiary ON raids(beneficiary, end)")
@@ -564,7 +643,11 @@ class Board:
     @locked
     def create_or_update(self, owner_key, body, ip, now):
         owner = self.owner(owner_key)
-        post = clean_post(body)
+        # 1.13: 이번 주 받은 바구니 과일 수·출장 수만큼 조작 방지 상한을 넓힌다
+        baskets, dispatches = self.db.execute(
+            "SELECT COALESCE(SUM(CASE WHEN kind='basket' THEN count END), 0), COALESCE(SUM(kind='dispatch'), 0) FROM carries "
+            "WHERE receiver=? AND kind IN ('basket', 'dispatch') AND end>=?", (owner, week_start(now))).fetchone()
+        post = clean_post(body, baskets, dispatches)
         with self.lock:
             self.limit("post", self.ip(ip), now)
             week = self.week(now)
@@ -662,6 +745,7 @@ class Board:
             self.db.execute("DELETE FROM codes WHERE owner=?", (owner,))
             self.db.execute("DELETE FROM neighbors WHERE owner=? OR other=?", (owner, owner))
             self.db.execute("DELETE FROM gifts WHERE sender=? OR receiver=?", (owner, owner))
+            self.db.execute("DELETE FROM carries WHERE sender=? OR receiver=?", (owner, owner))  # 1.13 쩔 기록
             self.db.commit()
         return n
 
@@ -828,18 +912,19 @@ class Board:
             self.db.execute("DELETE FROM raids WHERE end < ?", (t - KEEP_WEEKS * WEEK,))
             # 이웃: 8주 지난 돕기·선물 기록, 과수원이 지워진 설치의 코드와 이웃 관계(빈자리가 상한을 차지하지 않게)
             self.db.execute("DELETE FROM gifts WHERE created < ?", (t - KEEP_WEEKS * WEEK,))
+            self.db.execute("DELETE FROM carries WHERE end < ?", (t - KEEP_WEEKS * WEEK,))  # 1.13 쩔 기록
             self.db.execute("DELETE FROM codes WHERE owner NOT IN (SELECT owner FROM farms)")
             self.db.execute("DELETE FROM neighbors WHERE owner NOT IN (SELECT owner FROM farms) OR other NOT IN (SELECT owner FROM farms)")
             self.db.commit()
 
     # 서리 (1.8). 한 사람(raider)은 당한 쪽 응답 어디에도 넣지 않는다.
 
-    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best, thanks, name FROM farms"
+    FARM = "SELECT owner, cap, crate, fences, level, first, seen, guard, lost_day, lost, dogs, best, thanks, name, seedling FROM farms"
 
     @staticmethod
     def _farm_row(r):
         return {"owner": r[0], "cap": r[1], "crate": json.loads(r[2]), "fences": r[3], "level": r[4], "first": r[5],
-                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11], "thanks": r[12], "name": r[13]}
+                "seen": r[6], "guard": r[7], "lost_day": r[8], "lost": r[9], "dogs": r[10], "best": r[11], "thanks": r[12], "name": r[13], "seedling": r[14]}
 
     def _farm(self, owner):
         r = self.db.execute(self.FARM + " WHERE owner=?", (owner,)).fetchone()
@@ -895,8 +980,21 @@ class Board:
                 out["for"] = "neighbor"
             return out
 
-        inbox = q("SELECT * FROM (SELECT id, kind, fruit, stamp, worker, sender, created FROM gifts WHERE receiver=? AND done=0 "
+        inbox = q("SELECT * FROM (SELECT id, kind, fruit, stamp, worker, sender, created, long FROM gifts WHERE receiver=? AND done=0 "
                   "ORDER BY created DESC LIMIT ?) ORDER BY created", (me, INBOX)).fetchall()
+
+        def who(o):
+            return {"name": self._nick(o), "seed": self._seed(o)}
+
+        def carry(r):  # id, kind, sender, role, level, fruit, count, stamp, worker
+            out = {"id": r[0], "kind": r[1], "worker": json.loads(r[8]), **who(r[2])}
+            out.update({"dispatch": {"role": r[3], "level": r[4]}, "basket": {"fruit": r[5], "count": r[6], "stamp": r[7]},
+                        "sapling": {"tree": r[5]}}[r[1]])
+            return out
+
+        cols = "id, kind, sender, role, level, fruit, count, stamp, worker"
+        live = q("SELECT " + cols + ", end FROM carries WHERE receiver=? AND kind='dispatch' AND start<=? AND end>? ORDER BY start LIMIT 1",
+                 (me, t, t)).fetchone()
         return {
             # 내가 당한 것(끝난 것만): 앱이 창고에서 빼고 ack 한다. by: 들켰다면 누가 봤는지(1.11, 들키지 않았으면 owner)
             "raided": [{"id": r[0], "loot": self._final(r[1], r[2]), "caught": bool(r[2]), "by": "neighbor" if r[3] else "owner"} for r in
@@ -906,7 +1004,19 @@ class Board:
                                         "ORDER BY end", (me, t))],
             # 1.11: 이웃이 보낸 돕기·선물(최근 20개, 오래된 것부터). 앱이 반영하고 ack 하면 보낸 사람 고마움 +1
             "inbox": [{"id": r[0], "kind": r[1], "fruit": r[2], "stamp": r[3], "worker": json.loads(r[4]), "name": self._nick(r[5]),
-                       "seed": self._seed(r[5])} for r in inbox],
+                       "seed": self._seed(r[5]), "long": bool(r[7])} for r in inbox],  # long(1.13): 선배의 돕기라 손길 1시간
+            # 1.13 쩔: 지금 와 있는 출장 일꾼(없으면 null). 끝나면 carries 로 와서 ack 하면 선배 고마움 +2
+            "dispatch": dict(carry(live), left=int(live[9] - t + 0.999)) if live else None,
+            # 받은 바구니·묘목과 끝난 출장(오래된 것부터). 반영하고 ack 하면 선배 고마움(바구니·묘목 +1, 출장 +2)
+            "carries": [carry(r) for r in q("SELECT " + cols + " FROM carries WHERE receiver=? AND done=0 AND kind<>'step' AND end<=? "
+                                            "ORDER BY start LIMIT ?", (me, t, INBOX))],
+            # 사제 단계(crate6·crate12(졸업)·yuja·pink). as=junior: 내가 넘었다(축하 카드, ack 하면 그 선배 고마움 +3, name 은 선배),
+            # as=teacher: 내 후배가 넘었다(name 은 후배, ack 하면 사라진다)
+            "mentor": [{"id": r[0], "step": r[1], "as": "junior", **who(r[2])} for r in
+                       q("SELECT id, fruit, sender FROM carries WHERE receiver=? AND kind='step' AND done=0 ORDER BY start LIMIT ?", (me, INBOX))]
+                    + [{"id": r[0], "step": r[1], "as": "teacher", **who(r[2])} for r in
+                       q("SELECT id, fruit, receiver FROM carries WHERE sender=? AND kind='step' AND seen=0 ORDER BY start LIMIT ?", (me, INBOX))],
+            "teacher": self._grads(me),  # 졸업시킨 제자 수(지금 이웃인 사람만)
             # 1.11: 이웃이 나 대신 되찾아 온 것(ack 하면 되찾아 준 사람 고마움 +1)
             "recovered": [{"id": r[0], "loot": self._final(r[1], r[2]), "caught": bool(r[2])} for r in
                           q("SELECT id, loot, caught FROM raids WHERE beneficiary=? AND end<=? AND beneficiary_done=0 ORDER BY end", (me, t))],
@@ -933,7 +1043,8 @@ class Board:
         t = now.timestamp()
         self.limit("raid_status", me, now)
         crate = json.dumps(farm["crate"], sort_keys=True)
-        if self._farm(me) is None:
+        old = self._farm(me)
+        if old is None:
             self.limit("farm_new", self.ip(ip), now)
             self.db.execute("INSERT INTO farms(owner, cap, crate, fences, dogs, best, level, first, seen) VALUES(?,?,?,?,?,?,?,?,?)",
                             (me, farm["cap"], crate, farm["fences"], farm["dogs"], farm["best"], farm["level"], t, t))
@@ -942,6 +1053,9 @@ class Board:
                             (farm["cap"], crate, farm["fences"], farm["dogs"], farm["best"], farm["level"], t, me))
         if farm["look"] is not None:
             self.db.execute("UPDATE farms SET look=? WHERE owner=?", (json.dumps(farm["look"]), me))
+        self.db.execute("UPDATE farms SET seedling=? WHERE owner=?", (int(farm["seedling"]), me))
+        if old is not None:
+            self._steps(me, old, farm, now)
         live = " AND start<=? AND end>? AND caught=0"
         near = "victim IN (SELECT other FROM neighbors WHERE owner=?)"
         if farm["active"] and self.db.execute("SELECT 1 FROM raids WHERE (victim=? OR " + near + ")" + live, (me, me, t, t)).fetchone():
@@ -960,8 +1074,36 @@ class Board:
             if self.db.execute("UPDATE raids SET beneficiary_done=1 WHERE id=? AND beneficiary=? AND end<=? AND beneficiary_done=0",
                                (rid, me, t)).rowcount:
                 self.db.execute("UPDATE farms SET thanks=thanks+1 WHERE owner=(SELECT raider FROM raids WHERE id=?)", (rid,))
+            # 1.13 쩔: 받은 쪽이 반영(출장은 끝난 뒤에만) → 선배 고마움. 선배가 단계 알림을 ack 하면 seen
+            c = self.db.execute("SELECT kind, sender FROM carries WHERE id=? AND receiver=? AND done=0 AND end<=?", (rid, me, t)).fetchone()
+            if c:
+                self.db.execute("UPDATE carries SET done=1 WHERE id=?", (rid,))
+                self.db.execute("UPDATE farms SET thanks=thanks+? WHERE owner=?", (CARRY_THANKS[c[0]], c[1]))
+            self.db.execute("UPDATE carries SET seen=1 WHERE id=? AND sender=? AND kind='step'", (rid, me))
         self.db.commit()
         return self._raid_view(me, now)
+
+    def _steps(self, me, old, new, now):
+        """사제 단계(1.13): 이번 맞추기에서 넘은 단계마다, 넘기 전 내 창고 레벨보다 4 이상 높은 이웃(선배)에게 한 번씩
+        step 알림을 남긴다(이웃 사이마다 비트로 한 번, 맺은 뒤 넘은 것만)."""
+        crossed = [(name, bit) for name, bit, ok in STEPS if not ok(old["level"], old["best"]) and ok(new["level"], new["best"])]
+        if not crossed:
+            return
+        t = now.timestamp()
+        for senior, steps, level in self.db.execute("SELECT n.owner, n.steps, f.level FROM neighbors n JOIN farms f ON f.owner = n.owner "
+                                                    "WHERE n.other=?", (me,)).fetchall():
+            if not is_junior(level, old["level"]):  # 넘기 전 내 레벨로 본다(졸업 단계도 넘기 전에는 후배)
+                continue
+            for name, bit in crossed:
+                if not steps & bit:
+                    steps |= bit
+                    self.db.execute("INSERT INTO carries(id, sender, receiver, day, week, kind, fruit, start, end) VALUES(?,?,?,?,?,'step',?,?,?)",
+                                    (secrets.token_urlsafe(9), senior, me, day_key(now), week_key(now), name, t, t))
+            self.db.execute("UPDATE neighbors SET steps=? WHERE owner=? AND other=?", (steps, senior, me))
+
+    def _grads(self, owner):
+        """졸업시킨 제자 수(1.13): 지금 이웃 중 나와 이웃일 때 창고 레벨 12 를 넘은 후배"""
+        return self.db.execute("SELECT COUNT(*) FROM neighbors WHERE owner=? AND steps & ?", (owner, GRAD)).fetchone()[0]
 
     def _candidates(self, me, now):
         """서리할 수 있는 과수원(개가 짖는 곳도 보여 준다). 내 이웃(1.11)·초보(설치 3일·창고 레벨 2 미만)·14일 소식 없음·20% 미만·
@@ -1012,8 +1154,9 @@ class Board:
         mine = self._farm(me)
         if mine is None or mine["first"] > t - NEW_KEY:
             raise BadRequest("too_new")
-        if self.db.execute("SELECT 1 FROM raids WHERE raider=? AND role=? AND end>?", (me, role, t)).fetchone():
-            raise BadRequest("busy")
+        if (self.db.execute("SELECT 1 FROM raids WHERE raider=? AND role=? AND end>?", (me, role, t)).fetchone()
+                or self.db.execute("SELECT 1 FROM carries WHERE sender=? AND kind='dispatch' AND role=? AND end>?", (me, role, t)).fetchone()):
+            raise BadRequest("busy")  # 1.13: 출장 간 일꾼도
         revenge, recover, beneficiary = body.get("revenge"), body.get("recover"), ""
         if revenge is not None or recover is not None:
             if recover is not None:  # 되찾아 주기는 이웃의 발자국으로 하는 되갚기다(양 두 배, 하루 3번에 안 센다)
@@ -1088,20 +1231,48 @@ class Board:
         self.db.execute("INSERT INTO codes VALUES(?,?,?)", (me, code, now.timestamp()))
         return code
 
+    def _carry_room(self, other, now):
+        """후배(other)가 지금 더 받을 수 있는 쩔(모든 선배 합산): 출장·바구니는 오늘, 묘목은 이번 주, 받아 둔 묘목이 없을 때"""
+        t, q = now.timestamp(), self.db.execute
+        taken = {k for (k,) in q("SELECT DISTINCT kind FROM carries WHERE receiver=? AND ((kind IN ('dispatch', 'basket') AND day=?) "
+                                 "OR (kind='sapling' AND week=?))", (other, day_key(now), week_key(now)))}
+        live = q("SELECT 1 FROM carries WHERE receiver=? AND kind='dispatch' AND end>?", (other, t)).fetchone()
+        holding = (q("SELECT seedling FROM farms WHERE owner=?", (other,)).fetchone() or (0,))[0] or \
+            q("SELECT 1 FROM carries WHERE receiver=? AND kind='sapling' AND done=0", (other,)).fetchone()
+        return {"dispatch": None if "dispatch" in taken else "busy" if live else True,
+                "basket": None if "basket" in taken else True, "sapling": None if "sapling" in taken else "holding" if holding else True}
+
     def _neighbor_view(self, me, mine, now):
         t, day = now.timestamp(), day_key(now)
-        done = set(self.db.execute("SELECT receiver, kind FROM gifts WHERE sender=? AND day=?", (me, day)).fetchall())
+        # gifts.day: 선물은 날짜, 돕기는 칸(1.13, slot_key). 1.12 까지 날짜로 적힌 돕기는 칸과 안 맞아 그날 한 번 더 될 수 있다(배포 날만)
+        done = set(self.db.execute("SELECT receiver, kind, day FROM gifts WHERE sender=? AND day IN (?, ?, ?)",
+                                   (me, day, day + "am", slot_key(now))).fetchall())
         out = []
-        for other, seen, dogs, look in self.db.execute("SELECT n.other, f.seen, f.dogs, f.look FROM neighbors n JOIN farms f ON f.owner = n.other "
-                                                       "WHERE n.owner=? ORDER BY n.created, n.rowid", (me,)).fetchall():
+        for other, seen, dogs, look, level, best in self.db.execute(
+                "SELECT n.other, f.seen, f.dogs, f.look, f.level, f.best FROM neighbors n JOIN farms f ON f.owner = n.other "
+                "WHERE n.owner=? ORDER BY n.created, n.rowid", (me,)).fetchall():
             fp = self._footprint(me, other, t)
-            out.append({"id": self._target_id(me, other), "name": self._nick(other), "seed": self._seed(other), "look": json.loads(look),
+            look = json.loads(look)
+            junior = is_junior(mine["level"], level)
+            room = self._carry_room(other, now) if junior else {}
+            saplings = sapling_kinds(best, mine["best"]) if junior else []
+            out.append({"id": self._target_id(me, other), "name": self._nick(other), "seed": self._seed(other), "look": look,
                         # 마지막으로 맞춘 지 몇 초. 언제 켜고 끄는지 자세히 드러나지 않게 시간 단위로 반올림
                         "seen": int(max(0, t - seen) / 3600 + 0.5) * 3600,
-                        "helped": (other, "help") in done, "gifted": (other, "gift") in done, "dogs": dogs,
+                        # helped: 지금 칸(오전/오후)에 이미 돕기를 했는지, helpedAm: 오늘 오전에 했는지(1.13 하루 2번)
+                        "helped": (other, "help", slot_key(now)) in done, "helpedAm": (other, "help", day + "am") in done,
+                        "gifted": (other, "gift", day) in done, "dogs": dogs,
                         # 24시간 안에 당하고 아직 아무도 되갚지 않았으면 남은 초(내가 되찾아 줄 수 있다)
-                        "track": int(fp[2] + TRACKS - t) if fp else 0})
+                        "track": int(fp[2] + TRACKS - t) if fp else 0,
+                        # 1.13 쩔: 후배(내가 4 이상 높음)·선배, 이 이웃이 졸업시킨 제자 수, 잡초 단계,
+                        # 후배면 오늘 출장·바구니·이번 주 묘목을 더 받을 수 있는지(모든 선배 합산), 바구니 값 상한, 보낼 수 있는 묘목
+                        "junior": junior, "senior": is_junior(level, mine["level"]), "teacher": self._grads(other),
+                        "weeds": look.get("weeds", 0),
+                        "canDispatch": room.get("dispatch") is True, "canBasket": room.get("basket") is True,
+                        "canSapling": room.get("sapling") is True and bool(saplings),
+                        "basketValue": basket_value(best) if junior else 0, "saplings": saplings})
         return {"code": self._code(me, now), "max": MAX_NEIGHBORS, "thanks": mine["thanks"], "neighbors": out,
+                "teacher": self._grads(me),  # 1.13 내가 졸업시킨 제자 수
                 # 1.12 내가 정한 과수원 이름(없으면 null)과 앱이 이름을 지을 seed
                 "me": {"name": mine["name"] or None, "seed": self._seed(me)}}
 
@@ -1153,7 +1324,7 @@ class Board:
         if any(self.db.execute("SELECT COUNT(*) FROM neighbors WHERE owner=?", (o,)).fetchone()[0] >= MAX_NEIGHBORS for o in (me, other)):
             raise BadRequest("full")
         t = now.timestamp()
-        self.db.executemany("INSERT INTO neighbors VALUES(?,?,?)", [(me, other, t), (other, me, t)])
+        self.db.executemany("INSERT INTO neighbors(owner, other, created) VALUES(?,?,?)", [(me, other, t), (other, me, t)])
         out = dict(self._neighbor_view(me, mine, now), added=self._target_id(me, other))
         self.db.commit()  # 목록을 만들며 내 코드가 처음 생길 수 있어 그 뒤에
         return out
@@ -1170,7 +1341,7 @@ class Board:
 
     @locked
     def neighbor_send(self, owner_key, kind, body, now):
-        """돕기(help)·선물(gift, 과일 한 개)을 이웃마다 하루 한 번씩. 받는 쪽은 raid/status 의 inbox 로 받는다.
+        """돕기(help, 1.13 부터 오전·오후 칸마다)·선물(gift, 과일 한 개, 하루 한 번)을 이웃마다. 받는 쪽은 raid/status 의 inbox 로 받는다.
         선물 과일은 내가 연 가장 비싼 과일 값 이하만 확인한다(창고에서 빼는 것은 앱이 한다)."""
         me, mine = self._member(owner_key, "neighbor_send", now)
         if not isinstance(body, dict):
@@ -1181,13 +1352,68 @@ class Board:
             fruit = body.get("fruit")
             if not isinstance(fruit, str) or fruit not in PRICE or PRICE[fruit] > PRICE[mine["best"]]:
                 raise BadRequest("bad_fruit")
-        day = day_key(now)
+        day = slot_key(now) if kind == "help" else day_key(now)  # 1.13: 돕기는 오전·오후 칸마다 한 번, 선물은 하루 한 번
         if self.db.execute("SELECT 1 FROM gifts WHERE sender=? AND receiver=? AND day=? AND kind=?", (me, other, day, kind)).fetchone():
             raise BadRequest("done_today")
-        self.db.execute("INSERT INTO gifts(id, sender, receiver, day, kind, fruit, stamp, worker, created) VALUES(?,?,?,?,?,?,?,?,?)",
-                        (secrets.token_urlsafe(9), me, other, day, kind, fruit, stamp, json.dumps(worker), now.timestamp()))
+        # 1.13 손길 강화: 선배가 후배에게 보낸 돕기는 손길 1시간(받는 쪽 inbox 의 long)
+        long = kind == "help" and is_junior(mine["level"], self._farm(other)["level"])
+        self.db.execute("INSERT INTO gifts(id, sender, receiver, day, kind, fruit, stamp, worker, created, long) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                        (secrets.token_urlsafe(9), me, other, day, kind, fruit, stamp, json.dumps(worker), now.timestamp(), int(long)))
         self.db.commit()
-        return {"ok": True}
+        return {"ok": True, "long": True} if long else {"ok": True}
+
+    @locked
+    def neighbor_carry(self, owner_key, kind, body, now):
+        """쩔(1.13): 선배가 후배(창고 레벨이 4 이상 낮은 이웃)에게 보낸다. 받는 쪽 상한은 모든 선배를 합쳐 센다.
+        dispatch {id, role, level, worker} → {ok, end, left}: 4시간 출장(후배는 raid/status 의 dispatch 로 받는다). 하루 1번,
+          한 번에 한 명(내가 보낸 출장·서리 나간 그 역할·후배에게 와 있는 출장이 있으면 busy).
+        basket {id, fruit, count, stamp, worker} → {ok, count}: 과일 값 ≤ 내 best, 값 합 ≤ basket_value(후배 best), 개수 ≤ 후배 정원으로
+          줄여 돌려준다(창고에서 빼는 것은 앱이). 하루 1바구니.
+        sapling {id, kind, worker} → {ok}: sapling_kinds 안. 주 1그루, 받아 두고 안 심은 묘목이 있으면 holding."""
+        me, mine = self._member(owner_key, "neighbor_send", now)
+        if not isinstance(body, dict):
+            raise BadRequest()
+        other = self._neighbor(me, body.get("id"))
+        junior = self._farm(other)
+        worker = _tuple(body.get("worker"), *WORKER_LOOK)
+        role = level = fruit = count = stamp = None
+        if kind == "dispatch":
+            role, level = _one(body.get("role"), ROLES), _int(body.get("level"), 0, DISPATCH_LEVEL_CAP)
+            if worker[0] != role:
+                raise BadRequest()
+        elif kind == "basket":
+            fruit = body.get("fruit")
+            if not isinstance(fruit, str) or fruit not in PRICE or fruit == "rainbow" or PRICE[fruit] > PRICE[mine["best"]]:
+                raise BadRequest("bad_fruit")  # 무지개 레몬은 바구니에 못 담는다(앱 basketCount)
+            count, stamp = _int(body.get("count"), 1, MAX_CRATE), _one(body.get("stamp"), STAMPS)
+        else:
+            fruit = body.get("kind")
+            if not isinstance(fruit, str) or fruit not in sapling_kinds(junior["best"], mine["best"]):
+                raise BadRequest("bad_kind")
+        if not is_junior(mine["level"], junior["level"]):
+            raise BadRequest("not_junior")
+        t = now.timestamp()
+        room = self._carry_room(other, now)[kind]
+        if room is None:
+            raise BadRequest("taken_week" if kind == "sapling" else "taken_today")
+        if room in ("busy", "holding"):
+            raise BadRequest(room)
+        if kind == "dispatch" and (
+                self.db.execute("SELECT 1 FROM carries WHERE sender=? AND kind='dispatch' AND end>?", (me, t)).fetchone()
+                or self.db.execute("SELECT 1 FROM raids WHERE raider=? AND role=? AND end>?", (me, role, t)).fetchone()):
+            raise BadRequest("busy")
+        if kind == "basket":
+            count = min(count, basket_value(junior["best"]) // PRICE[fruit], junior["cap"])
+            if count < 1:
+                raise BadRequest("bad_fruit")  # 한 개도 상한 안에 들지 않는 비싼 과일
+        end = t + (DISPATCH_SECONDS if kind == "dispatch" else 0)
+        self.db.execute("INSERT INTO carries(id, sender, receiver, day, week, kind, role, level, fruit, count, stamp, worker, start, end) "
+                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (secrets.token_urlsafe(9), me, other, day_key(now), week_key(now), kind,
+                                                                 role, level, fruit, count, stamp, json.dumps(worker), t, end))
+        self.db.commit()
+        if kind == "dispatch":
+            return {"ok": True, "end": int(end), "left": DISPATCH_SECONDS}
+        return {"ok": True, "count": count} if kind == "basket" else {"ok": True}
 
     def _snap(self, week, kind, rank, p):
         owner = self.db.execute("SELECT owner FROM posts WHERE id=?", (p["id"],)).fetchone()[0]
@@ -1516,6 +1742,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                                   "too_new": 409, "busy": 409, "no_raids_left": 409, "guarded": 409, "empty": 409, "no_farm": 409,
                                   # 이웃(bad_fruit 은 422)
                                   "bad_code": 409, "full": 409, "already": 409, "done_today": 409,
+                                  # 쩔(1.13, bad_kind 는 422)
+                                  "not_junior": 409, "taken_today": 409, "taken_week": 409, "holding": 409,
                                   }.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
@@ -1560,6 +1788,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, board.neighbor_remove(owner, self.body(), now))
             if method == "POST" and parts in (["help"], ["gift"]):
                 return self.send(200, board.neighbor_send(owner, parts[0], self.body(), now))
+            if method == "POST" and parts in (["dispatch"], ["basket"], ["sapling"]):  # 1.13 쩔
+                return self.send(200, board.neighbor_carry(owner, parts[0], self.body(), now))
             if method == "POST" and parts == ["name"]:
                 return self.send(200, board.neighbor_name(owner, self.body(), now))
             return self.send(404, {"error": "not_found"})

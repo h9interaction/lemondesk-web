@@ -163,6 +163,7 @@
     <section id="tab-orchard" role="tabpanel" aria-labelledby="t-orchard">
       <div class="scene" id="scene"><div class="sky" id="sky"></div><div class="pan" id="pan" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div><div class="yard" id="yard"></div></div></div><div class="sky front" id="sky2"></div></div>
       <p class="hint num" id="clear" hidden></p>
+      <p class="hint" id="seedling" hidden></p>
       <p class="hint" id="hint" hidden></p>
       <div class="panel hud">
         <img class="crate" id="crate-pic" src="sprites/crate-0.png" alt="" width="104" height="100">
@@ -272,6 +273,7 @@
     away: t => ` · Out scrumping, back in ${t}`, raided: (n, ago) => `Someone scrumped ${n} lemons from your crate · ${ago}`,
     chased: (n, ago) => `You chased off a scrumper. They only got ${n} · ${ago}`,
     clearing: s => `Clearing land · ${s > 0 ? `${dur(s)} left` : 'almost done'}`,
+    seedling: k => `A senior sent you a ${k} sapling. Plant it on your Mac.`,
   } : {
     crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
     fullIn: t => `가득까지 ${t}`, full: '창고가 가득 찼어요', slow: '천천히 차는 중', field: (n, m) => `밭 ${n} / ${m}칸`, fieldFull: (n, m) => `밭 ${n} / ${m}칸 · 다 차서 바꿔 심을 수 있어요`,
@@ -302,11 +304,12 @@
     away: t => ` · 서리 나감, ${t} 뒤 돌아와요`, raided: (n, ago) => `누군가 레몬 ${n}개를 서리해 갔어요 · ${ago}`,
     chased: (n, ago) => `서리꾼을 쫓아냈어요. ${n}개만 가져갔어요 · ${ago}`,
     clearing: s => `개간 중 · ${s > 0 ? `${dur(s)} 남음` : '곧 끝나요'}`,
+    seedling: k => `선배가 보낸 ${k} 묘목이 있어요. 심기는 Mac에서 해요.`,
   };
   // 윈도우판(상태의 platform 이 win)이면 연결 뒤 문구의 'Mac' 을 'PC' 로. 맥 앱은 platform 을 보내지 않는다.
   let pc = false;
   const toPC = t => t.replace(/Mac이/g, 'PC가').replace(/Mac을/g, 'PC를').replace(/Mac/g, 'PC');
-  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText']) {
+  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling']) {
     const v = T[k];
     if (typeof v === 'function') T[k] = (...a) => pc ? toPC(v(...a)) : v(...a);
     else Object.defineProperty(T, k, { get: () => pc ? toPC(v) : v });
@@ -366,7 +369,7 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=1120'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=1130'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
@@ -763,18 +766,21 @@
 
   // ── 상태 → 장면 ─────────────────────────────
   let trees = [], crew = new Map(), dogs = [], decor = [], lantern = null, crateEl = null, sparkle = null, crateIdx = -1; // trees: 칸 번호 → 나무(보이는 칸 ± 2칸만, 나머지는 빈칸)
+  let weeds = new Map(), weedStage = 0; // 1.13 칸 번호 → 잡초·낙엽 더미 {el, name}
   let groundEnd = 0, fieldEnd = 0, wild = '', built = '', laidOut = '', treesBuilt = false, plotCount = 0, landSeen = 0, wasAway = new Set();
   let restore = +localStorage.getItem('ld-remote-scroll') || 0; // 밭을 민 위치(1.12): 다시 열면 처음 그릴 때 되돌린다
   const crateH = () => (index['crate-0'] || [0, 50])[1];
   function clearScene() { // 색 보정이 바뀌면 그림을 전부 새로 건다(맥 redrawAll)
     for (const w of crew.values()) w.stop(); for (const d of dogs) d.stop();
-    crew = new Map(); dogs = []; trees = []; decor = []; clouds = []; butterflies = []; lantern = crateEl = sparkle = null; crateIdx = -1; treesBuilt = false; skyStarted = false; laidOut = '';
+    crew = new Map(); dogs = []; trees = []; decor = []; weeds = new Map(); clouds = []; butterflies = []; lantern = crateEl = sparkle = null; crateIdx = -1; treesBuilt = false; skyStarted = false; laidOut = '';
     world.replaceChildren(ground, yard); yard.replaceChildren(); sky.replaceChildren(); sky2.replaceChildren();
     for (const [k, p] of looks) if (!k.endsWith('|-')) { looks.delete(k); p.then(u => u.startsWith('blob:') && URL.revokeObjectURL(u)); }
   }
   function renderScene() {
     const s = state(), has = !!(s && s.plots);
     scene.hidden = !has;
+    $('seedling').hidden = !(s && s.seedling); // 1.13 받아 두고 안 심은 선배 묘목(심기는 Mac 에서만)
+    if (s && s.seedling) $('seedling').textContent = T.seedling(T.kinds[s.seedling] || s.seedling);
     if (s) $('hint').textContent = has ? T.pan : T.upgrade;
     if (!has || !index) { $('hint').hidden = !(s && !has); return; }
     quiet = !data.online;
@@ -793,7 +799,7 @@
     if (laidOut !== `${n}|${land}|${s.season}|${wild}`) { laidOut = `${n}|${land}|${s.season}|${wild}`; layout(s); }
     if (treesBuilt && landSeen && land > landSeen) puff('fx-sparkle', plotX(land - 1), TREE_Y + 20); // 개간이 끝나 새 칸이 열린 순간
     landSeen = land;
-    syncTrees(s); syncWorkers(s); syncDogs(s); syncCrate();
+    syncTrees(s); syncWeeds(s); syncWorkers(s); syncDogs(s); syncCrate();
     lantern.hidden = period !== 'night';
   }
   function layout(s) { // 땅·계절 소품·밭 끝 풀숲·랜턴(나무 수·칸 수·계절이 바뀔 때만)
@@ -840,6 +846,29 @@
     }
     if (prev >= 0 && ((prev < 3 && stage >= 3) || (stage === 6 && prev !== 6))) puff('fx-sparkle', plotX(i) + 16, TREE_Y + Math.round(h * 0.6)); // 다 자랐거나 열매가 익은 순간
   }
+  // 1.13 잡초·낙엽: 맥 Balance.Weeds.pile·offset 과 같은 규칙으로 칸마다 정해진 그림·자리(나무 앞·일꾼 뒤, 맥 z 14).
+  // 나무 칸과 다음 빈 칸(끝 풀숲 빼고)의 보이는 칸 ± 1칸만. 치우면(단계가 0으로) 더미마다 반짝하고 사라진다
+  const weedHash = p => Math.floor((p + 1) * 2654435761 % 4294967296 / 256);
+  function weedPile(p, stage, season) {
+    const h = weedHash(p), one = h % 3 === 0;
+    if (!(stage > 0 && (one || (stage === 2 && h % 4 !== 3) || stage >= 3))) return null;
+    if (season === 'winter') return one ? 'leaves-0' : null;
+    if (season === 'autumn') return `leaves-${stage >= 3 || (stage === 2 && h % 2 === 0) ? 1 : 0}`;
+    return `weeds-${Math.min(2, stage - 1 + (h >> 4 & 1))}`;
+  }
+  const weedX = p => plotX(p) + [-6, 2, 8, 13][weedHash(p) >> 6 & 3] * 2;
+  function syncWeeds(s) {
+    const stage = s.weeds || 0, n = Math.min(s.plots.length + 1, landOf(s)), [a, b] = stage ? plotsIn(1, n) : [0, -1], cleared = stage < weedStage;
+    weedStage = stage;
+    for (const [i, w] of weeds) if (i < a || i > b) { if (cleared && !calm) puff('fx-sparkle', weedX(i), 10); w.el.remove(); weeds.delete(i); }
+    for (let i = a; i <= b; i++) {
+      const name = weedPile(i, stage, s.season) || '', w = weeds.get(i);
+      if (w && w.name === name) continue;
+      if (w) w.el.remove();
+      if (!name || !index[name]) { weeds.delete(i); continue; } // 그림이 없으면 빈 자리
+      const e = sp(14, weedX(i), 4); show(e, name); weeds.set(i, {el: e, name});
+    }
+  }
   function syncCrate() { // 창고 그림(채운 정도)과 가득 찼을 때의 반짝임. tick 이 매초 부른다
     const s = state(); if (!crateEl || !s) return;
     const m = override ? {crate: override.crate} : moment(), ratio = m.crate / Math.max(1, s.crate.capacity), i = m.crate === 0 ? 0 : ratio < .7 ? 1 : 2;
@@ -855,19 +884,29 @@
     } else if (!full && sparkle) { sparkle.remove(); sparkle = null; }
   }
   function syncWorkers(s) {
-    const want = new Map(), awayNow = new Set();
+    const want = new Map(), awayNow = new Set(), fresh = crew.size === 0; // fresh: 처음 그리거나 장면을 새로 걸 때
     for (const wk of s.workers) {
       const away = awayLeft(wk) > 0; if (away) awayNow.add(wk.role);
       for (let slot = 0; slot < (wk.crew || 0) - (away ? 1 : 0); slot++)
         want.set(`${wk.role}-${slot}`, {role: wk.role, slot, variant: (wk.looks || [])[slot] || 0, tier: wk.tier || 0, dye: (wk.dyes || [])[slot] || 0, crew: wk.crew});
     }
+    // 1.13 출장 일꾼: 선배의 일꾼이 일곱 번째 일꾼으로 와서 우리 일꾼처럼 일한다(맥 syncDispatch). left 는 Mac 이 보낸 때부터 센다
+    const d = s.dispatchIn && s.sent + s.dispatchIn.left > nowSec() ? s.dispatchIn : null;
+    if (d) want.set('dispatch-' + d.role, {role: d.role, slot: 2, variant: d.variant || 0, tier: d.tier || 0, dye: d.dye || 0, guest: true});
     for (const [k, w] of crew) if (!want.has(k)) { // 서리 나가는 일꾼은 오른쪽 밖으로 걸어 나간다
       crew.delete(k);
-      if (awayNow.has(w.role) && !calm) w.interrupt([{t: 'walk', x: () => view().r + 60, anim: 'walk'}, {t: 'run', f: () => w.stop()}]); else w.stop();
+      if (w.guest && !calm) w.interrupt([idle(0.2), {t: 'run', f: () => emote('heart', w)}, idle(1.2), {t: 'walk', x: () => view().r + 60, anim: 'walk'}, {t: 'run', f: () => w.stop()}]); // 출장 끝: 하트 뒤 오른쪽으로
+      else if (awayNow.has(w.role) && !calm) w.interrupt([{t: 'walk', x: () => view().r + 60, anim: 'walk'}, {t: 'run', f: () => w.stop()}]); else w.stop();
     }
     for (const [k, v] of want) {
       const w = crew.get(k);
       if (w) { if (w.update(v)) celebrate(w); continue; }
+      if (v.guest) { // 오른쪽에서 걸어 들어와 하트(동작 줄이기·처음 그릴 때는 그 자리에 나타난다)
+        const walkIn = !fresh && !calm, [ta, tb] = plotsIn(0, s.plots.length);
+        const nw = new Worker(v, walkIn ? view().r + 40 : plotX(pickIn([ta, tb])) - 40); nw.el.style.zIndex = 26; crew.set(k, nw);
+        nw.interrupt([...(walkIn ? [{t: 'walk', x: plotX(Math.max(0, tb - 1)) - 40, anim: 'walk'}] : []), {t: 'run', f: () => emote('heart', nw, 1.6)}, idle(1.6)]);
+        continue;
+      }
       const back = treesBuilt && wasAway.has(v.role) && v.slot === v.crew - 1 && !calm; // 서리에서 돌아와 창고 옆으로
       const vw = view(), x = back ? vw.r + 40 : v.role === 'harvester' ? vw.l + CRATE_X + 36 + v.slot * 20 : plotX(pickIn(plotsIn(0, s.plots.length))) - 40;
       const nw = new Worker(v, x); crew.set(k, nw);
@@ -886,7 +925,7 @@
   // 밭을 밀면(1.12): 보이는 칸 ± 2칸을 다시 맞추고, 창고는 화면에 붙어 있으니 걸터앉은 일꾼은 내려온다. 민 위치는 다시 열어도 남는다
   let panQueued = false, panSave = 0;
   pan.addEventListener('scroll', () => {
-    if (!panQueued) { panQueued = true; requestAnimationFrame(() => { panQueued = false; const s = state(); if (!treesBuilt || !s || !s.plots) return; syncTrees(s); for (const w of crew.values()) if (w.playing === 'sit') w.interrupt([idle(0.4)]); }); }
+    if (!panQueued) { panQueued = true; requestAnimationFrame(() => { panQueued = false; const s = state(); if (!treesBuilt || !s || !s.plots) return; syncTrees(s); syncWeeds(s); for (const w of crew.values()) if (w.playing === 'sit') w.interrupt([idle(0.4)]); }); }
     clearTimeout(panSave); panSave = setTimeout(() => { // 다 밀고 나서: 위치를 적고, 앉으러 가던 일꾼은 지금 창고 자리로 다시 간다(관성 중에 고른 자리는 허공이라)
       try { localStorage.setItem('ld-remote-scroll', String(Math.round(pan.scrollLeft))); } catch (e) {}
       for (const w of crew.values()) if (w.steps.some(st => st.anim === 'sit')) w.interrupt([idle(0.4)]);

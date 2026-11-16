@@ -17,6 +17,8 @@
 - 1.14(docs/research/mobile-1.14.md): 이웃 찾기·요청(neighbors/discover|request|accept|decline|block|prefs, 요청·차단 기록),
   폰 중계 예약(Mac 이 잠든 동안 '내 과수원' 명령을 relay_queue 에, Mac 이 relay/queue 로 받는다)과 대리(relay/link 로 소유 키 해시를
   기기에 이어 두면 잠든 동안 이웃 명령을 서버가 처리하고 내 쪽 변화를 relay_effects 에 쌓는다).
+- 1.15(docs/research/manager-1.15.md): 폰 명령 mgr_hire·mgr_set·stand_up·make·fill, 이웃 찾기 sort=mentor(선배·후배가 될 곳),
+  사용 통계 mg·pv·ms(매니저 레벨·폰으로 보기·매니저 판매 수)와 /stats 의 판매 분포·나무 종류 분포·서리 진단(새로 저장하는 것 없음).
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -32,6 +34,7 @@ import mimetypes
 import os
 import re
 import secrets
+import statistics
 import sqlite3
 import sys
 import threading
@@ -442,6 +445,8 @@ def _v_opt(f):
 
 _NID, _STAMP, _ROLE, _KIND, _FRUIT, _PLAN = _v_re(TARGET_ID), _v_in(STAMPS), _v_in(ROLES), _v_in(KINDS), _v_in(PRICE), _v_in(RAID_PLANS)
 _TEXT = lambda v: isinstance(v, str) and len(v) <= 40  # noqa: E731 이름·검색어(이름 검사는 처리하는 쪽이 한다)
+_BOOL = lambda v: isinstance(v, bool)  # noqa: E731
+DISCOVER_SORTS = {"recent", "similar", "new", "mentor"}  # mentor: 1.15 선배 이어 주기
 # 폰 → Mac 명령과 받는 칸(그 밖의 칸은 버린다). 본문의 id 는 명령 id 라서, 확정 절에 id 로 적힌 이웃·찾은 과수원은 target,
 # 소품은 prop·pos 로 받는다(2026-11-16 코디네이터 정정). 실제로 되는지(코인·칸 수 등)는 Mac(또는 대리면 서버 규칙)이 본다.
 MINE = {  # '내 과수원' 명령: Mac 이 잠들었으면 예약(1.14). hire2·replant: 1.7.1, care: 1.13 밭 치우기
@@ -450,14 +455,19 @@ MINE = {  # '내 과수원' 명령: Mac 이 잠들었으면 예약(1.14). hire2�
     "clear": {}, "seedling": {"plot": _v_opt(_v_int(0, MAX_PLOTS - 1))}, "theme": {"theme": _v_in(THEMES)},
     "dye": {"role": _ROLE, "slot": _v_opt(_v_int(0, 5)), "variant": _v_opt(_v_int(0, 1)), "dye": _v_int(0, 6)},
     "decor": {"prop": _v_re(re.compile(r"[a-z0-9-]{1,32}")),  # pos: 0~1, null 이면 치움
-              "pos": _v_opt(lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1)}}
+              "pos": _v_opt(lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1)},
+    # 1.15 매니저(고용·레벨 업, 할 일 켜고 끄기·사는 방식·남길 코인 %)·가판대(열기·레벨 업, 만들기)·손님 주문 채우기
+    "mgr_hire": {}, "mgr_set": {"sell": _v_opt(_BOOL), "plant": _v_opt(_BOOL), "buy": _v_opt(_BOOL),
+                                "plan": _v_opt(_v_in({"cheap", "fruit", "crew"})),
+                                "keep": _v_opt(lambda v: isinstance(v, int) and not isinstance(v, bool) and v in (0, 30, 50))},
+    "stand_up": {}, "make": {"recipe": _v_in({"lemonade", "syrup", "jam"})}, "fill": {"order": _v_re(re.compile(r"[a-z0-9]{1,16}"))}}
 SERVER = {  # '서버' 명령: Mac 이 깨어 있으면 Mac 이 서버에 보내고, 잠들었으면 nb_* 만 서버가 대리로(서리는 mac_asleep)
     "nb_help": {"target": _NID, "stamp": _STAMP}, "nb_gift": {"target": _NID, "fruit": _FRUIT, "stamp": _STAMP},
     "nb_add": {"code": _v_re(re.compile(r"[A-Za-z0-9 -]{1,20}"))}, "nb_name": {"name": _TEXT},
     "nb_dispatch": {"target": _NID, "role": _ROLE}, "nb_basket": {"target": _NID, "fruit": _FRUIT, "count": _v_int(1, MAX_CRATE), "stamp": _STAMP},
     "nb_sapling": {"target": _NID, "kind": _KIND}, "nb_request": {"target": _NID, "stamp": _v_opt(_STAMP)},
     "nb_accept": {"target": _NID}, "nb_decline": {"target": _NID}, "nb_block": {"target": _NID},
-    "nb_discover": {"q": _v_opt(_TEXT), "sort": _v_opt(_v_in({"new", "similar", "recent"})), "page": _v_opt(_v_int(0, 50))},
+    "nb_discover": {"q": _v_opt(_TEXT), "sort": _v_opt(_v_in(DISCOVER_SORTS)), "page": _v_opt(_v_int(0, 50))},
     "raid_targets": {}, "raid_send": {"target": _NID, "role": _ROLE, "plan": _PLAN},
     "raid_revenge": {"track": _v_re(RAID_ID), "role": _ROLE, "plan": _PLAN}, "raid_recover": {"target": _NID, "role": _ROLE, "plan": _PLAN}}
 COMMANDS = {**MINE, **SERVER}
@@ -510,7 +520,9 @@ def clean_ping(b, now):
             "minutes": _int(b.get("minutes"), 0, 1440), "opens": _int(b.get("opens"), 0, 10000),
             "sales": _int(b.get("sales"), 0, 100000), "kinds": _int(b.get("kinds"), 0, 13), "platform": b.get("platform", "mac"),
             # 1.11: 이웃 수, 최근 7일 안에 서리당했는지(0/1). 옛 앱은 안 보내므로 0
-            "nb": _int(b.get("nb", 0), 0, MAX_NEIGHBORS), "rb": _int(b.get("rb", 0), 0, 1)}
+            "nb": _int(b.get("nb", 0), 0, MAX_NEIGHBORS), "rb": _int(b.get("rb", 0), 0, 1),
+            # 1.15: 매니저 레벨, 폰으로 보기 켬(0/1), 그날 매니저가 판 횟수. 옛 앱은 안 보내므로 0
+            "mg": _int(b.get("mg", 0), 0, 20), "pv": _int(b.get("pv", 0), 0, 1), "ms": _int(b.get("ms", 0), 0, 100000)}
 
 
 def clean_install(b):
@@ -674,7 +686,10 @@ class Board:
                                  ("neighbors", "steps", "INTEGER NOT NULL DEFAULT 0"), ("gifts", "long", "INTEGER NOT NULL DEFAULT 0"),
                                  ("farms", "seedling", "INTEGER NOT NULL DEFAULT 0"),
                                  # 1.14 이웃 찾기에 보이기·요청 받기(기본 켬)
-                                 ("farms", "listed", "INTEGER NOT NULL DEFAULT 1"), ("farms", "asks", "INTEGER NOT NULL DEFAULT 1")):
+                                 ("farms", "listed", "INTEGER NOT NULL DEFAULT 1"), ("farms", "asks", "INTEGER NOT NULL DEFAULT 1"),
+                                 # 1.15 통계: 매니저 레벨·폰으로 보기·매니저 판매 수
+                                 ("pings", "mg", "INTEGER NOT NULL DEFAULT 0"), ("pings", "pv", "INTEGER NOT NULL DEFAULT 0"),
+                                 ("pings", "ms", "INTEGER NOT NULL DEFAULT 0")):
             if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
                 self.db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
         self.db.execute("CREATE INDEX IF NOT EXISTS raids_beneficiary ON raids(beneficiary, end)")
@@ -854,14 +869,14 @@ class Board:
         inst = sha(p["install"])
         self.db.execute("INSERT INTO participants VALUES(?,?) "
                         "ON CONFLICT(install) DO UPDATE SET first_day = min(first_day, excluded.first_day)", (inst, p["day"]))
-        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform, nb, rb) "
-                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
+        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform, nb, rb, mg, pv, ms) "
+                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
                         "version=excluded.version, os=excluded.os, lang=excluded.lang, arch=excluded.arch, platform=excluded.platform, "
                         "minutes=max(minutes, excluded.minutes), opens=max(opens, excluded.opens), "
                         "sales=max(sales, excluded.sales), kinds=excluded.kinds, received=excluded.received, "
-                        "nb=max(nb, excluded.nb), rb=max(rb, excluded.rb)",
+                        "nb=max(nb, excluded.nb), rb=max(rb, excluded.rb), mg=max(mg, excluded.mg), pv=max(pv, excluded.pv), ms=max(ms, excluded.ms)",
                         (inst, p["day"], p["version"], p["os"], p["lang"], p["arch"], p["minutes"], p["opens"],
-                         p["sales"], p["kinds"], now.timestamp(), p["platform"], p["nb"], p["rb"]))
+                         p["sales"], p["kinds"], now.timestamp(), p["platform"], p["nb"], p["rb"], p["mg"], p["pv"], p["ms"]))
         self.db.commit()
 
     @locked
@@ -909,6 +924,18 @@ class Board:
                  # 1.11: 7일 안에 쓴 설치 중 이웃이 있는 설치, 서리당한(rb=1) 설치와 아닌 설치의 다음 날 활동
                  "neighbors": {"active": nb_active, "with": nb_with},
                  "raided_next_day": {"raided": next_day(1), "others": next_day(0)}}
+        # 1.15: (설치, 날)별 판매 수 분포(봇처럼 튀는 설치), 설치마다 마지막 날의 연 나무 종류 수(원본이 남은 90일 안), 매니저·폰으로 보기(7일)
+        sales = sorted(r[0] or 0 for r in self.db.execute("SELECT sales FROM pings WHERE day >= ?", (ago(6),)))
+        usage["sales_per_install"] = {"median": statistics.median(sales) if sales else 0,
+                                      "p90": sales[-(-len(sales) * 9 // 10) - 1] if sales else 0, "max": sales[-1] if sales else 0}
+        usage["kinds"] = {str(k): c for k, c in self.db.execute(
+            "SELECT p.kinds, COUNT(*) FROM pings p JOIN (SELECT install, MAX(day) AS d FROM pings GROUP BY install) m "
+            "ON p.install = m.install AND p.day = m.d GROUP BY p.kinds ORDER BY p.kinds")}
+        mg_with, mg_avg, ms_sum, pv_with = self.db.execute(
+            "SELECT COALESCE(SUM(mg >= 1), 0), AVG(CASE WHEN mg >= 1 THEN mg END), COALESCE(SUM(ms), 0), COALESCE(SUM(pv), 0) "
+            "FROM (SELECT MAX(mg) AS mg, SUM(ms) AS ms, MAX(pv) AS pv FROM pings WHERE day >= ? GROUP BY install)", (ago(6),)).fetchone()
+        usage["manager"] = {"with": mg_with, "avg_level": round(mg_avg or 0, 1), "sold": ms_sum}
+        usage["phone"] = {"with": pv_with}
         start = ago(days - 1)
         rows = {d: {"day": d, "installs": 0, "active": a, "new": nw, "avg_minutes": round(m / a) if a else 0, "opens": o, "sales": sl}
                 for d, a, nw, m, o, sl in self.db.execute("SELECT day, active, new, minutes, opens, sales FROM daily WHERE day >= ?", (start,))}
@@ -923,7 +950,30 @@ class Board:
         week = self.week(now)
         board = {"posts_this_week": one("SELECT COUNT(*) FROM posts WHERE week = ? AND hidden = 0", week),
                  "stars_this_week": one("SELECT COUNT(*) FROM stars s JOIN posts p ON p.id = s.post WHERE p.week = ?", week)}
-        return {"today": today, "installs": installs, "usage": usage, "daily": [rows[d] for d in sorted(rows)], "board": board}
+        return {"today": today, "installs": installs, "usage": usage, "daily": [rows[d] for d in sorted(rows)], "board": board,
+                "raid": self._raid_health(now)}
+
+    def _raid_health(self, now):
+        """서리 진단(1.15, 이미 있는 farms·raids 에서 계산). targetable: _candidates 조건 중 서리꾼과 무관한 것(14일 소식·초보·
+        창고 레벨·창고 20%·오늘 손실 상한)을 모두 넘는 곳. filtered: 14일 안에 소식 있는 곳 중 각 조건에 걸리는 수(겹칠 수 있다)."""
+        t, day, week = now.timestamp(), day_key(now), now.timestamp() - 7 * 86400
+        filtered = {"newbie": 0, "level": 0, "fill": 0, "lost": 0, "stale": 0}
+        farms_7d = targetable = 0
+        for cap, crate, level, first, seen, lost_day, lost in self.db.execute(
+                "SELECT cap, crate, level, first, seen, lost_day, lost FROM farms"):
+            farms_7d += seen > week
+            if seen <= t - STALE:
+                filtered["stale"] += 1
+                continue
+            why = {"newbie": first > t - NEWBIE, "level": level < MIN_LEVEL, "fill": sum(json.loads(crate).values()) < cap * MIN_FILL,
+                   "lost": not BETA_OPEN and lost_day == day and lost >= int(cap * DAILY_LOSS)}
+            for k, hit in why.items():
+                filtered[k] += hit
+            targetable += not any(why.values())
+        raids, raiders, victims = self.db.execute(
+            "SELECT COUNT(*), COUNT(DISTINCT raider), COUNT(DISTINCT victim) FROM raids WHERE start > ?", (week,)).fetchone()
+        return {"farms_7d": farms_7d, "targetable": targetable, "filtered": filtered,
+                "raids_7d": raids, "raiders_7d": raiders, "victims_7d": victims}
 
     # 하이라이트
 
@@ -1403,12 +1453,13 @@ class Board:
     @locked
     def discover(self, owner_key, query, now):
         """이웃 찾기(1.14): 최근 14일 안에 켜진 과수원 중 나·내 이웃·차단(양쪽)·보이기 끈 곳을 뺀다. 한 번에 20곳.
-        sort: recent(최근 활동, 기본)·similar(창고 레벨이 비슷한 순)·new(후배가 될 과수원만, 새로 시작한 순). q: 이름 검색.
+        sort: recent(최근 활동, 기본)·similar(창고 레벨이 비슷한 순)·new(후배가 될 과수원만, 새로 시작한 순)·
+        mentor(1.15, 나와 선배·후배가 될 수 있는 곳만, 최근 활동 순. junior 가 거짓이면 그곳이 내 선배). q: 이름 검색.
         ponytail: farms 를 다 훑고 이름도 하나씩 찾는다. 참여자가 수만이 되면 seen 색인과 이름 열 검색으로."""
         me, mine = self._member(owner_key, "discover", now)
         query = query if isinstance(query, dict) else {}
         sort, text, page = query.get("sort") or "recent", query.get("q") or "", query.get("page") or 0
-        if sort not in ("recent", "similar", "new") or not _TEXT(text):
+        if sort not in DISCOVER_SORTS or not _TEXT(text):
             raise BadRequest()
         page = _int(int(page) if isinstance(page, str) and page.isdigit() else page, 0, 50)
         t = now.timestamp()
@@ -1421,6 +1472,8 @@ class Board:
             rows = [r for r in rows if text in (self._nick(r[0]) or "").lower()]
         if sort == "new":
             rows = sorted((r for r in rows if is_junior(mine["level"], r[2])), key=lambda r: -r[4])
+        elif sort == "mentor":
+            rows = sorted((r for r in rows if is_junior(mine["level"], r[2]) or is_junior(r[2], mine["level"])), key=lambda r: -r[3])
         elif sort == "similar":
             rows.sort(key=lambda r: (abs(r[2] - mine["level"]), -r[3]))
         else:

@@ -41,7 +41,8 @@
   .note { font-size: 13px; color: var(--muted); margin-top: 6px; }
   .err { color: #B3261E; }
   @media (prefers-color-scheme: dark) { .err { color: #F2B8B5; } }
-  @media (max-width: 760px) { .tiles, .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .tiles.five { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 12px; }
+  @media (max-width: 760px) { .tiles, .tiles.five, .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>
@@ -62,6 +63,12 @@
     <div class="tiles" id="t-usage"></div>
     <h2>이웃·서리 (동의한 설치)</h2>
     <div class="tiles" id="t-social"></div>
+    <h2>판매·매니저·폰 (동의한 설치, 7일)</h2>
+    <div class="tiles" id="t-manager"></div>
+    <h2>서리 진단 (서리 참여 과수원)</h2>
+    <div class="tiles" id="t-raid"></div>
+    <div class="tiles five" id="t-raid-why"></div>
+    <p class="note">아래 줄: 14일 안에 소식이 있는 과수원 중 각 조건 때문에 서리 대상에서 빠지는 수(한 곳이 여러 조건에 걸릴 수 있어요). 14일 넘게 소식이 없는 곳은 따로 셉니다.</p>
     <h2>최근 30일</h2>
     <div class="grid2">
       <div class="chart" id="c-installs"><h3>일별 설치</h3></div>
@@ -135,7 +142,7 @@
 
   function render(s) {
     $('out').hidden = false;
-    ['t-installs', 't-usage', 't-social', 'dist'].forEach(id => $(id).textContent = '');
+    ['t-installs', 't-usage', 't-social', 't-manager', 't-raid', 't-raid-why', 'dist'].forEach(id => $(id).textContent = '');
     ['c-installs', 'c-active'].forEach(id => $(id).querySelectorAll('svg,.tip').forEach(e => e.remove()));
     const i = s.installs, u = s.usage;
     tile($('t-installs'), n(i.total), '누적 설치');
@@ -155,6 +162,22 @@
     tile($('t-social'), pct(nb.with, nb.active), `이웃 있는 설치 (7일, ${n(nb.with)}/${n(nb.active)})`);
     tile($('t-social'), pct(rn.raided.back, rn.raided.days), `서리당한 다음 날도 씀 (30일, ${n(rn.raided.back)}/${n(rn.raided.days)})`);
     tile($('t-social'), pct(rn.others.back, rn.others.days), `서리 안 당한 날의 다음 날도 씀 (비교)`);
+    // 1.15: 판매 분포(봇처럼 튀는 설치)·매니저·폰으로 보기·서리 진단. 옛 API 면 없다
+    const sp = u.sales_per_install || {median: 0, p90: 0, max: 0}, mg = u.manager || {with: 0, avg_level: 0, sold: 0};
+    tile($('t-manager'), `${n(sp.median)} · ${n(sp.p90)} · ${n(sp.max)}`, '하루 판매 수 (중앙값 · 90% · 최대)');
+    tile($('t-manager'), `${n(mg.with)}`, `매니저 둔 설치 (평균 레벨 ${mg.avg_level})`);
+    tile($('t-manager'), n(mg.sold), '매니저가 판 횟수');
+    tile($('t-manager'), n((u.phone || {with: 0}).with), '폰으로 보기 켠 설치');
+    const rd = s.raid;
+    if (rd) {
+      tile($('t-raid'), n(rd.farms_7d), '7일 안에 소식 있는 과수원');
+      tile($('t-raid'), n(rd.targetable), '지금 서리 대상이 될 수 있는 곳');
+      tile($('t-raid'), n(rd.raids_7d), '최근 7일 서리');
+      tile($('t-raid'), `${n(rd.raiders_7d)} · ${n(rd.victims_7d)}`, '보낸 과수원 · 당한 과수원 (7일)');
+      const f = rd.filtered;
+      [['newbie', '초보 보호 (3일)'], ['level', '창고 레벨 2 미만'], ['fill', '창고 20% 미만'], ['lost', '오늘 잃을 만큼 잃음'], ['stale', '14일 넘게 소식 없음']]
+        .forEach(([k, label]) => tile($('t-raid-why'), n(f[k] || 0), label));
+    }
     // 30일을 빈 날까지 채운다
     const byDay = Object.fromEntries(s.daily.map(d => [d.day, d]));
     const days = [];
@@ -174,6 +197,7 @@
     dist('설치 버전 (누적)', i.versions); dist('설치 CPU (누적)', i.arch);
     dist('설치 플랫폼 (누적)', i.platform || {}); dist('활성 플랫폼 (7일)', u.platform || {});
     dist('활성 버전 (7일)', u.versions); dist('활성 OS (7일)', u.os);
+    dist('연 나무 종류 수 (설치마다 마지막 날, 90일)', u.kinds || {});
     $('foot').textContent = `기준일 ${s.today} (한국 시간) · 이번 주 게시판: 게시물 ${n(s.board.posts_this_week)}개, 별 ${n(s.board.stars_this_week)}개`;
   }
 

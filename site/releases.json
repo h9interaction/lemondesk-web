@@ -1,5 +1,18 @@
 [
   {
+    "version": "1.16.1",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.16.1/LemonDesk-1.16.1.dmg",
+    "notes": {
+      "ko": [
+        "관리 창에서 나무·일꾼·도담·창고 정보가 1.16.0 전처럼 다시 자세히 보여요"
+      ],
+      "en": [
+        "The manage window shows tree, worker, Dodam and crate details again, as before 1.16.0"
+      ]
+    }
+  },
+  {
     "version": "1.16.0",
     "date": "2026-11-17",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.16.0/LemonDesk-1.16.0.dmg",

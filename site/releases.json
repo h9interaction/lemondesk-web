@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.15.5",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.5/LemonDesk-1.15.5.dmg",
+    "notes": {
+      "ko": [
+        "자동 업데이트를 꺼 두어도 새 버전이 나오면 알려 줘요. 관리 창 맨 위 카드와 메뉴바 메뉴에서 '새로운 기능'을 보거나 '설치 후 다시 켜기'를 한 번 눌러 바로 업데이트해요(자동 업데이트 설정은 그대로)",
+        "메뉴바 메뉴에 '업데이트 확인…'이 생겼어요. 새 버전이 있으면 메뉴바 레몬 옆에 반짝이가 붙어요"
+      ],
+      "en": [
+        "Even with automatic updates off, Lemon Desk now tells you when a new version is out. From the card at the top of the window or the menu bar menu, see What's New or click Install and Relaunch once (your auto-update setting stays as it is)",
+        "The menu bar menu now has Check for Updates…, and a sparkle appears next to the lemon when a new version is available"
+      ]
+    }
+  },
+  {
     "version": "1.15.4",
     "date": "2026-11-17",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.4/LemonDesk-1.15.4.dmg",

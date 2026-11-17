@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.15.4</title>
-      <pubDate>Tue, 17 Nov 2026 06:11:34 GMT</pubDate>
-      <sparkle:version>28</sparkle:version>
-      <sparkle:shortVersionString>1.15.4</sparkle:shortVersionString>
+      <title>1.15.5</title>
+      <pubDate>Tue, 17 Nov 2026 07:13:51 GMT</pubDate>
+      <sparkle:version>29</sparkle:version>
+      <sparkle:shortVersionString>1.15.5</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>이웃을 20명까지 맺을 수 있어요(전에는 10명)</li><li>이웃이 많아도 띠가 붐비지 않게, 띠로 찾아오는 이웃은 하루 24명까지예요. 그 뒤에 온 돕기·선물도 그대로 받아요</li><li>폰에서 바꿔 심을 때 칸마다 나무 이름과 개당 값이 보이고, 값이 낮은 나무부터 나와요</li></ul><ul><li>You can now have up to 20 neighbors (was 10)</li><li>To keep the strip calm, up to 24 neighbors visit it each day. Help and gifts after that still arrive</li><li>When replanting from your phone, each plot now shows its tree&#x27;s name and price per fruit, cheapest first</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.4/LemonDesk-1.15.4.dmg" type="application/octet-stream" sparkle:edSignature="QVPEQ/NUJ7bDz5S9r2HjZ3oLaZk5+Tf998lL84Vsam4D57/OKyZUFaViHRd0ab713l97rhkjf+HQnYAS/0DABA==" length="18560743"/>
+      <description><![CDATA[<ul><li>자동 업데이트를 꺼 두어도 새 버전이 나오면 알려 줘요. 관리 창 맨 위 카드와 메뉴바 메뉴에서 &#x27;새로운 기능&#x27;을 보거나 &#x27;설치 후 다시 켜기&#x27;를 한 번 눌러 바로 업데이트해요(자동 업데이트 설정은 그대로)</li><li>메뉴바 메뉴에 &#x27;업데이트 확인…&#x27;이 생겼어요. 새 버전이 있으면 메뉴바 레몬 옆에 반짝이가 붙어요</li></ul><ul><li>Even with automatic updates off, Lemon Desk now tells you when a new version is out. From the card at the top of the window or the menu bar menu, see What&#x27;s New or click Install and Relaunch once (your auto-update setting stays as it is)</li><li>The menu bar menu now has Check for Updates…, and a sparkle appears next to the lemon when a new version is available</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.5/LemonDesk-1.15.5.dmg" type="application/octet-stream" sparkle:edSignature="id4pWyzfmJixe7akordg/AhEfUR/3Pe4j7n3oGcuNh/5TpmjTDXawAFGq4F+S0gCxqA3+KpzoJIWBk9cSSTgCQ==" length="18624603"/>
     </item>
   </channel>
 </rss>

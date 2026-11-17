@@ -1,5 +1,22 @@
 [
   {
+    "version": "1.16.0",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.16.0/LemonDesk-1.16.0.dmg",
+    "notes": {
+      "ko": [
+        "도담에게 모드가 생겼어요. 알뜰·수집가·반장·사장님·정원사·바리스타·개척자 도담 중 하나를 고르면, 그 목표에 맞게 알아서 심고 사요. 모드는 도담 레벨이 오르면 하나씩 열려요",
+        "고른 모드가 무엇을 키우고 있는지 관리 창과 메뉴바에서 바로 보여요. 띠의 도담 머리 위에도 모드 표시가 붙어요",
+        "도담의 흥정 실력이 레벨과 함께 늘어요. 높은 레벨이 되면 제값보다 비싸게 팔기도 해요"
+      ],
+      "en": [
+        "Dodam now has modes. Pick Thrifty, Collector, Foreman, Boss, Gardener, Barista, or Pioneer Dodam, and Dodam plants and buys toward that goal. New modes open as Dodam levels up",
+        "The manage window and menu bar show what your chosen mode is growing, and Dodam wears a mode badge on the strip",
+        "Dodam's bargaining improves with level. At high levels Dodam can even sell above the regular price"
+      ]
+    }
+  },
+  {
     "version": "1.15.5",
     "date": "2026-11-17",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.5/LemonDesk-1.15.5.dmg",
@@ -20,13 +37,13 @@
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.4/LemonDesk-1.15.4.dmg",
     "notes": {
       "ko": [
-        "이웃을 20명까지 맺을 수 있어요(전에는 10명)",
-        "이웃이 많아도 띠가 붐비지 않게, 띠로 찾아오는 이웃은 하루 24명까지예요. 그 뒤에 온 돕기·선물도 그대로 받아요",
+        "이웃을 전보다 더 많이 맺을 수 있어요",
+        "이웃이 많아도 띠가 붐비지 않게 하루에 띠로 찾아오는 이웃 수를 정했어요. 그 뒤에 온 돕기·선물도 그대로 받아요",
         "폰에서 바꿔 심을 때 칸마다 나무 이름과 개당 값이 보이고, 값이 낮은 나무부터 나와요"
       ],
       "en": [
-        "You can now have up to 20 neighbors (was 10)",
-        "To keep the strip calm, up to 24 neighbors visit it each day. Help and gifts after that still arrive",
+        "You can now have more neighbors than before",
+        "To keep the strip calm, only so many neighbors visit it each day. Help and gifts after that still arrive",
         "When replanting from your phone, each plot now shows its tree's name and price per fruit, cheapest first"
       ]
     }
@@ -88,18 +105,18 @@
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.0/LemonDesk-1.15.0.dmg",
     "notes": {
       "ko": [
-        "매니저 일꾼 '도담'이 생겼어요(창고 레벨 6부터). 쉬지 않고 창고가 가득 찰 때마다 대신 팔고(제값의 60~80%, 손으로 팔면 100%), 레벨 5부터 빈 칸에 심고, 레벨 10부터 다음 것을 대신 사요. 주말에도 과수원이 멈추지 않아요",
+        "매니저 일꾼 '도담'이 생겼어요(창고 레벨이 오르면 고용할 수 있어요). 쉬지 않고 창고가 가득 찰 때마다 대신 팔고, 레벨이 오르면 빈 칸에 심고 다음 것을 대신 사요. 직접 팔면 늘 제값이에요. 주말에도 과수원이 멈추지 않아요",
         "관리 창에 '다음에 사면 좋은 것'이 한 줄로 보여요",
-        "레모네이드 가판대를 열 수 있어요. 창고의 과일로 레모네이드·과일청·마멀레이드를 만들면 재료보다 1.5배 비싸게 팔려요",
+        "레모네이드 가판대를 열 수 있어요. 창고의 과일로 레모네이드·과일청·마멀레이드를 만들면 재료보다 비싸게 팔려요",
         "가판대에 손님이 찾아와 주문을 남겨요. 직접 채우면 보상과 팁을 받아요(주문은 도담이 대신 채우지 않아요)",
         "날씨가 생겼어요. 비가 오고, 눈이 내리고, 바람이 불어요. 비 오는 동안 돌보기 일꾼은 물 주기를 쉬어요",
         "이웃 찾기에 '선배·후배' 정렬이 생겼어요. 막 시작했다면 키워 줄 선배를 찾아보세요",
         "폰으로 보기에서도 도담·가판대·주문·날씨를 보고 바꿀 수 있어요"
       ],
       "en": [
-        "Meet Dodam, your orchard manager (from crate level 6). Dodam sells every time the crate fills, without breaks (60–80% of the price; selling by hand still gets 100%), plants empty plots from level 5, and buys your next upgrade from level 10. Your orchard keeps going over the weekend",
+        "Meet Dodam, your orchard manager (hire once your crate is big enough). Dodam sells every time the crate fills, without breaks, and as it levels up it plants empty plots and buys your next upgrade. Selling by hand always gets the full price. Your orchard keeps going over the weekend",
         "The management window now shows the best thing to buy next",
-        "Open a lemonade stand and turn fruit from your crate into lemonade, syrup or marmalade, which sell for 1.5× the fruit",
+        "Open a lemonade stand and turn fruit from your crate into lemonade, syrup or marmalade, which sell for more than the fruit",
         "Guests visit the stand and leave orders. Fill them yourself for a reward and a tip (Dodam leaves orders to you)",
         "Weather arrives: rain, snow and wind. Caretakers take a break from watering while it rains",
         "Find Neighbors can now sort by senior and junior. Just starting out? Find a senior to help you grow",
@@ -114,14 +131,14 @@
     "notes": {
       "ko": [
         "폰으로 보기에서도 Mac 에서 하던 일을 거의 다 할 수 있어요. 이웃·모음 탭이 생겼고, 서리 보내기·이웃 찾기·출장·바구니·묘목, 소품 자리·테마·옷 색 바꾸기도 폰에서 돼요",
-        "Mac 이 잠들거나 꺼져 있어도 폰에서 팔기·심기·고용 같은 일을 예약해 두면, Mac 이 깨어날 때 그 시각에 한 것처럼 반영돼요(최대 50개, 72시간)",
+        "Mac 이 잠들거나 꺼져 있어도 폰에서 팔기·심기·고용 같은 일을 예약해 두면, Mac 이 깨어날 때 그 시각에 한 것처럼 반영돼요",
         "Mac 이 꺼져 있어도 폰에서 이웃 물 주기·선물·출장·바구니·묘목을 바로 보낼 수 있어요",
         "이웃 찾기가 생겼어요. 코드를 주고받지 않아도 과수원 목록에서 이웃 요청을 보내고, 받은 요청은 수락·거절·차단할 수 있어요. 찾기에 보이지 않게 끌 수도 있어요",
         "초대 링크를 보내면, 받은 사람은 누르기만 해도 앱에서 바로 이웃을 맺을 수 있어요"
       ],
       "en": [
         "Phone view now does almost everything the Mac app does: new Neighbors and Book tabs, plus scrumping, finding neighbors, worker loans, baskets, saplings, decor spots, themes and outfit colors",
-        "Even while your Mac is asleep or off, queue up selling, planting or hiring from your phone. When the Mac wakes up, they're applied as if done at that moment (up to 50, within 72 hours)",
+        "Even while your Mac is asleep or off, queue up selling, planting or hiring from your phone. When the Mac wakes up, they're applied as if done at that moment",
         "Water, gifts, worker loans, baskets and saplings for neighbors go out right away from your phone, even with the Mac off",
         "Find Neighbors: send a neighbor request from the orchard list without swapping codes, and accept, decline or block requests you get. You can hide yourself from the list too",
         "Send an invite link: your friend taps it and becomes your neighbor right in the app"
@@ -134,17 +151,17 @@
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.13.0/LemonDesk-1.13.0.dmg",
     "notes": {
       "ko": [
-        "선배와 후배가 생겼어요. 창고 레벨이 4 이상 차이 나는 이웃(창고 12레벨 전)은 후배예요. 선배는 후배에게 일꾼을 4시간 출장 보내고(후배 띠에 일곱 번째 일꾼으로 와서 일해요), 비싼 과일 바구니와 아직 못 연 나무 묘목을 보낼 수 있어요",
-        "후배가 창고 6·12레벨, 유자·핑크 레몬 해금을 넘을 때마다 함께 축하하고 선배에게 고마움이 쌓여요. 제자를 졸업시키면 레몬 선생님 깃발 소품과 목표가 열려요",
-        "이웃 물 주기가 하루 2번(오전·오후)으로 늘었어요. 선배가 후배에게 주면 손길이 1시간이에요",
+        "선배와 후배가 생겼어요. 창고 레벨이 많이 차이 나는 이웃은 후배예요. 선배는 후배에게 일꾼을 출장 보내고(후배 띠에 일곱 번째 일꾼으로 와서 일해요), 비싼 과일 바구니와 아직 못 연 나무 묘목을 보낼 수 있어요",
+        "후배가 큰 고비를 넘을 때마다(창고 레벨, 유자·핑크 레몬 해금) 함께 축하하고 선배에게 고마움이 쌓여요. 제자를 졸업시키면 레몬 선생님 깃발 소품과 목표가 열려요",
+        "이웃 물 주기가 하루 오전·오후로 늘었어요. 선배가 후배에게 주면 손길이 더 오래가요",
         "오래 비우면 밭에 잡초와 낙엽이 쌓여요(열매와 나무는 그대로예요). 돌아와 치우면 퇴비가 되어 잠깐 더 빨리 자라고, 없는 동안 이웃이 물을 주면 잡초도 뽑아 줘요",
         "폰으로 보기에서도 잡초·출장 일꾼·받은 묘목이 보이고, 폰에서 팔거나 심으면 밭이 치워져요",
         "영어에서 서리 보내기 버튼이 Share 로 나오던 것을 고쳤어요"
       ],
       "en": [
-        "Seniors and juniors: a neighbor whose crate is 4 or more levels below yours (and under level 12) is your junior. Lend them a worker for 4 hours (it shows up on their strip as a seventh worker), or send a basket of pricey fruit and a sapling of a tree they haven't unlocked yet",
-        "Each time a junior reaches crate level 6 or 12 or unlocks yuja or pink lemon, you celebrate together and the senior earns thanks. Graduate a student to unlock the Lemon Mentor Flag decoration and new goals",
-        "You can now water each neighbor twice a day (morning and afternoon). Water from a senior to a junior lasts an hour",
+        "Seniors and juniors: a neighbor whose crate is far below yours is your junior. Lend them a worker for a while (it shows up on their strip as a seventh worker), or send a basket of pricey fruit and a sapling of a tree they haven't unlocked yet",
+        "Each time a junior passes a milestone (crate levels, unlocking yuja or pink lemon), you celebrate together and the senior earns thanks. Graduate a student to unlock the Lemon Mentor Flag decoration and new goals",
+        "You can now water each neighbor in the morning and the afternoon. Water from a senior to a junior lasts longer",
         "If you're away for a while, weeds and fallen leaves pile up on your field (your fruit and trees stay the same). Tidy up when you're back to make compost that speeds growth for a bit, and neighbors who water while you're away pull the weeds too",
         "Phone view now shows weeds, lent workers and received saplings, and selling or planting from your phone tidies the field",
         "Fixed the scrumping Send button showing as Share in English"
@@ -157,7 +174,7 @@
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.12.0/LemonDesk-1.12.0.dmg",
     "notes": {
       "ko": [
-        "땅이 끝없이 넓어져요. 밭 10칸이 다 차면 오른쪽 풀숲을 개간해 한 칸씩 늘릴 수 있어요. 코인을 내면 일꾼이 몇 시간 동안 땅을 일궈요(이웃 손길이 있으면 더 빨라요)",
+        "땅이 끝없이 넓어져요. 밭이 다 차면 오른쪽 풀숲을 개간해 한 칸씩 늘릴 수 있어요. 코인을 내면 일꾼이 몇 시간 동안 땅을 일궈요(이웃 손길이 있으면 더 빨라요)",
         "띠가 화면 폭까지 길어지고, 그보다 넓은 밭은 ⌥(Option)를 누른 채 띠 위에서 스크롤해 둘러볼 수 있어요. ⌥를 누르고 있는 동안은 나무를 눌러 따고 창고를 눌러 팔 수도 있어요",
         "땅을 일구다 보면 옛 물건이 나와요. 녹슨 물뿌리개부터 보물 상자까지 여덟 가지를 꾸미기 소품으로 놓을 수 있어요",
         "관리 창에 밭 지도가 생겼어요. 칸을 누르면 띠가 그곳으로 가요",
@@ -168,7 +185,7 @@
         "영어로 쓸 때 관리 창 위쪽 탭이 보이지 않던 문제를 고쳤어요"
       ],
       "en": [
-        "Your land now goes on forever. When all 10 plots are full, clear the wild patch on the right to add one plot at a time. Pay some coins and your workers spend a few hours clearing it (faster with a neighbor's help)",
+        "Your land now goes on forever. When your field is full, clear the wild patch on the right to add one plot at a time. Pay some coins and your workers spend a few hours clearing it (faster with a neighbor's help)",
         "The strip now stretches up to the width of your screen, and wider orchards scroll: hold ⌥ (Option) and scroll over the strip to look around. While holding ⌥ you can also click trees to pick and click the crate to sell",
         "Clearing land turns up old treasures: eight finds, from a rusty watering can to a treasure chest, that you can place as decorations",
         "A new orchard map in the window: click a plot to move the strip there",
@@ -187,21 +204,21 @@
     "notes": {
       "ko": [
         "이웃이 생겼어요. 이웃 탭에서 내 코드를 나누거나 받은 코드를 넣으면 서로 이웃이 되고, 이웃 과수원을 엽서처럼 구경할 수 있어요",
-        "이웃을 도와주세요. 하루 한 번 물을 주러 가면 이웃 과수원이 30분 동안 빨리 자라고, 그쪽 띠에 내 일꾼이 찾아가 물을 주고 인사해요. 과일 한 개를 선물할 수도 있어요",
+        "이웃을 도와주세요. 하루 한 번 물을 주러 가면 이웃 과수원이 한동안 빨리 자라고, 그쪽 띠에 내 일꾼이 찾아가 물을 주고 인사해요. 과일 한 개를 선물할 수도 있어요",
         "고마움이 쌓이면 벤치·화분·새집 같은 소품이 열리고, 꾸미기 탭에서 띠 원하는 자리에 놓을 수 있어요. 받은 선물은 선물 수첩에 모여요",
         "이웃이 지켜 줘요. 개를 키우는 이웃이 있으면 서리 피해가 줄고, 이웃이 깨어 있으면 서리꾼이 들켜요. 이웃이 서리당하면 대신 되찾아 줄 수도 있어요",
         "이웃이 없어도 동네 과수원 두 곳이 하루 한 번 놀러 와요",
         "기록 탭에 목표가 생기고, 처음 시작하는 분을 위한 안내를 더했어요. 귀여운 효과음과 잔잔한 배경음도 생겼어요(설정 › 소리에서 켤 수 있어요)",
-        "서리는 정식 규칙으로 돌아왔어요: 하루 3번, 새로 시작한 과수원은 3일 동안 보호돼요"
+        "서리는 정식 규칙으로 돌아왔어요: 하루 횟수가 정해져 있고, 새로 시작한 과수원은 며칠 동안 보호돼요"
       ],
       "en": [
         "Neighbors are here. Share your code or enter a friend's on the Neighbors tab to become neighbors, and peek at their orchard like a postcard",
-        "Lend a hand: water a neighbor's orchard once a day to make it grow faster for 30 minutes, and your worker visits their strip to water and wave. You can also gift them one fruit",
+        "Lend a hand: water a neighbor's orchard once a day to make it grow faster for a while, and your worker visits their strip to water and wave. You can also gift them one fruit",
         "Thanks you earn unlock decorations like a bench, flower pots and a birdhouse that you can place anywhere on your strip from the Decorate tab. Gifts you receive fill a gift album",
         "Neighbors watch your back: neighbors with dogs reduce scrumping losses, an awake neighbor catches scrumpers, and you can win back what was taken from a neighbor",
         "Even without neighbors, two village orchards drop by once a day",
         "Goals on the Record tab and a short guide for new players, plus cute sound effects and gentle background music (turn them on in Settings › Sound)",
-        "Scrumping is back to its full rules: three a day, and new orchards are protected for three days"
+        "Scrumping is back to its full rules: a few a day, and new orchards are protected for their first days"
       ]
     }
   },
@@ -251,12 +268,12 @@
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.8.2/LemonDesk-1.8.2.dmg",
     "notes": {
       "ko": [
-        "후반 나무를 더 빨리 열 수 있어요: 포멜로 해금 3,000만 → 2,200만, 황금 레몬 해금 6,000만 → 4,200만 코인",
-        "여름 레모네이드 가판대 보너스를 판매가 +20%에서 +10%로 줄였어요. 어느 계절에 시작해도 진행 속도가 비슷해요"
+        "후반 나무를 더 빨리 열 수 있도록 해금 값을 낮췄어요",
+        "여름 레모네이드 가판대 보너스를 줄였어요. 어느 계절에 시작해도 진행 속도가 비슷해요"
       ],
       "en": [
-        "Late trees open sooner: unlocking the Pomelo now costs 22M coins (was 30M), and the Golden lemon 42M (was 60M)",
-        "The summer lemonade stand bonus is now +10% sale price (was +20%), so progress feels about the same whichever season you start in"
+        "Late trees open sooner: their unlock costs are lower",
+        "The summer lemonade stand bonus is smaller, so progress feels about the same whichever season you start in"
       ]
     }
   },
@@ -489,14 +506,14 @@
     "notes": {
       "ko": [
         "나무가 열두 가지로 늘고 심어 본 나무를 모으는 도감이 생겼어요",
-        "일꾼 레벨 5·10·15·20마다 장비가 바뀌어요",
-        "레벨 10부터 역할마다 생김새가 다른 일꾼을 한 명 더 고용할 수 있어요",
+        "일꾼 레벨이 오르면 장비가 바뀌어요",
+        "레벨이 오르면 역할마다 생김새가 다른 일꾼을 한 명 더 고용할 수 있어요",
         "햇살·봄빛·노을·달밤 테마, 옷 색 꾸미기, 시간대마다 바뀌는 빛과 밤의 랜턴·반딧불"
       ],
       "en": [
         "Twelve kinds of trees and a collection book of the ones you've planted",
-        "Worker gear changes at levels 5, 10, 15 and 20",
-        "From level 10, hire a second, different-looking worker for each role",
+        "Worker gear changes as they level up",
+        "At higher levels, hire a second, different-looking worker for each role",
         "Sunny, Blossom, Sunset and Moonlight themes, outfit colors, light that follows the time of day, and a lantern and fireflies at night"
       ]
     }

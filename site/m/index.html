@@ -403,10 +403,8 @@
       guarded: 'A dog is barking. Pick another orchard.', empty: 'Nothing to take.', not_found: "That orchard isn't available anymore. Refresh the list.", bad_code: "That code doesn't work",
       done_today: 'Already done today. Try again later.', not_junior: 'Only juniors can get that', taken_today: 'They already got one today', taken_week: 'They already got a sapling this week',
       holding: 'They still have a sapling to plant', bad_fruit: "That fruit can't be sent", no_fruit: 'Not enough of that fruit in your crate', bad_kind: "That sapling can't be sent"},
-    mgrH: 'Manager', mgrName: 'Dodam', mgrJob: 'Sells for you when the crate is full, and plants and buys as it levels up', mgrLockedBtn: 'Crate level 6',
-    mgrLocked: 'You can hire Dodam at crate level 6.', mgrLevel: (l, m) => `Level ${l} / ${m}`,
-    bargainW: ['a little below full price', 'at full price', 'above full price'], bargainHire: b => `Hire for haggling ${b}`,
-    bargainUp: (b, l) => `Haggling ${b} · one step up at level ${l}`, bargainTop: b => `Haggling ${b} · top step`,
+    mgrH: 'Manager', mgrName: 'Dodam', mgrJob: r => `Sells for you when the crate is full (${r}% of the price)`, mgrLockedBtn: 'Crate level 6',
+    mgrLocked: 'You can hire Dodam at crate level 6.', mgrLevel: (l, m, r) => `Level ${l} / ${m} · sells at ${r}%`,
     modesH: "Dodam's mode", modeAt: l => `Opens at level ${l}`, since: d => `+${d} since picked`, sincePct: d => `+${d}% since picked`,
     modes: {cheap: ['Thrifty Dodam', 'Buys the cheapest things first, step by step'],
       dex: ['Collector Dodam', 'Plants kinds you have never grown first to fill the Book'],
@@ -510,10 +508,8 @@
       guarded: '개가 짖고 있어요. 다른 과수원을 골라요.', empty: '가져올 게 없어요.', not_found: '그 과수원은 이제 없어요. 목록을 새로 고쳐요.', bad_code: '쓸 수 없는 코드예요',
       done_today: '오늘은 이미 했어요. 다음에 또 해요.', not_junior: '후배에게만 보낼 수 있어요', taken_today: '이 이웃은 오늘 이미 받았어요', taken_week: '이 이웃은 이번 주에 묘목을 이미 받았어요',
       holding: '이 이웃은 아직 심지 않은 묘목을 갖고 있어요', bad_fruit: '그 과일은 보낼 수 없어요', no_fruit: '창고에 그 과일이 모자라요', bad_kind: '그 묘목은 보낼 수 없어요'},
-    mgrH: '매니저', mgrName: '도담', mgrJob: '창고가 가득 차면 대신 팔고, 레벨이 오르면 심고 사 줘요', mgrLockedBtn: '창고 레벨 6',
-    mgrLocked: '창고 레벨 6이 되면 도담을 고용할 수 있어요.', mgrLevel: (l, m) => `레벨 ${l} / ${m}`,
-    bargainW: ['제값보다 조금 싸게', '제값에', '제값보다 비싸게'], bargainHire: b => `고용하면 흥정 실력 ${b}`,
-    bargainUp: (b, l) => `흥정 실력 ${b} · 레벨 ${l}에 한 단계 올라요`, bargainTop: b => `흥정 실력 ${b} · 가장 높은 단계예요`,
+    mgrH: '매니저', mgrName: '도담', mgrJob: r => `창고가 가득 차면 대신 팔아요(제값의 ${r}%)`, mgrLockedBtn: '창고 레벨 6',
+    mgrLocked: '창고 레벨 6이 되면 도담을 고용할 수 있어요.', mgrLevel: (l, m, r) => `레벨 ${l} / ${m} · 판매율 ${r}%`,
     modesH: '도담 모드', modeAt: l => `레벨 ${l}에 열려요`, since: d => `고른 뒤 +${d}`, sincePct: d => `고른 뒤 +${d}%`,
     modes: {cheap: ['알뜰 도담', '가장 싼 것부터 차근차근 사요'],
       dex: ['수집가 도담', '안 심어 본 나무부터 심어 도감을 채워요'],
@@ -1602,9 +1598,8 @@
       return [head, op];
     });
   }
-  // 1.16 도담 모드(맥 Orchard.Manager.Plan 순서)와 흥정 별(FULL_STEP: 제값 단계, 맥 Balance.Manager.bargainSteps)
-  const MODES = ['cheap', 'dex', 'crew', 'rich', 'garden', 'barista', 'land'], FULL_STEP = 3;
-  const bargain = M => '★'.repeat(M.bargain + 1) + '☆'.repeat(Math.max(0, M.bargains - M.bargain - 1)) + ' · ' + T.bargainW[Math.sign(M.bargain - FULL_STEP) + 1];
+  // 1.16 도담 모드(맥 Orchard.Manager.Plan 순서)
+  const MODES = ['cheap', 'dex', 'crew', 'rich', 'garden', 'barista', 'land'];
   function modeLine(p, now, base) { // 맥 Orchard.modeLine 과 같은 문구
     base = base ?? now;
     const d = Math.round(now - base), plus = d > 0 ? ' · ' + T.since(d) : '', L = T.modeLine;
@@ -1625,8 +1620,8 @@
       ready.then(() => index && index['manager-idle'] && show(e, 'manager-idle', {clip: Motion.clip('idle', frames('manager-idle')), offset: rnd(0, 3), lit: true, center: false}));
       if (!M.level) who.style.opacity = .35;
       const info = el('div'), acts = el('div', 'acts'), why = el('span', 'why');
-      info.append(el('b', 'px', T.mgrName), el('div', 'sub num', M.locked ? T.mgrLocked : M.level ? T.mgrLevel(M.level, M.max) : T.none), el('div', 'sub', T.mgrJob));
-      if (M.bargain != null && !M.locked) info.append(el('div', 'sub', !M.level ? T.bargainHire(bargain(M)) : M.bargainUp ? T.bargainUp(bargain(M), M.bargainUp) : T.bargainTop(bargain(M))));
+      const pct = Math.round(M.rate * 100);
+      info.append(el('b', 'px', T.mgrName), el('div', 'sub num', M.locked ? T.mgrLocked : M.level ? T.mgrLevel(M.level, M.max, pct) : T.none), el('div', 'sub', T.mgrJob(pct)));
       if (M.sold) info.append(el('div', 'sub num', T.mgrSold(fmt(M.sold))));
       const up = buy('', '', b => send({action: 'mgr_hire'}, b)); acts.append(up);
       setBuy(up, why, M.level ? T.upBtn : T.hireBtn, M.cost ?? null, M.locked ? T.mgrLockedBtn : T.maxed);

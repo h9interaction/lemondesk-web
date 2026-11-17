@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.15.5</title>
-      <pubDate>Tue, 17 Nov 2026 07:13:51 GMT</pubDate>
-      <sparkle:version>29</sparkle:version>
-      <sparkle:shortVersionString>1.15.5</sparkle:shortVersionString>
+      <title>1.16.0</title>
+      <pubDate>Tue, 17 Nov 2026 12:15:02 GMT</pubDate>
+      <sparkle:version>30</sparkle:version>
+      <sparkle:shortVersionString>1.16.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>자동 업데이트를 꺼 두어도 새 버전이 나오면 알려 줘요. 관리 창 맨 위 카드와 메뉴바 메뉴에서 &#x27;새로운 기능&#x27;을 보거나 &#x27;설치 후 다시 켜기&#x27;를 한 번 눌러 바로 업데이트해요(자동 업데이트 설정은 그대로)</li><li>메뉴바 메뉴에 &#x27;업데이트 확인…&#x27;이 생겼어요. 새 버전이 있으면 메뉴바 레몬 옆에 반짝이가 붙어요</li></ul><ul><li>Even with automatic updates off, Lemon Desk now tells you when a new version is out. From the card at the top of the window or the menu bar menu, see What&#x27;s New or click Install and Relaunch once (your auto-update setting stays as it is)</li><li>The menu bar menu now has Check for Updates…, and a sparkle appears next to the lemon when a new version is available</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.5/LemonDesk-1.15.5.dmg" type="application/octet-stream" sparkle:edSignature="id4pWyzfmJixe7akordg/AhEfUR/3Pe4j7n3oGcuNh/5TpmjTDXawAFGq4F+S0gCxqA3+KpzoJIWBk9cSSTgCQ==" length="18624603"/>
+      <description><![CDATA[<ul><li>도담에게 모드가 생겼어요. 알뜰·수집가·반장·사장님·정원사·바리스타·개척자 도담 중 하나를 고르면, 그 목표에 맞게 알아서 심고 사요. 모드는 도담 레벨이 오르면 하나씩 열려요</li><li>고른 모드가 무엇을 키우고 있는지 관리 창과 메뉴바에서 바로 보여요. 띠의 도담 머리 위에도 모드 표시가 붙어요</li><li>도담의 흥정 실력이 레벨과 함께 늘어요. 높은 레벨이 되면 제값보다 비싸게 팔기도 해요</li></ul><ul><li>Dodam now has modes. Pick Thrifty, Collector, Foreman, Boss, Gardener, Barista, or Pioneer Dodam, and Dodam plants and buys toward that goal. New modes open as Dodam levels up</li><li>The manage window and menu bar show what your chosen mode is growing, and Dodam wears a mode badge on the strip</li><li>Dodam&#x27;s bargaining improves with level. At high levels Dodam can even sell above the regular price</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.16.0/LemonDesk-1.16.0.dmg" type="application/octet-stream" sparkle:edSignature="l2iwTRVPT9GBeRtNHEJeW/Q1iCX35UZTuOQt2YTLUsIRccEx/xYejFD+xSQedk5J+B3euIFyWJdg6MIIGwg8AA==" length="18749803"/>
     </item>
   </channel>
 </rss>

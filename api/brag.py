@@ -30,6 +30,7 @@
               (PORT, IX_DATA_DIR 은 인프라가 넣어 준다)
 관리: python3 brag.py admin list|hide ID|unhide ID|delete ID|clear-name 과수원 이름
 """
+import base64
 import hashlib
 import hmac
 import json
@@ -71,7 +72,9 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
           # 1.14 이웃 찾기·요청(소유 키당), 예약 명령 받아 가기(기기당)
           "discover": (120, 3600), "neighbor_request": (60, 3600), "queue": (600, 3600),
           # 1.15.1 기기 연동: 소유 키당(올리기 10초 몰아서 + 멈춘 기기 1분마다 확인), 코드 넣기는 IP 당
-          "sync": (1200, 3600), "sync_redeem": (20, 3600)}
+          "sync": (1200, 3600), "sync_redeem": (20, 3600),
+          # 1.15.2 버그 신고: 표는 소유 키당, 올리기는 IP 당(하루 개수는 소유 키당 BUG_PER_DAY 로 따로 센다)
+          "bug_ticket": (10, 3600), "bug": (10, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -263,6 +266,14 @@ SAPLING_RANGE = 2            # 묘목: 후배 best 다음 두 종류(해금 순�
 # 기기 연동(1.15.1, docs/research/sync-1.15.1.md 확정 절). 앱 Balance.Sync 와 같다
 SYNC_MAX = 262_144           # maxBundle: sync/… 본문 상한(다른 API 는 MAX_BODY)
 SYNC_CODE_TTL = 600          # codeTTL: 다른 기기 추가 코드(한 번만)
+# 1.15.2 버그 신고(대표 요청 2026-11-17): 앱이 받은 일회용 표로만 쓴다(게임을 최근에 켠 사람만). 운영자만 본다.
+BUG_TICKET_TTL = 3600        # 표 하나 = 신고 하나, 1시간
+BUG_ACTIVE_DAYS = 14         # 서리 맞추기(farms.seen)가 이 안에 있어야 '활성 사용자'
+BUG_PER_DAY = 5              # 소유 키당 하루 신고 수
+BUG_TEXT = (5, 2000)         # 글 길이(자)
+BUG_IMAGES, BUG_IMAGE_MAX = 3, 1_500_000   # 이미지 수, 한 장 바이트(브라우저가 줄여 올린다)
+BUG_MAX = 6 * 1024 * 1024    # 올리기 본문 상한(base64 라 이미지보다 크다)
+BUG_KEEP_DAYS = 180
 SYNC_SKEW = 600              # clockSkew: 저장 시각(at)이 서버 시각보다 이만큼 넘게 미래면 bad_clock
 SYNC_PLATFORMS = {"mac", "windows"}
 SYNC_LABELS = {"laptop", "desktop"}
@@ -727,6 +738,12 @@ class Board:
             CREATE TABLE IF NOT EXISTS sync_devices(owner TEXT NOT NULL, device TEXT NOT NULL, platform TEXT NOT NULL, label TEXT NOT NULL,
                 added REAL NOT NULL, seen REAL NOT NULL, revoked INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(owner, device));
             CREATE TABLE IF NOT EXISTS sync_codes(code TEXT PRIMARY KEY, owner TEXT NOT NULL, key TEXT NOT NULL, expires REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS bug_tickets(ticket TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, os TEXT NOT NULL,
+                platform TEXT NOT NULL, expires REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS bugs(id TEXT PRIMARY KEY, owner TEXT NOT NULL, created REAL NOT NULL, app TEXT NOT NULL,
+                os TEXT NOT NULL, platform TEXT NOT NULL, text TEXT NOT NULL, images INTEGER NOT NULL, done INTEGER NOT NULL DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS bug_images(bug TEXT NOT NULL, n INTEGER NOT NULL, mime TEXT NOT NULL, data BLOB NOT NULL,
+                PRIMARY KEY(bug, n));
         """)
         # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
         # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by). 1.12: 내 과수원 이름
@@ -905,6 +922,7 @@ class Board:
             self.db.execute("DELETE FROM blocks WHERE owner=? OR other=?", (owner, owner))
             self.db.execute("DELETE FROM relay_link WHERE owner=?", (owner,))
             self._drop_sync(owner)  # 1.15.1 기기 연동
+            self._drop_bugs(owner)  # 1.15.2 버그 신고
             self.db.commit()
         return n
 
@@ -1104,6 +1122,10 @@ class Board:
                 nw = self.db.execute("SELECT COUNT(*) FROM participants WHERE first_day=?", (d,)).fetchone()[0]
                 self.db.execute("INSERT INTO daily VALUES(?,?,?,?,?,?)", (d, a, nw, m or 0, o or 0, sl or 0))
             self.db.execute("DELETE FROM pings WHERE day < ?", (stats_cut,))
+            # 1.15.2 버그 신고: 지난 표, 180일 지난 신고와 이미지
+            self.db.execute("DELETE FROM bug_tickets WHERE expires<=?", (t,))
+            self.db.execute("DELETE FROM bug_images WHERE bug IN (SELECT id FROM bugs WHERE created<?)", (t - BUG_KEEP_DAYS * 86400,))
+            self.db.execute("DELETE FROM bugs WHERE created<?", (t - BUG_KEEP_DAYS * 86400,))
             # 서리: 8주 소식 없는 설치와 8주 지난 기록
             self.db.execute("DELETE FROM farms WHERE seen < ?", (t - KEEP_WEEKS * WEEK,))
             self.db.execute("DELETE FROM raids WHERE end < ?", (t - KEEP_WEEKS * WEEK,))
@@ -1940,6 +1962,106 @@ class Board:
         self.db.commit()
         return {}
 
+    # 버그 신고(1.15.2)
+
+    @locked
+    def bug_ticket(self, owner_key, body, now):
+        """앱이 '버그 신고…'를 누르면: 최근에 게임을 켠 과수원에만 1시간짜리 일회용 표를 준다(웹페이지는 누가 쓰는지 모르므로)."""
+        me = self.owner(owner_key)
+        self.limit("bug_ticket", me, now)
+        t = now.timestamp()
+        seen = self.db.execute("SELECT seen FROM farms WHERE owner=?", (me,)).fetchone()
+        if not seen or seen[0] < t - BUG_ACTIVE_DAYS * 86400:
+            raise BadRequest("inactive")
+        b = body if isinstance(body, dict) else {}
+        app = b.get("app") if isinstance(b.get("app"), str) and re.fullmatch(r"\d{1,2}\.\d{1,2}(\.\d{1,2})?", b.get("app")) else "?"
+        osv = b.get("os") if isinstance(b.get("os"), str) else ""
+        osv = re.sub(r"[^\w .()-]", "", osv)[:40] or "?"
+        platform = b.get("platform") if b.get("platform") in ("mac", "windows") else "mac"
+        ticket = secrets.token_hex(16)
+        self.db.execute("DELETE FROM bug_tickets WHERE expires<=?", (t,))
+        self.db.execute("INSERT INTO bug_tickets VALUES(?,?,?,?,?,?)", (sha(ticket), me, app, osv, platform, t + BUG_TICKET_TTL))
+        self.db.commit()
+        return {"ticket": ticket, "expires": int(t + BUG_TICKET_TTL)}
+
+    def _ticket(self, ticket, now):
+        if not isinstance(ticket, str) or not re.fullmatch(r"[0-9a-f]{32}", ticket):
+            raise BadRequest("bad_ticket")
+        r = self.db.execute("SELECT owner, app, os, platform, expires FROM bug_tickets WHERE ticket=?", (sha(ticket),)).fetchone()
+        if not r or r[4] <= now.timestamp():
+            raise BadRequest("bad_ticket")
+        return r
+
+    @locked
+    def bug_check(self, ticket, now):
+        """게시판 페이지가 글을 쓰기 전에 표가 살아 있는지 본다."""
+        r = self._ticket(ticket, now)
+        return {"ok": True, "expires": int(r[4]), "app": r[1], "platform": r[3]}
+
+    @locked
+    def bug_create(self, body, ip, now):
+        """글(5~2000자)과 이미지(최대 3장, JPEG·PNG, data URL)를 받는다. 표는 한 번 쓰면 지운다."""
+        self.limit("bug", self.ip(ip), now)
+        b = body if isinstance(body, dict) else {}
+        owner, app, osv, platform, _ = self._ticket(b.get("ticket"), now)
+        t = now.timestamp()
+        if self.db.execute("SELECT COUNT(*) FROM bugs WHERE owner=? AND created>?", (owner, t - 86400)).fetchone()[0] >= BUG_PER_DAY:
+            raise RateLimited()
+        text = b.get("text") if isinstance(b.get("text"), str) else ""
+        text = re.sub(r"[\x00-\x08\x0b-\x1f\x7f]", "", text).strip()
+        if not BUG_TEXT[0] <= len(text) <= BUG_TEXT[1]:
+            raise BadRequest("bad_text")
+        raw = b.get("images") or []
+        if not isinstance(raw, list) or len(raw) > BUG_IMAGES:
+            raise BadRequest("bad_image")
+        images = []
+        for u in raw:
+            m = re.fullmatch(r"data:(image/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)", u) if isinstance(u, str) else None
+            if not m:
+                raise BadRequest("bad_image")
+            try:
+                data = base64.b64decode(m.group(2), validate=True)
+            except ValueError:
+                raise BadRequest("bad_image")
+            magic = data[:3] == b"\xff\xd8\xff" if m.group(1) == "image/jpeg" else data[:8] == b"\x89PNG\r\n\x1a\n"
+            if not magic or len(data) > BUG_IMAGE_MAX:
+                raise BadRequest("bad_image")
+            images.append((m.group(1), data))
+        bid = secrets.token_hex(6)
+        self.db.execute("DELETE FROM bug_tickets WHERE ticket=?", (sha(b["ticket"]),))
+        self.db.execute("INSERT INTO bugs(id, owner, created, app, os, platform, text, images) VALUES(?,?,?,?,?,?,?,?)",
+                        (bid, owner, t, app, osv, platform, text, len(images)))
+        for n, (mime, data) in enumerate(images):
+            self.db.execute("INSERT INTO bug_images VALUES(?,?,?,?)", (bid, n, mime, sqlite3.Binary(data)))
+        self.db.commit()
+        return {"id": bid}
+
+    @locked
+    def bug_list(self, limit=100):
+        """운영자용(통계 토큰). 소유 키 해시 앞 8자로 같은 사람의 신고를 묶어 볼 수 있다."""
+        rows = self.db.execute("SELECT id, owner, created, app, os, platform, text, images, done FROM bugs ORDER BY created DESC LIMIT ?",
+                               (limit,)).fetchall()
+        return {"bugs": [{"id": r[0], "who": r[1][:8], "created": int(r[2]), "app": r[3], "os": r[4], "platform": r[5],
+                          "text": r[6], "images": r[7], "done": bool(r[8])} for r in rows]}
+
+    @locked
+    def bug_image(self, bid, n):
+        r = self.db.execute("SELECT mime, data FROM bug_images WHERE bug=? AND n=?", (bid, n)).fetchone()
+        if not r:
+            raise KeyError(bid)
+        return r[0], bytes(r[1])
+
+    @locked
+    def bug_done(self, bid, done=True):
+        self.db.execute("UPDATE bugs SET done=? WHERE id=?", (1 if done else 0, bid))
+        self.db.commit()
+        return {}
+
+    def _drop_bugs(self, owner):
+        self.db.execute("DELETE FROM bug_images WHERE bug IN (SELECT id FROM bugs WHERE owner=?)", (owner,))
+        self.db.execute("DELETE FROM bugs WHERE owner=?", (owner,))
+        self.db.execute("DELETE FROM bug_tickets WHERE owner=?", (owner,))
+
     def _snap(self, week, kind, rank, p):
         owner = self.db.execute("SELECT owner FROM posts WHERE id=?", (p["id"],)).fetchone()[0]
         self.db.execute("INSERT OR REPLACE INTO highlights VALUES(?,?,?,?,?,?)",
@@ -2413,6 +2535,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                     return self.neighbors(method, parts[1:], q, owner, now)
                 if parts[:1] == ["sync"]:
                     return self.sync(method, parts[1:], q, owner, now)
+                if parts[:1] == ["bugs"]:
+                    return self.bugs(method, parts[1:], q, owner, now)
                 if method == "GET" and parts == ["me"]:
                     return self.send(200, board.me(owner, now))
                 if method == "DELETE" and parts == ["me", "posts"]:  # 1.11.1 게시물만
@@ -2432,6 +2556,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                                   "pending": 409, "cooldown": 409, "closed": 409,
                                   # 기기 연동(1.15.1, bad_clock 은 422)
                                   "not_holder": 409, "stale": 409, "old_schema": 409, "revoked": 409, "self": 409, "off": 404,
+                                  # 버그 신고(1.15.2, bad_text·bad_image 는 422)
+                                  "inactive": 403, "bad_ticket": 409, "forbidden": 403,
                                   }.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
@@ -2495,6 +2621,33 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, board.neighbor_carry(owner, parts[0], self.body(), now))
             if method == "POST" and parts == ["name"]:
                 return self.send(200, board.neighbor_name(owner, self.body(), now))
+            return self.send(404, {"error": "not_found"})
+
+        def bugs(self, method, parts, q, owner, now):  # 1.15.2 버그 신고
+            if method == "POST" and parts == ["ticket"]:
+                return self.send(200, board.bug_ticket(owner, self.body(), now))
+            if method == "GET" and parts == ["ticket"]:
+                return self.send(200, board.bug_check(q.get("t"), now))
+            if method == "POST" and parts == []:
+                return self.send(200, board.bug_create(self.body(BUG_MAX), self.client_ip(), now))
+            # 아래는 운영자만(통계 토큰)
+            auth = self.headers.get("Authorization") or ""
+            if not STATS_TOKEN or not hmac.compare_digest(auth.encode(), ("Bearer " + STATS_TOKEN).encode()):
+                raise BadRequest("forbidden")
+            if method == "GET" and parts == []:
+                return self.send(200, board.bug_list())
+            if method == "GET" and len(parts) == 2 and parts[1].isdigit():
+                mime, data = board.bug_image(parts[0], int(parts[1]))
+                self.send_response(200)
+                self.cors()
+                self.send_header("Content-Type", mime)
+                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Cache-Control", "private, no-store")
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            if method == "POST" and len(parts) == 2 and parts[1] == "done":
+                return self.send(200, board.bug_done(parts[0], bool(self.body().get("done", True))))
             return self.send(404, {"error": "not_found"})
 
         def sync(self, method, parts, q, owner, now):  # 1.15.1 기기 연동: 본문은 SYNC_MAX 까지

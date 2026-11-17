@@ -43,6 +43,13 @@
   @media (prefers-color-scheme: dark) { .err { color: #F2B8B5; } }
   .tiles.five { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 12px; }
   @media (max-width: 760px) { .tiles, .tiles.five, .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  /* 버그 신고(1.15.2, 운영자만) */
+  .bug { border: 1px solid var(--line, #ddd); border-radius: 12px; padding: 14px; margin-top: 12px; }
+  .bug.done { opacity: .55; }
+  .bug header { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 13px; }
+  .bug p { white-space: pre-wrap; margin: 8px 0 0; }
+  .bug .imgs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .bug .imgs img { max-width: 220px; max-height: 160px; border-radius: 8px; cursor: zoom-in; }
 </style>
 </head>
 <body>
@@ -81,6 +88,9 @@
     <h2>분포</h2>
     <div class="grid2" id="dist"></div>
     <p class="note" id="foot"></p>
+    <h2>버그 신고 (최근 100개, 180일 보관)</h2>
+    <p class="note">앱의 설정 › 버그 신고… 로 연 사람만 쓸 수 있어요. '누구'는 소유 키 해시 앞 8자예요(같은 사람의 신고 묶어 보기).</p>
+    <div id="bugs"></div>
   </div>
 </div>
 <script>
@@ -214,9 +224,43 @@
       if (r.status === 403) throw new Error('토큰이 맞지 않아요.');
       if (!r.ok) throw new Error('불러오지 못했어요. (' + r.status + ')');
       render(await r.json());
+      loadBugs(token).catch(() => { $('bugs').textContent = '버그 신고를 불러오지 못했어요.'; });
       $('status').textContent = '';
     } catch (e) {
       $('status').textContent = e.message || '불러오지 못했어요.'; $('status').className = 'err';
+    }
+  }
+  // 버그 신고: 이미지도 토큰이 있어야 받으므로 fetch 로 받아 blob 주소로 보여 준다
+  const BUGS = local ? '/lemondesk/api/bugs' : 'https://lemondesk-api.interaction.hnine.com/api/bugs';
+  async function loadBugs(token) {
+    const auth = {headers: {Authorization: 'Bearer ' + token}};
+    const r = await fetch(BUGS, auth);
+    if (!r.ok) throw new Error(r.status);
+    const box = $('bugs'); box.textContent = '';
+    const {bugs} = await r.json();
+    if (!bugs.length) { box.append(el('p', 'muted', '아직 신고가 없어요.')); return; }
+    for (const b of bugs) {
+      const a = el('article', 'bug' + (b.done ? ' done' : ''));
+      const h = el('header');
+      h.append(el('b', null, new Date(b.created * 1000).toLocaleString('ko')), el('span', 'muted', `${b.platform} · ${b.app} · ${b.os} · 누구 ${b.who}`));
+      const done = el('button', null, b.done ? '다시 열기' : '처리함'); done.type = 'button';
+      done.onclick = async () => {
+        await fetch(`${BUGS}/${b.id}/done`, {method: 'POST', headers: {...auth.headers, 'Content-Type': 'application/json'}, body: JSON.stringify({done: !b.done})});
+        b.done = !b.done; a.classList.toggle('done', b.done); done.textContent = b.done ? '다시 열기' : '처리함';
+      };
+      h.append(done);
+      a.append(h, el('p', null, b.text));
+      if (b.images) {
+        const imgs = el('div', 'imgs');
+        for (let i = 0; i < b.images; i++) {
+          const img = el('img'); img.alt = `스크린샷 ${i + 1}`; imgs.append(img);
+          fetch(`${BUGS}/${b.id}/${i}`, auth).then(x => x.blob()).then(blob => {
+            const u = URL.createObjectURL(blob); img.src = u; img.onclick = () => open(u, '_blank');
+          });
+        }
+        a.append(imgs);
+      }
+      box.append(a);
     }
   }
   $('auth').onsubmit = e => { e.preventDefault(); localStorage.setItem('ld-stats-token', $('token').value.trim()); load(); };

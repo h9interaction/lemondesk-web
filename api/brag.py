@@ -19,6 +19,9 @@
   기기에 이어 두면 잠든 동안 이웃 명령을 서버가 처리하고 내 쪽 변화를 relay_effects 에 쌓는다).
 - 1.15(docs/research/manager-1.15.md): 폰 명령 mgr_hire·mgr_set·stand_up·make·fill, 이웃 찾기 sort=mentor(선배·후배가 될 곳),
   사용 통계 mg·pv·ms(매니저 레벨·폰으로 보기·매니저 판매 수)와 /stats 의 판매 분포·나무 종류 분포·서리 진단(새로 저장하는 것 없음).
+- 기기 연동(1.15.1, docs/research/sync-1.15.1.md, sync/…): 켠 소유 키만 과수원 저장 사본(bundle)·홀더 기기·기기 목록(기기 키 해시,
+  mac·windows, laptop·desktop, 마지막 접속)을 저장한다. 진행하는 기기(홀더)는 하나, 다른 기기는 take 로 이어받는다.
+  사용 통계 sync(off·on·holder).
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -66,7 +69,9 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
           "neighbors": (120, 3600), "neighbor_code": (10, 3600), "neighbor_add": (20, 3600), "neighbor_add_ip": (30, 3600),
           "neighbor_send": (60, 3600), "neighbor_name": (10, 3600),
           # 1.14 이웃 찾기·요청(소유 키당), 예약 명령 받아 가기(기기당)
-          "discover": (120, 3600), "neighbor_request": (60, 3600), "queue": (600, 3600)}
+          "discover": (120, 3600), "neighbor_request": (60, 3600), "queue": (600, 3600),
+          # 1.15.1 기기 연동: 소유 키당(올리기 10초 몰아서 + 멈춘 기기 1분마다 확인), 코드 넣기는 IP 당
+          "sync": (1200, 3600), "sync_redeem": (20, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -255,6 +260,14 @@ UNLOCK = {"eureka": 0, "kumquat": 60, "meyer": 150, "calamansi": 450, "lime": 1_
           "pomelo": 22_000_000, "golden": 42_000_000, "rainbow": 42_000_000}
 COLLECTIBLE = [k for k, _ in FRUITS if k != "rainbow"]  # 해금 순서(앱 TreeKind 순서)
 SAPLING_RANGE = 2            # 묘목: 후배 best 다음 두 종류(해금 순서) 안
+# 기기 연동(1.15.1, docs/research/sync-1.15.1.md 확정 절). 앱 Balance.Sync 와 같다
+SYNC_MAX = 262_144           # maxBundle: sync/… 본문 상한(다른 API 는 MAX_BODY)
+SYNC_CODE_TTL = 600          # codeTTL: 다른 기기 추가 코드(한 번만)
+SYNC_SKEW = 600              # clockSkew: 저장 시각(at)이 서버 시각보다 이만큼 넘게 미래면 bad_clock
+SYNC_PLATFORMS = {"mac", "windows"}
+SYNC_LABELS = {"laptop", "desktop"}
+SYNC_TARGET = re.compile(r"[0-9a-f]{8}")  # 기기 목록 id = sha256(device) 앞 8자
+SYNC_STATES = re.compile(r"(off|on|holder)?")  # 통계 ping 의 sync(옛 앱은 안 보낸다)
 
 
 def _twin(k):
@@ -526,7 +539,37 @@ def clean_ping(b, now):
             # 1.11: 이웃 수, 최근 7일 안에 서리당했는지(0/1). 옛 앱은 안 보내므로 0
             "nb": _int(b.get("nb", 0), 0, MAX_NEIGHBORS), "rb": _int(b.get("rb", 0), 0, 1),
             # 1.15: 매니저 레벨, 폰으로 보기 켬(0/1), 그날 매니저가 판 횟수. 옛 앱은 안 보내므로 0
-            "mg": _int(b.get("mg", 0), 0, 20), "pv": _int(b.get("pv", 0), 0, 1), "ms": _int(b.get("ms", 0), 0, 100000)}
+            "mg": _int(b.get("mg", 0), 0, 20), "pv": _int(b.get("pv", 0), 0, 1), "ms": _int(b.get("ms", 0), 0, 100000),
+            # 1.15.1: 기기 연동 끔·켬(멈춤)·홀더. 옛 앱은 안 보내므로 ''
+            "sync": _match(b.get("sync", ""), SYNC_STATES)}
+
+
+def clean_sync(b, now, *fields):
+    """기기 연동 본문(확정 절 '검사'). device 는 sha256 으로, bundle 은 저장할 JSON 문자열로 바꿔 돌려준다."""
+    if not isinstance(b, dict):
+        raise BadRequest()
+    out = {"device": sha(_match(b.get("device"), KEY))}
+    for f in fields:
+        v = b.get(f)
+        if f == "platform" and v not in SYNC_PLATFORMS or f == "label" and v not in SYNC_LABELS:
+            raise BadRequest()
+        if f == "schema":
+            v = _int(v, 1, 99)
+        if f == "rev":
+            v = _int(v, 0, 2 ** 53)
+        if f == "at":
+            if isinstance(v, bool) or not isinstance(v, (int, float)) or not v >= 0:  # NaN 도 거른다
+                raise BadRequest()
+            if v > now.timestamp() + SYNC_SKEW:
+                raise BadRequest("bad_clock")
+        if f == "bundle":
+            save = v.get("save") if isinstance(v, dict) else None
+            if not (isinstance(save, dict) and isinstance(save.get("payload"), str) and isinstance(save.get("sig"), str)
+                    and isinstance(v.get("prefs"), dict)):
+                raise BadRequest()
+            v = json.dumps(v, ensure_ascii=False, separators=(",", ":"))
+        out[f] = v
+    return out
 
 
 def clean_install(b):
@@ -677,6 +720,13 @@ class Board:
             CREATE TABLE IF NOT EXISTS relay_link(device TEXT PRIMARY KEY, owner TEXT NOT NULL, created REAL NOT NULL);
             CREATE TABLE IF NOT EXISTS relay_effects(device TEXT NOT NULL, id TEXT NOT NULL, kind TEXT NOT NULL, body TEXT NOT NULL,
                 at REAL NOT NULL, PRIMARY KEY(device, id));
+            -- 1.15.1 기기 연동: 과수원 사본(bundle JSON)·홀더 기기 해시, 기기 목록, 다른 기기 추가 코드.
+            -- 코드 행의 key 만 소유 키 원문이다(redeem 이 새 기기에 돌려줘야 한다). 쓰면 바로, 안 쓰면 10분 뒤 지운다.
+            CREATE TABLE IF NOT EXISTS sync(owner TEXT PRIMARY KEY, bundle TEXT NOT NULL, rev INTEGER NOT NULL, holder TEXT NOT NULL,
+                schema INTEGER NOT NULL, at REAL NOT NULL, updated REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS sync_devices(owner TEXT NOT NULL, device TEXT NOT NULL, platform TEXT NOT NULL, label TEXT NOT NULL,
+                added REAL NOT NULL, seen REAL NOT NULL, revoked INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(owner, device));
+            CREATE TABLE IF NOT EXISTS sync_codes(code TEXT PRIMARY KEY, owner TEXT NOT NULL, key TEXT NOT NULL, expires REAL NOT NULL);
         """)
         # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
         # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by). 1.12: 내 과수원 이름
@@ -693,7 +743,9 @@ class Board:
                                  ("farms", "listed", "INTEGER NOT NULL DEFAULT 1"), ("farms", "asks", "INTEGER NOT NULL DEFAULT 1"),
                                  # 1.15 통계: 매니저 레벨·폰으로 보기·매니저 판매 수
                                  ("pings", "mg", "INTEGER NOT NULL DEFAULT 0"), ("pings", "pv", "INTEGER NOT NULL DEFAULT 0"),
-                                 ("pings", "ms", "INTEGER NOT NULL DEFAULT 0")):
+                                 ("pings", "ms", "INTEGER NOT NULL DEFAULT 0"),
+                                 # 1.15.1 통계: 기기 연동(off·on·holder, 옛 앱은 '')
+                                 ("pings", "sync", "TEXT NOT NULL DEFAULT ''")):
             if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
                 self.db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
         self.db.execute("CREATE INDEX IF NOT EXISTS raids_beneficiary ON raids(beneficiary, end)")
@@ -852,6 +904,7 @@ class Board:
             self.db.execute("DELETE FROM requests WHERE sender=? OR receiver=?", (owner, owner))
             self.db.execute("DELETE FROM blocks WHERE owner=? OR other=?", (owner, owner))
             self.db.execute("DELETE FROM relay_link WHERE owner=?", (owner,))
+            self._drop_sync(owner)  # 1.15.1 기기 연동
             self.db.commit()
         return n
 
@@ -873,14 +926,15 @@ class Board:
         inst = sha(p["install"])
         self.db.execute("INSERT INTO participants VALUES(?,?) "
                         "ON CONFLICT(install) DO UPDATE SET first_day = min(first_day, excluded.first_day)", (inst, p["day"]))
-        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform, nb, rb, mg, pv, ms) "
-                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
+        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform, nb, rb, mg, pv, ms, sync) "
+                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
+                        "sync=CASE WHEN excluded.sync<>'' THEN excluded.sync ELSE sync END, "
                         "version=excluded.version, os=excluded.os, lang=excluded.lang, arch=excluded.arch, platform=excluded.platform, "
                         "minutes=max(minutes, excluded.minutes), opens=max(opens, excluded.opens), "
                         "sales=max(sales, excluded.sales), kinds=excluded.kinds, received=excluded.received, "
                         "nb=max(nb, excluded.nb), rb=max(rb, excluded.rb), mg=max(mg, excluded.mg), pv=max(pv, excluded.pv), ms=max(ms, excluded.ms)",
                         (inst, p["day"], p["version"], p["os"], p["lang"], p["arch"], p["minutes"], p["opens"],
-                         p["sales"], p["kinds"], now.timestamp(), p["platform"], p["nb"], p["rb"], p["mg"], p["pv"], p["ms"]))
+                         p["sales"], p["kinds"], now.timestamp(), p["platform"], p["nb"], p["rb"], p["mg"], p["pv"], p["ms"], p["sync"]))
         self.db.commit()
 
     @locked
@@ -951,6 +1005,8 @@ class Board:
             rows.setdefault(d, {"day": d, "installs": 0, "active": 0, "new": 0, "avg_minutes": 0, "opens": 0, "sales": 0})["new"] = nw
         for d, n in self.db.execute("SELECT day, SUM(n) FROM install_counts WHERE day >= ? GROUP BY day", (start,)):
             rows.setdefault(d, {"day": d, "installs": 0, "active": 0, "new": 0, "avg_minutes": 0, "opens": 0, "sales": 0})["installs"] = n
+        for d, sy, c in self.db.execute("SELECT day, sync, COUNT(*) FROM pings WHERE day >= ? AND sync <> '' GROUP BY day, sync", (start,)):
+            rows[d].setdefault("sync", {"off": 0, "on": 0, "holder": 0})[sy] = c  # 1.15.1 기기 연동(날짜별 설치 수)
         week = self.week(now)
         board = {"posts_this_week": one("SELECT COUNT(*) FROM posts WHERE week = ? AND hidden = 0", week),
                  "stars_this_week": one("SELECT COUNT(*) FROM stars s JOIN posts p ON p.id = s.post WHERE p.week = ?", week)}
@@ -1060,6 +1116,7 @@ class Board:
             self.db.execute("DELETE FROM requests WHERE created < ? OR sender NOT IN (SELECT owner FROM farms) "
                             "OR receiver NOT IN (SELECT owner FROM farms)", (t - 2 * REQUEST_DAYS,))
             self.db.execute("DELETE FROM blocks WHERE owner NOT IN (SELECT owner FROM farms) OR other NOT IN (SELECT owner FROM farms)")
+            self.db.execute("DELETE FROM sync_codes WHERE expires <= ?", (t,))  # 1.15.1: 소유 키 원문이 든 코드는 10분만
             self.db.commit()
 
     # 서리 (1.8). 한 사람(raider)은 당한 쪽 응답 어디에도 넣지 않는다.
@@ -1180,11 +1237,15 @@ class Board:
         }
 
     @locked
-    def raid_status(self, owner_key, body, ip, now):
+    def raid_status(self, owner_key, body, ip, now, device=None):
         """창고 상태 알리기(앱이 켤 때·팔 때·관리 창을 열 때·20% 경계·30분마다, 일꾼이 나가 있으면 1분마다).
         active: 주인이 방금 팔았거나 창을 열었다 → 지금 내 밭과 이웃 밭(1.11)에 있는 서리꾼이 들킨다.
         look(1.11): 과수원 모습. ack 에는 반영한 서리·돕기·선물·되찾은 것 id 를 함께 넣는다."""
         me = self.owner(owner_key)
+        if device is not None:  # 1.15.1: 연동을 켠 소유 키는 홀더 기기만(헤더 X-Sync-Device 가 없는 옛 앱은 그대로)
+            r = self.db.execute("SELECT holder FROM sync WHERE owner=?", (me,)).fetchone()
+            if r and r[0] != sha(device):
+                raise BadRequest("not_holder")
         farm = clean_farm(body)
         t = now.timestamp()
         self.limit("raid_status", me, now)
@@ -1720,6 +1781,165 @@ class Board:
             return {"ok": True, "end": int(end), "left": DISPATCH_SECONDS}
         return {"ok": True, "count": count} if kind == "basket" else {"ok": True}
 
+    # 기기 연동 (1.15.1, docs/research/sync-1.15.1.md 확정 절). owner·device 는 sha256 만 저장한다.
+    # 예외: sync_codes.key 는 소유 키 원문이다. redeem 은 소유 키 없이 코드만으로 새 기기에 소유 키를 돌려줘야 해서,
+    # 아직 쓰지 않은 코드 행에만 두고 쓰면 바로, 쓰지 않으면 10분 뒤(redeem·code 가 읽을 때와 maintain) 지운다.
+
+    def _sync_on(self, owner_key, body, now, *fields):
+        """공통: 키 확인 → 횟수 제한 → 본문 검사 → 켜져 있어야 한다(아니면 404 off). (me, 본문, (rev, holder, schema))"""
+        me = self.owner(owner_key)
+        self.limit("sync", me, now)
+        b = clean_sync(body, now, *fields)
+        row = self.db.execute("SELECT rev, holder, schema FROM sync WHERE owner=?", (me,)).fetchone()
+        if row is None:
+            raise BadRequest("off")
+        return me, b, row
+
+    def _sync_member(self, me, dev):
+        """목록에 없거나 끊긴 기기는 이어받지 못한다(코드를 다시 받아야 한다)"""
+        if not self.db.execute("SELECT 1 FROM sync_devices WHERE owner=? AND device=? AND revoked=0", (me, dev)).fetchone():
+            raise BadRequest("revoked")
+
+    def _sync_join(self, me, b, t):
+        """이 기기를 목록에 넣는다(끊겼던 기기도 켜기·코드로 다시 들어오면 되살린다)"""
+        self.db.execute("INSERT INTO sync_devices(owner, device, platform, label, added, seen) VALUES(?,?,?,?,?,?) "
+                        "ON CONFLICT(owner, device) DO UPDATE SET platform=excluded.platform, label=excluded.label, seen=excluded.seen, revoked=0",
+                        (me, b["device"], b["platform"], b["label"], t, t))
+
+    def _sync_seen(self, me, dev, t):
+        self.db.execute("UPDATE sync_devices SET seen=? WHERE owner=? AND device=?", (t, me, dev))
+
+    def _drop_sync(self, me):
+        for table in ("sync", "sync_devices", "sync_codes"):
+            self.db.execute("DELETE FROM %s WHERE owner=?" % table, (me,))
+
+    @locked
+    def sync_enable(self, owner_key, body, now):
+        """켜기: 지금 과수원을 올리고 이 기기가 홀더. 이미 켜져 있으면 덮어쓴다. 끊긴 기기는 못 켠다(끊은 뜻을 지킨다)."""
+        me = self.owner(owner_key)
+        self.limit("sync", me, now)
+        b = clean_sync(body, now, "platform", "label", "schema", "at", "bundle")
+        if self.db.execute("SELECT 1 FROM sync_devices WHERE owner=? AND device=? AND revoked=1", (me, b["device"])).fetchone():
+            raise BadRequest("revoked")
+        t = now.timestamp()
+        old = self.db.execute("SELECT rev FROM sync WHERE owner=?", (me,)).fetchone()
+        rev = (old[0] if old else 0) + 1
+        self.db.execute("INSERT OR REPLACE INTO sync VALUES(?,?,?,?,?,?,?)", (me, b["bundle"], rev, b["device"], b["schema"], b["at"], t))
+        self._sync_join(me, b, t)
+        self.db.commit()
+        return {"rev": rev}
+
+    @locked
+    def sync_status(self, owner_key, device, now):
+        me = self.owner(owner_key)
+        self.limit("sync", me, now)
+        dev = sha(_match(device, KEY))
+        row = self.db.execute("SELECT rev, holder, schema FROM sync WHERE owner=?", (me,)).fetchone()
+        if row is None:
+            return {"on": False}
+        self._sync_member(me, dev)
+        self._sync_seen(me, dev, now.timestamp())
+        self.db.commit()
+        rev, holder, schema = row
+        devices = self.db.execute("SELECT device, platform, label, seen FROM sync_devices WHERE owner=? AND revoked=0 ORDER BY added",
+                                  (me,)).fetchall()
+        hp, hl = next(((p, l) for d, p, l, _ in devices if d == holder), ("", ""))
+        return {"on": True, "rev": rev, "schema": schema, "holder": holder == dev, "holderPlatform": hp, "holderLabel": hl,
+                "devices": [{"id": d[:8], "platform": p, "label": l, "seen": int(s), "me": d == dev} for d, p, l, s in devices]}
+
+    @locked
+    def sync_put(self, owner_key, body, now):
+        """올리기(홀더만). rev 는 마지막으로 맞춘 서버 rev 여야 한다."""
+        me, b, (rev, holder, schema) = self._sync_on(owner_key, body, now, "rev", "schema", "at", "bundle")
+        if holder != b["device"]:
+            raise BadRequest("not_holder")
+        if b["schema"] < schema:  # 옛 앱이 모르는 필드를 지운 채 덮어쓰지 못하게
+            raise BadRequest("old_schema")
+        if b["rev"] != rev:
+            raise BadRequest("stale")
+        t = now.timestamp()
+        self.db.execute("UPDATE sync SET bundle=?, rev=?, schema=?, at=?, updated=? WHERE owner=?",
+                        (b["bundle"], rev + 1, b["schema"], b["at"], t, me))
+        self._sync_seen(me, b["device"], t)
+        self.db.commit()
+        return {"rev": rev + 1}
+
+    @locked
+    def sync_code(self, owner_key, body, now):
+        """다른 기기 추가 코드(홀더만, 10분, 한 번). 새 코드를 만들면 옛 코드는 지운다."""
+        me, b, (_, holder, _) = self._sync_on(owner_key, body, now)
+        if holder != b["device"]:
+            raise BadRequest("not_holder")
+        t = now.timestamp()
+        self.db.execute("DELETE FROM sync_codes WHERE owner=? OR expires<=?", (me, t))
+        code = ""
+        while not code or self.db.execute("SELECT 1 FROM sync_codes WHERE code=?", (code,)).fetchone():
+            code = "".join(secrets.choice(CODE_CHARS) for _ in range(CODE_LEN))
+        self.db.execute("INSERT INTO sync_codes VALUES(?,?,?,?)", (code, me, owner_key, t + SYNC_CODE_TTL))
+        self._sync_seen(me, b["device"], t)
+        self.db.commit()
+        return {"code": code, "expires": int(t + SYNC_CODE_TTL)}
+
+    @locked
+    def sync_redeem(self, body, ip, now):
+        """새 기기에서 코드 넣기(소유 키 없음): 소유 키 원문·사본을 받고 이 기기가 홀더. 플랫폼은 섞여도 된다(맥 ↔ 윈도우)."""
+        self.limit("sync_redeem", self.ip(ip), now)
+        b = clean_sync(body, now, "platform", "label", "schema")
+        code = body.get("code")
+        code = re.sub(r"[\s-]", "", code).upper() if isinstance(code, str) else ""
+        t = now.timestamp()
+        self.db.execute("DELETE FROM sync_codes WHERE expires<=?", (t,))
+        self.db.commit()
+        r = self.db.execute("SELECT c.owner, c.key, s.rev, s.schema, s.bundle FROM sync_codes c JOIN sync s ON s.owner = c.owner "
+                            "WHERE c.code=?", (code,)).fetchone()
+        if not r:
+            raise BadRequest("bad_code")
+        me, key, rev, schema, bundle = r
+        if b["schema"] < schema:  # 코드는 남긴다(업데이트하고 10분 안에 다시 넣으면 된다)
+            raise BadRequest("old_schema")
+        self.db.execute("DELETE FROM sync_codes WHERE code=?", (code,))
+        self.db.execute("UPDATE sync SET rev=?, holder=?, updated=? WHERE owner=?", (rev + 1, b["device"], t, me))
+        self._sync_join(me, b, t)
+        self.db.commit()
+        return {"owner": key, "rev": rev + 1, "bundle": json.loads(bundle)}
+
+    @locked
+    def sync_take(self, owner_key, body, now):
+        """여기서 이어 키우기: 사본은 그대로, 홀더만 바꾸고 rev 를 올린다(옛 홀더의 PUT 이 not_holder 로 걸린다)."""
+        me, b, (rev, _, schema) = self._sync_on(owner_key, body, now, "schema")
+        self._sync_member(me, b["device"])
+        if b["schema"] < schema:
+            raise BadRequest("old_schema")
+        t = now.timestamp()
+        self.db.execute("UPDATE sync SET rev=?, holder=?, updated=? WHERE owner=?", (rev + 1, b["device"], t, me))
+        self._sync_seen(me, b["device"], t)
+        bundle = self.db.execute("SELECT bundle FROM sync WHERE owner=?", (me,)).fetchone()[0]
+        self.db.commit()
+        return {"rev": rev + 1, "bundle": json.loads(bundle)}
+
+    @locked
+    def sync_revoke(self, owner_key, body, now):
+        """다른 기기 끊기(홀더만, 자기 자신은 self). target 은 기기 목록 id(sha256(device) 앞 8자)."""
+        me, b, (_, holder, _) = self._sync_on(owner_key, body, now)
+        if holder != b["device"]:
+            raise BadRequest("not_holder")
+        target = _match(body.get("target"), SYNC_TARGET)
+        if b["device"].startswith(target):
+            raise BadRequest("self")
+        if not self.db.execute("UPDATE sync_devices SET revoked=1 WHERE owner=? AND substr(device, 1, 8)=? AND revoked=0",
+                               (me, target)).rowcount:
+            raise KeyError(target)
+        self.db.commit()
+        return {}
+
+    @locked
+    def sync_off(self, owner_key):
+        """연동 끄기: 사본·기기 목록·코드를 지운다(각 기기에는 마지막 로컬 저장이 남는다)."""
+        me = self.owner(owner_key)
+        self._drop_sync(me)
+        self.db.commit()
+        return {}
+
     def _snap(self, week, kind, rank, p):
         owner = self.db.execute("SELECT owner FROM posts WHERE id=?", (p["id"],)).fetchone()[0]
         self.db.execute("INSERT OR REPLACE INTO highlights VALUES(?,?,?,?,?,?)",
@@ -2191,6 +2411,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                     return self.raid(method, parts[1:], owner, now)
                 if parts[:1] == ["neighbors"]:
                     return self.neighbors(method, parts[1:], q, owner, now)
+                if parts[:1] == ["sync"]:
+                    return self.sync(method, parts[1:], q, owner, now)
                 if method == "GET" and parts == ["me"]:
                     return self.send(200, board.me(owner, now))
                 if method == "DELETE" and parts == ["me", "posts"]:  # 1.11.1 게시물만
@@ -2208,6 +2430,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                                   "not_junior": 409, "taken_today": 409, "taken_week": 409, "holding": 409,
                                   # 이웃 요청(1.14)
                                   "pending": 409, "cooldown": 409, "closed": 409,
+                                  # 기기 연동(1.15.1, bad_clock 은 422)
+                                  "not_holder": 409, "stale": 409, "old_schema": 409, "revoked": 409, "self": 409, "off": 404,
                                   }.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
@@ -2241,7 +2465,7 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
 
         def raid(self, method, parts, owner, now):
             if method == "POST" and parts == ["status"]:
-                return self.send(200, board.raid_status(owner, self.body(), self.client_ip(), now))
+                return self.send(200, board.raid_status(owner, self.body(), self.client_ip(), now, self.headers.get("X-Sync-Device")))
             if method == "GET" and parts == ["targets"]:
                 return self.send(200, board.raid_targets(owner, now))
             if method == "POST" and parts == []:
@@ -2273,6 +2497,19 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, board.neighbor_name(owner, self.body(), now))
             return self.send(404, {"error": "not_found"})
 
+        def sync(self, method, parts, q, owner, now):  # 1.15.1 기기 연동: 본문은 SYNC_MAX 까지
+            if method == "GET" and parts == ["status"]:
+                return self.send(200, board.sync_status(owner, q.get("device"), now))
+            if method == "DELETE" and parts == []:
+                return self.send(200, board.sync_off(owner))
+            if method == "POST" and parts == ["redeem"]:
+                return self.send(200, board.sync_redeem(self.body(SYNC_MAX), self.client_ip(), now))
+            act = {("POST", "enable"): board.sync_enable, ("PUT", ""): board.sync_put, ("POST", "code"): board.sync_code,
+                   ("POST", "take"): board.sync_take, ("POST", "revoke"): board.sync_revoke}.get((method, "/".join(parts)))
+            if act is None:
+                return self.send(404, {"error": "not_found"})
+            return self.send(200, act(owner, self.body(SYNC_MAX), now))
+
         def serve_static(self, rel):
             root = os.path.abspath(static)
             path = os.path.normpath(os.path.join(root, rel or "index.html"))
@@ -2296,6 +2533,9 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
 
         def do_DELETE(self):
             self.route("DELETE")
+
+        def do_PUT(self):  # 1.15.1 PUT sync
+            self.route("PUT")
 
         def do_OPTIONS(self):  # 게시판 페이지의 CORS 사전 요청(JSON 본문 POST)
             self.send_response(204)

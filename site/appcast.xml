@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.15.2</title>
-      <pubDate>Tue, 17 Nov 2026 05:07:43 GMT</pubDate>
-      <sparkle:version>26</sparkle:version>
-      <sparkle:shortVersionString>1.15.2</sparkle:shortVersionString>
+      <title>1.15.3</title>
+      <pubDate>Tue, 17 Nov 2026 05:58:11 GMT</pubDate>
+      <sparkle:version>27</sparkle:version>
+      <sparkle:shortVersionString>1.15.3</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>자랑 게시판에 &#x27;업데이트 소식&#x27; 탭이 생겼어요. 새 버전이 나올 때마다 무엇이 바뀌었는지 게시판에서 볼 수 있어요</li><li>버그 신고가 생겼어요. 설정 › 버그 신고…를 누르면 게시판의 신고 쪽이 열리고, 글과 스크린샷(3장까지)을 보낼 수 있어요. 운영자만 읽어요</li><li>자랑하기에서 닉네임이 12자를 넘으면 올리기가 왜 안 되는지 바로 알려 줘요</li></ul><ul><li>The Orchard Board has a new Updates tab, so you can see what changed in every new version</li><li>New: bug reports. Settings › Report a Bug… opens the report page on the board, where you can send a description and up to 3 screenshots. Only the team reads them</li><li>When bragging, a nickname longer than 12 characters now tells you why it can&#x27;t be posted</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.2/LemonDesk-1.15.2.dmg" type="application/octet-stream" sparkle:edSignature="0QP3ZeLJcnYqsRGuKSBg1Xa3a9y03rlvHGqvkGHM1D+NjbIKz9ny1Lyuu2JFGrUWszHlAd0RtliwI+VjSrOUCg==" length="18554198"/>
+      <description><![CDATA[<ul><li>손님 주문과 가판대에서 창고·선반에 지금 몇 개가 있고 몇 개가 모자라는지 보여 줘요. 예: &#x27;창고 12 / 30 · 18개 부족&#x27;, &#x27;선반 1 / 2 · 만드는 중 1 · 1병 부족&#x27;</li><li>가판대 만들기 줄에 재료 과일이 창고에 몇 개 있는지, 지금 몇 병을 만들 수 있는지 보여 줘요</li></ul><ul><li>Customer orders and the stand now show how many you have in the crate or on the shelf, and how many you&#x27;re short. e.g. &#x27;Crate 12 / 30 · 18 short&#x27;, &#x27;Shelf 1 / 2 · Making 1 · 1 short&#x27;</li><li>Each stand recipe now shows how much of its fruit is in the crate and how many bottles you can make</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.3/LemonDesk-1.15.3.dmg" type="application/octet-stream" sparkle:edSignature="qafj09KgZJZkm2ZN9Ydz4CBhovPhnUj/G6SbBj584FluyuzaRyQd63r6x9iXTxMH0Ql7xPccsTVnD615vZOmDg==" length="18562318"/>
     </item>
   </channel>
 </rss>

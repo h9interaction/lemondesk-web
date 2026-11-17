@@ -18,9 +18,9 @@
 <meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="../icon.png?v=1">
 <link rel="icon" href="sprites/icon-64.png">
-<link rel="preload" href="fonts/galmuri11-bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/galmuri11-bold.woff2?v=1153" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2) format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=1153) format("woff2"); font-display: swap; }
   :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
   @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
@@ -413,6 +413,10 @@
     noFruitFor: 'Unlock a fruit for this first.', slotsFull: 'Every slot is busy.', lowFruit: 'Not enough of that fruit in the crate.',
     ordersH: 'Customer orders', noOrders: 'No orders yet. A customer stops by every 3 hours.', orderBottle: (r, n) => `${r} × ${n}`, orderFruit: (k, n) => `${k} × ${n}`,
     orderLeft: t => `Leaves in ${t}`, fillBtn: 'Fill', cantFill: "You don't have enough yet.",
+    stockLine: (h, n) => h >= n ? `Crate ${fmt(h)} · enough for ${fmt(Math.floor(h / n))}` : `Crate ${fmt(h)} · ${fmt(n - h)} short`,
+    haveFruit: (h, c) => `Crate ${fmt(h)} / ${fmt(c)}`, haveShelf: (h, c) => `Shelf ${fmt(h)} / ${fmt(c)}`, makingN: m => `Making ${fmt(m)}`,
+    shortFruit: x => `${fmt(x)} short`, shortBottle: x => `${fmt(x)} short`,
+    needFruit: (k, x) => `Need ${fmt(x)} more ${k}`, needBottle: (r, x) => `Need ${fmt(x)} more ${r}`,
     mgrHired: 'Dodam joined your orchard', mgrUp: 'Dodam leveled up', standOpen: 'The stand is open', standUp: 'Stand leveled up', started: r => `Started making ${r}`,
     filled: e => `Order filled · +${fmt(e)} coins`,
     adjs: ['Sleepy', 'Busy', 'Shy', 'Lazy', 'Tangy', 'Sparkly', 'Plucky', 'Quiet', 'Hungry', 'Humming', 'Sunny', 'Breezy'], farm: (a, f) => `${a} ${f} orchard`,
@@ -503,6 +507,10 @@
     noFruitFor: '이 병에 쓸 과일을 먼저 열어요.', slotsFull: '만드는 칸이 다 찼어요.', lowFruit: '창고에 그 과일이 모자라요.',
     ordersH: '손님 주문', noOrders: '아직 주문이 없어요. 3시간마다 손님이 와요.', orderBottle: (r, n) => `${r} ${n}병`, orderFruit: (k, n) => `${k} ${n}개`,
     orderLeft: t => `${t} 뒤 떠나요`, fillBtn: '채우기', cantFill: '아직 모자라요.',
+    stockLine: (h, n) => h >= n ? `창고 ${fmt(h)}개 · ${fmt(Math.floor(h / n))}병 만들 수 있어요` : `창고 ${fmt(h)}개 · ${fmt(n - h)}개 부족`,
+    haveFruit: (h, c) => `창고 ${fmt(h)} / ${fmt(c)}`, haveShelf: (h, c) => `선반 ${fmt(h)} / ${fmt(c)}`, makingN: m => `만드는 중 ${fmt(m)}`,
+    shortFruit: x => `${fmt(x)}개 부족`, shortBottle: x => `${fmt(x)}병 부족`,
+    needFruit: (k, x) => `${k} ${fmt(x)}개가 더 있어야 해요`, needBottle: (r, x) => `${r} ${fmt(x)}병이 더 있어야 해요`,
     mgrHired: '도담이 과수원에 왔어요', mgrUp: '도담 레벨이 올랐어요', standOpen: '가판대를 열었어요', standUp: '가판대 레벨이 올랐어요', started: r => `${r} 만들기를 시작했어요`,
     filled: e => `주문을 채웠어요 · +${fmt(e)} 코인`,
     adjs: ['졸린', '부지런한', '수줍은', '느긋한', '새콤한', '반짝이는', '씩씩한', '조용한', '배고픈', '콧노래 부르는', '햇살 가득한', '바람 부는'], farm: (a, f) => `${a} ${f} 과수원`,
@@ -1510,7 +1518,7 @@
   function renderStand() {
     const s = state(); if (!s) return;
     const st = s.stand, os = (s.orders || []).filter(o => leftOf(s, o.left) > 0), min = x => Math.ceil(Math.max(0, leftOf(s, x)) / 60);
-    keep('stand', [!!s.manager, st && {...st, jobs: st.jobs.map(j => [j.recipe, min(j.left)])}, os.map(o => [o.id, o.can, min(o.left)]), s.coins, en], () => {
+    keep('stand', [!!s.manager, st && {...st, jobs: st.jobs.map(j => [j.recipe, min(j.left)])}, os.map(o => [o.id, o.can, min(o.left), o.have, o.making]), s.coins, en], () => {
       if (!s.manager) return [panel(el('p', 'note', T.update15))]; // 옛 앱(1.14 이하)
       if (!st) return [];
       const head = panel(el('b', 'px', T.standH)), why = el('span', 'why'), up = buy('', 'y', b => send({action: 'stand_up'}, b));
@@ -1531,8 +1539,11 @@
         const [k, n] = Object.entries(r.need || {})[0] || [], d = el('div', 'prop'), h = el('b', 'px', T.recipes[r.recipe] || r.recipe), w2 = el('span', 'why');
         h.prepend(goodPic(r.recipe));
         const b = act(T.makeBtn, {action: 'make', recipe: r.recipe}, {off: !r.can});
-        if (!r.can) w2.textContent = !k ? '' : busySlots ? T.slotsFull : T.lowFruit;
-        const txt = el('div', 'grow'); txt.append(h, el('div', 'note num', k ? T.needLine(kindName(k), fmt(n), dur(r.seconds), fmt(r.value)) : T.noFruitFor), w2);
+        const has = k && r.have != null; // 1.15.2 이하 Mac 은 have 를 안 보낸다
+        if (!r.can) w2.textContent = !k ? '' : busySlots ? T.slotsFull : has ? T.needFruit(kindName(k), n - r.have) : T.lowFruit;
+        const txt = el('div', 'grow'); txt.append(h, el('div', 'note num', k ? T.needLine(kindName(k), fmt(n), dur(r.seconds), fmt(r.value)) : T.noFruitFor));
+        if (has) txt.append(el('div', 'note num', T.stockLine(r.have, n)));
+        txt.append(w2);
         d.append(row(txt, b));
         head.append(d);
       }
@@ -1543,8 +1554,14 @@
         h.prepend(o.recipe ? goodPic(o.recipe) : pic(`${S}fruit-${o.fruit}.png`, 'good'));
         const b = buy(T.fillBtn, 'y', bb => send({action: 'fill', order: o.id}, bb));
         b.price.append(coin(), `+${short(o.reward)}`); b.setAttribute('aria-label', `${T.fillBtn}, +${fmt(o.reward)} ${en ? 'coins' : '코인'}`);
-        b.disabled = !o.can || busy(); if (!o.can) w2.textContent = T.cantFill;
-        const txt = el('div', 'grow'); txt.append(h, el('div', 'note num', T.orderLeft(dur(leftOf(s, o.left)))), w2);
+        const has = o.have != null, lack = o.count - (o.have || 0); // 1.15.2 이하 Mac 은 have 를 안 보낸다
+        b.disabled = !o.can || busy();
+        if (!o.can) w2.textContent = !has ? T.cantFill : o.recipe ? T.needBottle(T.recipes[o.recipe] || o.recipe, lack) : T.needFruit(kindName(o.fruit), lack);
+        const txt = el('div', 'grow'); txt.append(h);
+        if (has) txt.append(el('div', 'note num', o.recipe
+          ? [T.haveShelf(o.have, o.count), o.making > 0 && T.makingN(o.making), lack > 0 && T.shortBottle(lack)].filter(Boolean).join(' · ')
+          : [T.haveFruit(o.have, o.count), lack > 0 && T.shortFruit(lack)].filter(Boolean).join(' · ')));
+        txt.append(el('div', 'note num', T.orderLeft(dur(leftOf(s, o.left)))), w2);
         d.append(row(txt, b));
         op.append(d);
       }

@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.15.3",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.3/LemonDesk-1.15.3.dmg",
+    "notes": {
+      "ko": [
+        "손님 주문과 가판대에서 창고·선반에 지금 몇 개가 있고 몇 개가 모자라는지 보여 줘요. 예: '창고 12 / 30 · 18개 부족', '선반 1 / 2 · 만드는 중 1 · 1병 부족'",
+        "가판대 만들기 줄에 재료 과일이 창고에 몇 개 있는지, 지금 몇 병을 만들 수 있는지 보여 줘요"
+      ],
+      "en": [
+        "Customer orders and the stand now show how many you have in the crate or on the shelf, and how many you're short. e.g. 'Crate 12 / 30 · 18 short', 'Shelf 1 / 2 · Making 1 · 1 short'",
+        "Each stand recipe now shows how much of its fruit is in the crate and how many bottles you can make"
+      ]
+    }
+  },
+  {
     "version": "1.15.2",
     "date": "2026-11-17",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.2/LemonDesk-1.15.2.dmg",

@@ -1,5 +1,22 @@
 [
   {
+    "version": "1.15.2",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.2/LemonDesk-1.15.2.dmg",
+    "notes": {
+      "ko": [
+        "자랑 게시판에 '업데이트 소식' 탭이 생겼어요. 새 버전이 나올 때마다 무엇이 바뀌었는지 게시판에서 볼 수 있어요",
+        "버그 신고가 생겼어요. 설정 › 버그 신고…를 누르면 게시판의 신고 쪽이 열리고, 글과 스크린샷(3장까지)을 보낼 수 있어요. 운영자만 읽어요",
+        "자랑하기에서 닉네임이 12자를 넘으면 올리기가 왜 안 되는지 바로 알려 줘요"
+      ],
+      "en": [
+        "The Orchard Board has a new Updates tab, so you can see what changed in every new version",
+        "New: bug reports. Settings › Report a Bug… opens the report page on the board, where you can send a description and up to 3 screenshots. Only the team reads them",
+        "When bragging, a nickname longer than 12 characters now tells you why it can't be posted"
+      ]
+    }
+  },
+  {
     "version": "1.15.1",
     "date": "2026-11-17",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.1/LemonDesk-1.15.1.dmg",

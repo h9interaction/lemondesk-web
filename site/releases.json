@@ -1,5 +1,18 @@
 [
   {
+    "version": "1.16.2",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.16.2/LemonDesk-1.16.2.dmg",
+    "notes": {
+      "ko": [
+        "작은 문제들을 고치고 안정성을 높였어요"
+      ],
+      "en": [
+        "Small fixes and stability improvements"
+      ]
+    }
+  },
+  {
     "version": "1.16.1",
     "date": "2026-11-17",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.16.1/LemonDesk-1.16.1.dmg",

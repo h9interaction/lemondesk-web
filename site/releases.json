@@ -1,5 +1,26 @@
 [
   {
+    "version": "1.17.0",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.0/LemonDesk-1.17.0.dmg",
+    "notes": {
+      "ko": [
+        "도감이 넓어졌어요. 특별한 레몬·병 레시피·하늘 일기·일꾼 앨범·게시판 수첩을 모아 보세요",
+        "목표가 기본·도전·숨은 도전으로 나뉘었어요. 엉뚱한 도전과 힌트만 보이는 숨은 도전을 이루면 칭호와 소품, 도감 칸이 열려요",
+        "나만의 레몬 품종, 이룬 날이 새겨진 기념패, 이웃과의 우정 벤치처럼 내 과수원에만 있는 보상이 생겼어요",
+        "자랑하기에 칭호·업적 배지·진열장을 걸 수 있어요. 자랑 게시판에서는 과수원이 움직이고, 스탬프로 반응하고, 이주의 주제가 생겼어요",
+        "게시판에서 별과 스탬프를 받거나 이주의 하이라이트에 오르면 트로피와 소품을 받아요. 다른 과수원을 구경하며 스탬프를 남겨도 보상이 있어요"
+      ],
+      "en": [
+        "The Book has grown: collect special lemons, bottle recipes, a sky diary, a worker album and a board notebook",
+        "Goals are now Basic, Challenges and Hidden challenges. Quirky challenges and hint-only hidden ones unlock titles, decorations and Book entries",
+        "New rewards that only your orchard has: your own lemon variety, a plaque engraved with the day you earned it, and a friendship bench with a neighbor",
+        "Show off a title, achievement badges and a showcase when you brag. On the board, orchards now move, you can react with stamps, and there's a weekly theme",
+        "Earn trophies and decorations when your posts get stars and stamps or make the weekly highlights. Visiting other orchards and leaving stamps is rewarded too"
+      ]
+    }
+  },
+  {
     "version": "1.16.2",
     "date": "2026-11-17",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.16.2/LemonDesk-1.16.2.dmg",

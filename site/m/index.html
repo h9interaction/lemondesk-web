@@ -18,9 +18,9 @@
 <meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="../icon.png?v=1">
 <link rel="icon" href="sprites/icon-64.png">
-<link rel="preload" href="fonts/galmuri11-bold.woff2?v=1160" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/galmuri11-bold.woff2?v=1170" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=1160) format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=1170) format("woff2"); font-display: swap; }
   :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
   @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
@@ -162,6 +162,8 @@
   .dex { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 4px; margin-top: 8px; text-align: center; font-size: 13px; line-height: 1.25; }
   .dex img { width: 48px; height: 43px; display: block; margin: 0 auto 2px; }
   .goal { margin-top: 8px; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: 13px; }
+  .chips span { padding: 1px 6px; background: #E4F2C8; color: #2F5208; }
   .goal .bar { height: 8px; margin: 2px 0 0; }
   .goal.done { color: var(--soft); }
   .plots > div { border: 2px solid #C9A56B; padding: 2px 0 0; min-height: 76px; font-size: 14px; text-align: center; }
@@ -385,6 +387,24 @@
     farmLine: (l, n, a) => `Crate level ${l} · ${n} neighbors · ${a}`, newFarm: 'New', raidLeft: n => `Scrumps left today: ${n}`, raidAwake: 'You can only send scrumpers while your Mac is on.',
     targetsBtn: 'Show targets', raidGo: 'Scrump', revenge: 'Pay back', revengeLine: t => `Follow the scrumper's tracks · ${t} left`, fillLine: (f, d) => `Crate ${f}% full` + (d ? ' · dog barking' : ''),
     noTargets: 'No orchards to scrump right now.',
+    // 1.17 도감 묶음·도전(이름은 앱 Achievements.swift·make-strings.py EN 그대로)
+    col: {h: {special: 'Special Lemons', recipe: 'Bottle Recipes', sky: 'Sky Diary', album: 'Worker Album', board: 'Board Notebook'},
+      achH: (n, m) => `Challenges ${n} / ${m}`, hiddenH: (n, m) => `Hidden ${n} / ${m}`, titlesH: 'Titles', habit: 'Habit',
+      gear: n => `Gear tier ${n}`, stars: n => `${n} stars received`, visitor: n => `Visited on ${n} days`,
+      special: {heart: 'Heart Lemon', twin: 'Twin Lemons', rain: 'Raindrop Yuja', snow: 'Snowflake Kumquat', moonpair: 'Moonlit Pair', sunset: 'Sunset Grapefruit',
+        rainbow: 'Rainbow Shard', first: 'First-Harvest Lemon', variety: 'My Own Variety'},
+      sky: {clear: 'Clear day', rain: 'Rain', wind: 'Wind', snow: 'Snow', rainbow: 'Rainbow', fullmoon: 'Full moon night', sunsetrain: 'Sunset rain', firstsnow: 'First snow',
+        newyear: 'First sunrise of the year'},
+      album: {cheers: 'Cheers', nap: 'Nap', lunch: 'Lunch picnic', visit: "Neighbor's visit", dogplay: 'Playing with the dog', nameplate: 'Name tags'},
+      board: {firstpost: 'First post', firststar: 'First star', trophy: 'Weekly Trophy', 'stamp-lemon': '30 Wants', 'stamp-flower': '30 Pretties', 'stamp-laugh': '30 Funnies',
+        'stamp-clap': '30 Wows', regular: 'Board Regular Star'},
+      ach: {exact999: 'Exactly 999', monoculture: 'One Kind Only', rainseller: 'Rainy-Day Seller', underrainbow: 'Under the Rainbow', lastone: 'The Last One',
+        snowkumquat: 'Winter Kumquats', sevenfaces: "Dodam's Seven Faces", recipes: 'Barista Lessons', rainbowcloset: 'Rainbow Closet', names: 'Call My Name',
+        caughtthrice: 'Scrump Gone Wrong', ironfarm: 'Iron Orchard', giftbottle: 'Heartfelt Harvest', sunset: 'Sunset Grapefruit', moonpair: 'Moonlit Pair',
+        firstharvest: 'First Harvest', myvariety: 'My Own Variety', friendship: 'Friendship Bench', midnight: 'Midnight Lemon Seller', mondayblues: 'Monday blues',
+        tgif: 'Friday Night Payday', fullnight: 'Full-Crate Night', vacation: "Dodam's Day Off", lonelytree: 'A Single Tree', weekend: 'Weekend Farm',
+        allsky: 'Sky Diary'},
+    },
     dexH: (n, m) => `Book ${n} / ${m}`, goalsH: 'Goals', secretsH: (n, m) => `Secrets ${n} / ${m}`, scrumpH: (n, m) => `Scrumping book ${n} / ${m}`, giftedH: (n, m) => `Gift book ${n} / ${m}`,
     goals: {plant: n => n === 1 ? 'Plant your first tree' : `Plant ${n} trees`, dex: n => `Fill ${n} kinds in the Book`, rainbow: () => 'Unlock the rainbow lemon', crate: n => `Crate level ${n}`,
       worker: n => `Worker level ${n}`, second: () => 'Hire a second worker', gear: () => 'Master gear for all three workers', sold: n => `Sell ${fmt(n)} lemons`, earned: n => `Earn ${fmt(n)} coins`,
@@ -490,6 +510,20 @@
     farmLine: (l, n, a) => `창고 레벨 ${l} · 이웃 ${n}명 · ${a}`, newFarm: '새로 시작', raidLeft: n => `오늘 남은 서리 ${n}번`, raidAwake: 'Mac이 켜져 있을 때만 서리를 보낼 수 있어요.',
     targetsBtn: '서리할 과수원 보기', raidGo: '서리하기', revenge: '되갚기', revengeLine: t => `서리꾼의 발자국을 따라가요 · ${t} 남음`, fillLine: (f, d) => `창고 ${f}% 참` + (d ? ' · 개가 짖는 중' : ''),
     noTargets: '지금 서리할 만한 과수원이 없어요.',
+    col: {h: {special: '특별한 레몬', recipe: '병 레시피', sky: '하늘 일기', album: '일꾼 앨범', board: '게시판 수첩'},
+      achH: (n, m) => `도전 ${n} / ${m}`, hiddenH: (n, m) => `숨은 도전 ${n} / ${m}`, titlesH: '칭호', habit: '버릇',
+      gear: n => `장비 ${n}단계`, stars: n => `받은 별 ${n}개`, visitor: n => `구경꾼 ${n}일`,
+      special: {heart: '하트 레몬', twin: '쌍둥이 레몬', rain: '빗방울 유자', snow: '눈꽃 금귤', moonpair: '달빛 한 쌍', sunset: '노을 자몽', rainbow: '무지개 조각', first: '첫 수확 레몬',
+        variety: '나만의 품종'},
+      sky: {clear: '맑은 날', rain: '비', wind: '바람', snow: '눈', rainbow: '무지개', fullmoon: '보름달 밤', sunsetrain: '노을 비', firstsnow: '첫눈', newyear: '새해 첫 해'},
+      album: {cheers: '건배', nap: '낮잠', lunch: '점심 돗자리', visit: '이웃 방문 인사', dogplay: '개와 놀기', nameplate: '이름표'},
+      board: {firstpost: '첫 자랑', firststar: '첫 별', trophy: '주차 트로피', 'stamp-lemon': '탐나요 30개', 'stamp-flower': '예뻐요 30개', 'stamp-laugh': '웃겨요 30개',
+        'stamp-clap': '대단해요 30개', regular: '게시판 단골 스타'},
+      ach: {exact999: '딱 999', monoculture: '레몬 외길', rainseller: '빗속의 장사꾼', underrainbow: '무지개 아래서', lastone: '마지막 한 알', snowkumquat: '겨울 금귤', sevenfaces: '도담의 일곱 얼굴',
+        recipes: '바리스타 수업', rainbowcloset: '무지갯빛 옷장', names: '이름을 불러 줘', caughtthrice: '망했다 서리', ironfarm: '철벽 과수원', giftbottle: '하트 수확', sunset: '노을빛 자몽',
+        moonpair: '달빛 한 쌍', firstharvest: '첫 수확', myvariety: '나만의 품종', friendship: '우정의 벤치', midnight: '한밤중의 레몬 장수', mondayblues: '월요병', tgif: '불금 정산',
+        fullnight: '창고 꽉 채운 밤', vacation: '도담 휴가', lonelytree: '레몬 한 그루', weekend: '주말 농장', allsky: '하늘 일기'},
+    },
     dexH: (n, m) => `도감 ${n} / ${m}`, goalsH: '목표', secretsH: (n, m) => `비밀 ${n} / ${m}`, scrumpH: (n, m) => `서리 수첩 ${n} / ${m}`, giftedH: (n, m) => `선물 수첩 ${n} / ${m}`,
     goals: {plant: n => n === 1 ? '첫 나무 심기' : `나무 ${n}그루 심기`, dex: n => `도감 ${n}종 채우기`, rainbow: () => '무지개 레몬 열기', crate: n => `창고 레벨 ${n}`,
       worker: n => `일꾼 레벨 ${n}`, second: () => '두 번째 일꾼 고용', gear: () => '세 일꾼 모두 명인 장비', sold: n => `레몬 ${fmt(n)}개 팔기`, earned: n => `코인 ${fmt(n)} 벌기`,
@@ -611,7 +645,7 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=1160'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=1170'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
@@ -1759,6 +1793,42 @@
     });
   }
 
+  // 1.17 도감 묶음·도전·칭호(collections.groups·achieved·hidden·titles). 옛 앱은 groups 가 없어 아무것도 더하지 않는다.
+  // 열린 칸만 보이고 잠긴 칸은 'n / 전체' 수로만(Achievements.groups 칸 수, 도전 18·숨은 8)
+  const GROUPS = {special: 9, recipe: 21, sky: 9, album: 16, board: 14};
+  const SKY = {clear: '☀️', rain: '🌧️', wind: '🍃', snow: '❄️', rainbow: '🌈', fullmoon: '🌕', sunsetrain: '🌇', firstsnow: '☃️', newyear: '🌅'};
+  const chips = list => { const d = el('div', 'chips'); d.append(...list.map(t => el('span', '', t))); return d; };
+  function cellName(g, id) {
+    const C = T.col;
+    if (g === 'recipe') { const [r, k] = id.split('-'); return `${T.recipes[r] || r} · ${kindName(k)}`; }
+    const m = /^habit-(\w+?)(b?)$/.exec(id);
+    if (g === 'album' && m) return `${C.habit} · ${T.roles[m[1]] || m[1]}${m[2] ? ' 2' : ''}`;
+    if (g === 'album' && id.startsWith('gear-')) return C.gear(id.slice(5));
+    if (g === 'board' && id.startsWith('stars-')) return C.stars(id.slice(6));
+    if (g === 'board' && id.startsWith('visitor-')) return C.visitor(id.slice(8));
+    return (C[g] || {})[id] || id;
+  }
+  function groups(c) {
+    if (!c.groups) return [];
+    return Object.keys(GROUPS).map(g => {
+      const ord = Object.keys(T.col[g] || {}), at = id => (ord.indexOf(id) + 1) || 99;
+      const ids = (c.groups[g] || []).filter(id => typeof id === 'string').sort((a, b) => at(a) - at(b) || a.localeCompare(b, 'en', {numeric: true}));
+      const head = el('b', 'px num', `${T.col.h[g]} ${ids.length} / ${GROUPS[g]}`);
+      if (!ids.length) return panel(head);
+      if (g !== 'special') return panel(head, chips(ids.map(id => (g === 'sky' ? `${SKY[id] || ''} ` : '') + cellName(g, id))));
+      const grid = el('div', 'dex');
+      for (const id of ids) { const d = el('div'); d.append(pic(`${S}${id === 'variety' ? 'fruit-eureka' : 'special-' + id}.png`), el('span', '', cellName(g, id))); grid.append(d); }
+      return panel(head, grid);
+    });
+  }
+  function collected(c) {
+    if (!c.groups) return [];
+    const C = T.col, done = (c.achieved || []).filter(id => id in C.ach), hidden = c.hidden || 0; // 기본 목표는 위 목표 칸에
+    const out = [panel(el('b', 'px num', `${C.achH(done.length - hidden, 18)} · ${C.hiddenH(hidden, 8)}`), done.length ? chips(done.map(id => C.ach[id])) : null)];
+    if ((c.titles || []).length) out.push(panel(el('b', 'px', C.titlesH), chips(c.titles.map(String))));
+    return out;
+  }
+
   function renderCol() {
     const s = state(), c = s && v14() && s.collections;
     $('col-old').hidden = !s || !!c; $('col-old').textContent = T.update14;
@@ -1776,8 +1846,8 @@
       }));
       const book = (title, list) => { const ic = el('div', 'icons'); for (const k of kinds) { const i = pic(`${S}fruit-${k}.png`, list.includes(k) ? '' : 'off'); i.title = list.includes(k) ? kindName(k) : '?'; ic.append(i); } return panel(el('b', 'px', title), ic); };
       const sc = (c.scrump || []).filter(k => kinds.includes(k)), gf = (c.gifted || []).filter(k => kinds.includes(k));
-      return [panel(el('b', 'px', T.dexH(have, kinds.length)), grid), gp, panel(el('b', 'px num', T.secretsH((c.secrets || []).length, 20))),
-        book(T.scrumpH(sc.length, kinds.length), sc), book(T.giftedH(gf.length, kinds.length), gf)];
+      return [panel(el('b', 'px', T.dexH(have, kinds.length)), grid), gp, ...collected(c), panel(el('b', 'px num', T.secretsH((c.secrets || []).length, 20))),
+        book(T.scrumpH(sc.length, kinds.length), sc), book(T.giftedH(gf.length, kinds.length), gf), ...groups(c)];
     });
   }
 

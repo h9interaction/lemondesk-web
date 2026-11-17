@@ -40,11 +40,11 @@
   .lead { margin-top: 12px; max-width: 38em; }
   section { margin-top: 56px; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  select, .tabs button, .more, .star, .report {
+  select, .tabs button, .more, .star, .report, .pick {
     font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 8px;
     padding: 8px 12px; min-height: 40px; cursor: pointer;
   }
-  .tabs { display: inline-flex; gap: 6px; }
+  .tabs { display: inline-flex; gap: 6px; flex-wrap: wrap; }
   .tabs button[aria-pressed="true"], .tabs button[aria-selected="true"] { background: var(--lemon); color: #23511F; border-color: var(--lemon); font-weight: 700; }
   .views { margin-top: 28px; }
 
@@ -86,7 +86,7 @@
   .empty { margin-top: 20px; padding: 24px; border: 1px dashed var(--line); border-radius: 12px; }
 
   /* 게시물 */
-  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; align-items: start; }
   .post { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
   .post.shared { border: 2px solid var(--lemon); }
   .post header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -101,7 +101,50 @@
   .stats { font-size: 14px; font-variant-numeric: tabular-nums; }
   .badges { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; }
   .badges span { background: var(--lemon-soft); color: var(--ink); border-radius: 999px; padding: 2px 10px; }
-  .report { align-self: flex-end; font-size: 13px; min-height: 32px; padding: 4px 10px; color: var(--muted); background: transparent; }
+  .report { font-size: 13px; min-height: 32px; padding: 4px 10px; color: var(--muted); background: transparent; }
+  .who { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .chip { background: var(--lemon); color: #23511F; border-radius: 999px; padding: 0 10px; font-size: 13px; font-weight: 700; }
+
+  /* 1.17 살아 있는 과수원: 폰 장면 그림(../m/sprites, 아트 픽셀 1칸 = 1px)을 절반으로 줄여 띠처럼. 넓으면 옆으로 민다 */
+  .strip.live { height: 86px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .strip.live::-webkit-scrollbar { display: none; }
+  .strip.blossom { background: #F8E4EC; } .strip.sunset { background: #F7D2B0; } .strip.moon { background: #2B3559; } .strip.garden { background: #DDEFD8; }
+  .live .size { position: relative; height: 86px; min-width: 100%; }
+  .live .world { position: absolute; left: 0; bottom: 0; height: 172px; transform: scale(.5); transform-origin: 0 100%; }
+  .live .gnd { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background-repeat: repeat-x; background-position: left bottom; image-rendering: pixelated; }
+  .live .sp, .live .bd { position: absolute; left: 0; bottom: 0; background-repeat: no-repeat; image-rendering: pixelated; }
+  .live .ent { position: absolute; left: 0; bottom: 0; width: 0; height: 0; }
+  .live .sh { position: absolute; left: -17px; bottom: -3px; opacity: .35; background-repeat: no-repeat; image-rendering: pixelated; }
+  .ico { display: inline-block; flex: none; background-repeat: no-repeat; image-rendering: pixelated; }
+  .ico.emoji { font-size: 20px; line-height: 1; text-align: center; }
+
+  /* 업적 배지 · 진열장 · 스탬프 */
+  .ach { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ach button { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px 2px 4px; min-height: 36px; cursor: pointer; }
+  #ach-pop { position: fixed; inset: auto; margin: 0; max-width: min(300px, calc(100vw - 24px)); padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); box-shadow: 0 6px 24px rgba(0,0,0,.14); font-size: 14px; }
+  #ach-pop b { display: block; color: var(--ink); font-size: 15px; }
+  #ach-pop .muted { font-size: 13px; margin-top: 6px; }
+  .case { display: flex; align-items: center; gap: 12px; background: var(--lemon-soft); border-radius: 10px; padding: 10px 12px; }
+  .case .what { font-size: 12px; color: var(--muted); display: block; }
+  .case b { color: var(--ink); overflow-wrap: anywhere; }
+  .case p { font-size: 14px; overflow-wrap: anywhere; }
+  .stamps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .stamps button { font: inherit; font-size: 14px; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; min-height: 36px; cursor: pointer; font-variant-numeric: tabular-nums; }
+  .stamps button[aria-pressed="true"] { background: var(--lemon); color: #23511F; border-color: var(--lemon); font-weight: 700; }
+  .stamps button:disabled { cursor: default; }
+  .post > footer { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
+  .nb { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+  .nb a { font-weight: 700; text-decoration: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; min-height: 36px; display: inline-flex; align-items: center; }
+  .nb small { font-size: 12px; color: var(--muted); }
+  .post.flash { outline: 3px solid var(--lemon); outline-offset: 2px; }
+  .cat.theme { background: var(--lemon); color: #23511F; }
+  .cat.theme .muted, .cat.theme b { color: #23511F; }
+  /* 겨울(12~2월)에는 눈이 조금 내린다 */
+  body.winter::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 30; opacity: .7;
+    background-image: radial-gradient(2px 2px at 20px 30px, #B9D3E2, transparent), radial-gradient(2px 2px at 130px 90px, #B9D3E2, transparent), radial-gradient(3px 3px at 200px 170px, #B9D3E2, transparent);
+    background-size: 240px 240px; animation: snow 24s linear infinite; }
+  @keyframes snow { to { background-position: 0 240px; } }
+  @media (prefers-reduced-motion: reduce) { body.winter::before { animation: none; } }
   .more { margin: 24px auto 0; display: block; }
   .note { font-size: 14px; margin-top: 8px; min-height: 1.6em; }
   footer .foot { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-top: 96px; padding: 24px 0 40px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
@@ -140,9 +183,12 @@
   <section aria-labelledby="list-title">
     <div class="row">
       <h2 id="list-title" data-t="thisWeek">이번 주 자랑</h2>
+      <div class="tabs">
       <div class="tabs" role="group" aria-label="정렬">
         <button type="button" data-sort="new" aria-pressed="true" data-t="new">최신</button>
         <button type="button" data-sort="stars" aria-pressed="false" data-t="byStars">별 많은 순</button>
+      </div>
+      <button type="button" class="pick" id="random" data-t="random">아무 과수원 구경</button>
       </div>
     </div>
     <p class="note" id="note" role="status" aria-live="polite"></p>
@@ -182,6 +228,8 @@
   </div>
 </footer>
 
+<div id="ach-pop" popover role="dialog" aria-live="polite"></div>
+<script src="../m/motion.js?v=1150"></script>
 <script>
 (() => {
   // 로컬 확인(brag.py --static site)에서는 같은 서버의 API 를 쓴다
@@ -210,6 +258,32 @@
     bugSending: 'Sending…', bugThanks: 'Thanks! We got your report.', bugFail: "Couldn't send it. Please try again in a moment.", bugLimit: "You've sent a lot today. Please try again tomorrow.",
     bugRemove: 'Remove',
     shared: 'Shared orchard', weekOf: d => `Week of ${d.toLocaleDateString('en', {month: 'short', day: 'numeric'})}`,
+    random: 'Visit a random orchard',
+    stampNames: {lemon: 'Want it', flower: 'Pretty', laugh: 'Funny', clap: 'Amazing'}, stampsLabel: 'Stamps', stampAria: (s, n) => `${s}, ${n} so far`,
+    nb: 'Be neighbors', nbNote: 'Opens the Lemon Desk app', withNeighbor: 'Together with a neighbor',
+    cases: {variety: 'My own variety', plaque: 'Plaque', frame: 'Frame', trophy: 'Trophy', nickname: 'Worker nickname', friend: 'Friendship bench'},
+    badgeCount: n => `${n} orchard${n === 1 ? ' has' : 's have'} shown this off`, hidden: 'Hidden challenge', hiddenHint: 'Only those who did it know how.', basic: 'Goal', challenge: 'Challenge',
+    themeOfWeek: 'Theme of the week', stampTop: s => `Most "${s}"`,
+    themes: {pink: 'Pink lemon garden', even: 'Most varied orchard', manager: 'Left it to Dodam', dogs: 'Home of three dogs', decor: 'Rich in props', stand: 'Stand boss', rare: 'Rare achievement'},
+    themeVal: {pink: n => `${n} pink lemon trees`, even: n => `${n} kinds planted`, dogs: n => `${n} dogs`, decor: n => `${n} props`, manager: n => `Dodam sold ${fmt(n)}`, stand: n => `${fmt(n)} bottles made`},
+    goals: {plant: n => n === 1 ? 'Plant your first tree' : `Plant ${n} trees`, dex: n => `Fill ${n} kinds in the Book`, rainbow: () => 'Unlock the rainbow lemon', crate: n => `Crate level ${n}`,
+      worker: n => `Worker level ${n}`, second: () => 'Hire a second worker', gear: () => 'Master gear for all three workers', sold: n => `Sell ${fmt(n)} lemons`, earned: n => `Earn ${fmt(n)} coins`,
+      dogs: () => 'Three guard dogs', secrets: n => `Find ${n} secrets`, scrump: n => n === 1 ? '1 kind in the scrump notebook' : `${n} kinds in the scrump notebook`, neighbors: n => n === 1 ? 'Make your first neighbor' : `${n} neighbors`,
+      acts: n => `Help or gift ${n} times`, gifted: n => n === 1 ? '1 kind in the gift notebook' : `${n} kinds in the gift notebook`, thanks: n => `Receive ${n} thanks`, land: n => `Expand to ${n} plots`, finds: n => `Dig up ${n} finds`,
+      mentor: n => n === 1 ? 'First student graduates' : `${n} students graduated`},
+    ach: {exact999: ['Exactly 999', 'Sell exactly 999 lemons at once'], monoculture: ['One Kind Only', 'Fill the first 10 plots with one kind'],
+      rainseller: ['Rainy-Day Seller', 'Sell 1,000 lemons while it rains'], underrainbow: ['Under the Rainbow', 'Pick a rainbow lemon while a rainbow is out'],
+      lastone: ['The Last One', 'Fill a customer order and leave exactly 1 in the crate'], snowkumquat: ['Winter Kumquats', 'Pick 100 kumquats while it snows'],
+      sevenfaces: ["Dodam's Seven Faces", "Spend a day in each of Dodam's seven modes"], recipes: ['Barista Lessons', 'Make all 21 bottle recipes'],
+      rainbowcloset: ['Rainbow Closet', 'Dress all six workers in different colors'], names: ['Call My Name', 'Name all six workers'],
+      caughtthrice: ['Scrump Gone Wrong', 'Get caught scrumping 3 times'], ironfarm: ['Iron Orchard', 'Dogs chase off scrumpers on 5 days'],
+      giftbottle: ['Heartfelt Harvest', 'Make a bottle from fruit a neighbor gave you'],
+      sunset: ['Sunset Grapefruit', 'Pick 300 grapefruit or pomelo between 6 and 8 PM'], moonpair: ['Moonlit Pair', 'Plant two moonlight lemons side by side'],
+      firstharvest: ['First Harvest', 'Pick your very first fruit'], myvariety: ['My Own Variety', 'Fill 20 kinds in the Book and finish 10 challenges'],
+      friendship: ['Friendship Bench', 'Help or gift neighbors 30 times']},
+    hint: {midnight: 'The shop stays open while everyone sleeps', mondayblues: 'Start of the week, before work…', tgif: 'End of the week, on the way home…',
+      fullnight: 'Let a day roll over with the crate full', vacation: 'Dodam needs a day off too', lonelytree: 'You can run a shop with just one tree',
+      weekend: 'Open the shop on Saturday and again on Sunday', allsky: 'Look up at the sky often'},
   } : {
     harvest: '이번 주 가장 많이 딴 과수원', secrets: '비밀 탐험가', dex: '도감 수집가',
     picked: n => `딴 레몬 ${n}개`, found: n => `비밀 ${n}개 찾음`, dexv: n => `도감 ${n}/20`,
@@ -225,6 +299,26 @@
     bugSending: '보내는 중…', bugThanks: '고마워요! 신고를 받았어요.', bugFail: '보내지 못했어요. 잠시 뒤에 다시 해 주세요.', bugLimit: '오늘은 많이 보냈어요. 내일 다시 해 주세요.',
     bugRemove: '빼기',
     shared: '공유된 자랑', weekOf: d => `${d.getMonth() + 1}월 ${d.getDate()}일 주`,
+    stampNames: {lemon: '탐나요', flower: '예뻐요', laugh: '웃겨요', clap: '대단해요'}, stampsLabel: '스탬프', stampAria: (s, n) => `${s}, 지금 ${n}개`,
+    nb: '이웃 되기', nbNote: 'Lemon Desk 앱이 열려요', withNeighbor: '이웃과 함께',
+    cases: {variety: '나만의 품종', plaque: '기념패', frame: '액자', trophy: '트로피', nickname: '일꾼 별명', friend: '우정 벤치'},
+    badgeCount: n => `이 업적을 자랑한 과수원 ${n}곳`, hidden: '숨은 도전', hiddenHint: '이룬 사람만 조건을 알아요.', basic: '목표', challenge: '도전',
+    themeOfWeek: '이주의 주제', stampTop: s => `'${s}' 가장 많이`,
+    themes: {pink: '핑크 레몬 정원', even: '가장 고른 과수원', manager: '도담에게 맡긴 주', dogs: '개 세 마리 집', decor: '소품 부자', stand: '가판대 사장', rare: '드문 업적'},
+    themeVal: {pink: n => `핑크 레몬 ${n}그루`, even: n => `${n}종류 심음`, dogs: n => `개 ${n}마리`, decor: n => `소품 ${n}개`, manager: n => `도담이 ${n.toLocaleString('ko')}번 팖`, stand: n => `만든 병 ${n.toLocaleString('ko')}개`},
+    goals: {plant: n => n === 1 ? '첫 나무 심기' : `나무 ${n}그루 심기`, dex: n => `도감 ${n}종 채우기`, rainbow: () => '무지개 레몬 열기', crate: n => `창고 레벨 ${n}`,
+      worker: n => `일꾼 레벨 ${n}`, second: () => '두 번째 일꾼 고용', gear: () => '세 일꾼 모두 명인 장비', sold: n => `레몬 ${n.toLocaleString('ko')}개 팔기`, earned: n => `코인 ${n.toLocaleString('ko')} 벌기`,
+      dogs: () => '집 지키는 개 세 마리', secrets: n => `비밀 ${n}개 찾기`, scrump: n => `서리 수첩 ${n}종`, neighbors: n => n === 1 ? '첫 이웃 맺기' : `이웃 ${n}명`,
+      acts: n => `돕기·선물 ${n}번`, gifted: n => `선물 수첩 ${n}종`, thanks: n => `고마움 ${n}개 받기`, land: n => `땅 ${n}칸까지 넓히기`, finds: n => `발견물 ${n}개 찾기`,
+      mentor: n => n === 1 ? '첫 제자 졸업' : `제자 ${n}명 졸업`},
+    ach: {exact999: ['딱 999', '한 번에 레몬을 정확히 999개 팔기'], monoculture: ['레몬 외길', '밭 앞 10칸을 한 종류로만 심기'], rainseller: ['빗속의 장사꾼', '비 오는 동안 레몬 1,000개 팔기'],
+      underrainbow: ['무지개 아래서', '무지개가 뜬 동안 무지개 레몬 따기'], lastone: ['마지막 한 알', '손님 주문을 채우고 창고에 딱 1개 남기기'], snowkumquat: ['겨울 금귤', '눈 오는 동안 금귤 100개 따기'],
+      sevenfaces: ['도담의 일곱 얼굴', '도담 모드 일곱 가지로 하루씩 보내기'], recipes: ['바리스타 수업', '병 레시피 21가지 모두 만들기'], rainbowcloset: ['무지갯빛 옷장', '일꾼 여섯 명에게 서로 다른 옷 색 입히기'],
+      names: ['이름을 불러 줘', '일꾼 여섯 명 모두 이름 지어 주기'], caughtthrice: ['망했다 서리', '서리하다 들키기 3번'], ironfarm: ['철벽 과수원', '개가 서리꾼을 쫓아낸 날 5번'],
+      giftbottle: ['하트 수확', '이웃에게 선물 받은 과일로 병 만들기'], sunset: ['노을빛 자몽', '저녁 6~8시에 자몽·포멜로 300개 따기'], moonpair: ['달빛 한 쌍', '달빛 레몬 두 그루를 나란히 심기'],
+      firstharvest: ['첫 수확', '처음으로 열매 따기'], myvariety: ['나만의 품종', '도감 20종을 채우고 도전 10개 이루기'], friendship: ['우정의 벤치', '이웃 돕기·선물 30번']},
+    hint: {midnight: '모두가 잠든 시간에도 가게는 열려 있어요', mondayblues: '한 주의 시작, 출근하기 전에…', tgif: '한 주의 끝, 퇴근길에…', fullnight: '가득 찬 창고로 하루를 넘겨 보세요', vacation: '도담에게도 쉬는 날이 필요해요',
+      lonelytree: '단 한 그루로도 장사는 할 수 있어요', weekend: '토요일과 일요일, 이틀 내리 가게를 열어 보세요', allsky: '하늘을 자주 올려다보세요'},
   };
   if (en) {
     document.documentElement.lang = 'en';
@@ -269,19 +363,298 @@
     return s;
   }
 
+  // ── 1.17 살아 있는 과수원: 폰 장면(site/m)의 그림·움직임 규칙(motion.js)을 그대로 쓰는 작은 띠 ─────────────
+  // ponytail: 폰 장면의 일부만(나무 단계·일꾼 일/쉼/걷기·개·소품·테마 색). 창고·하늘·날씨·감정 표시는 뺐다 — 게시물은 '그 과수원의 모습'만.
+  // 그림 주소 꼬리표는 site/m/index.html 의 V 와 같이 올린다.
+  const MS = '../m/sprites/', MV = '?v=1170';
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let idx = null;
+  const idxReady = fetch(MS + 'index.json' + MV).then(r => r.json()).then(d => { idx = d; }).catch(() => {});
+  const THEME = {blossom: [1.02, .97, 1.02, 10, 0, 6], sunset: [1.05, .95, .86, 4, 0, 0], moon: [.86, .90, 1.04, 0, 0, 8], garden: [.97, 1.04, .93, 4, 8, 0]}; // 폰 THEME
+  const DYE = [null, 355, 25, 125, 200, 275, 325]; // 맥 Palette.dyeHues
+  const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
+  const X0 = 80, treeX = i => X0 + 70 + i * 100; // 폰은 칸 120px, 카드에서는 조금 촘촘하게
+  const rnd = (a, b) => a + Math.random() * (b - a), clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const files = new Map(), looks = new Map();
+  const load = url => files.get(url) || files.set(url, new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; })).get(url);
+  function withHue(r, g, b, hue) { // 맥 Palette.withHue: 채도·명도는 두고 색상만(폰 페이지와 같다)
+    const rf = r / 255, gf = g / 255, bf = b / 255, v = Math.max(rf, gf, bf), s = v > 0 ? (v - Math.min(rf, gf, bf)) / v : 0;
+    const hh = (hue / 60) % 6, i = Math.floor(hh) % 6, f = hh - Math.floor(hh), p = v * (1 - s), q = v * (1 - s * f), t = v * (1 - s * (1 - f));
+    const u = x => Math.max(0, Math.min(255, Math.round(x * 255)));
+    return [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i].map(u);
+  }
+  function recolor(im, colors, hue, g) { // colors: 염색할 색 목록, 'all' 이면 모든 픽셀(나만의 품종)
+    const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+    const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height), px = d.data, all = colors === 'all', set = !all && colors && new Set(colors.map(h => parseInt(h, 16)));
+    const ch = (v, m, a) => Math.max(0, Math.min(255, Math.round(v * m + a)));
+    for (let i = 0; i < px.length; i += 4) {
+      if (!px[i + 3]) continue;
+      let r = px[i], gg = px[i + 1], b = px[i + 2];
+      if (all || (set && set.has(r << 16 | gg << 8 | b))) [r, gg, b] = withHue(r, gg, b, hue);
+      if (g) { r = ch(r, g[0], g[3]); gg = ch(gg, g[1], g[4]); b = ch(b, g[2], g[5]); }
+      px[i] = r; px[i + 1] = gg; px[i + 2] = b;
+    }
+    x.putImageData(d, 0, 0);
+    return new Promise(ok => c.toBlob(bl => ok(bl ? URL.createObjectURL(bl) : c.toDataURL())));
+  }
+  function art(name, dye = null, theme = '', all = false) { // 그림 주소(테마 색 보정·옷 염색을 입힌 것은 한 번 만들어 둔다)
+    const url = MS + name + '.png' + MV, colors = dye == null ? null : all ? 'all' : (idx[name] || [])[3], g = THEME[theme] || null;
+    if (!g && !colors) return load(url).then(() => url, () => url);
+    const key = `${name}|${colors ? dye : '-'}|${g ? theme : '-'}`;
+    if (!looks.has(key)) looks.set(key, load(url).then(im => recolor(im, colors, dye, g)).catch(() => url));
+    return looks.get(key);
+  }
+  const frames = name => idx[name] ? idx[name][2] : 0;
+  /** 그림(시트)을 요소에 건다. clip 이 있으면 프레임을 넘긴다(폰 show 와 같다). 동작 줄이기면 첫 프레임에 멈춘다 */
+  function show(e, name, {clip = null, once = false, frame = 0, offset = 0, dye = null, theme = '', center = true} = {}) {
+    const info = idx[name]; if (!info) return;
+    const tok = e.tok = (e.tok || 0) + 1, [w, h, n] = info;
+    art(name, dye, theme).then(u => {
+      if (e.tok !== tok) return;
+      if (e.frames) { e.frames.cancel(); e.frames = null; }
+      Object.assign(e.style, {width: w + 'px', height: h + 'px', backgroundImage: `url("${u}")`, backgroundPosition: `${-(once ? n - 1 : frame) * w}px 0`});
+      if (center) e.style.marginLeft = -w / 2 + 'px';
+      if (!clip || n < 2 || calm) return;
+      const kf = [], kt = clip.keyTimes;
+      for (let i = 0; i < n; i++) kf.push({backgroundPosition: `${-i * w}px 0`, offset: kt[i], easing: 'steps(1, end)'});
+      kf.push({backgroundPosition: `${-(n - 1) * w}px 0`, offset: 1});
+      e.frames = e.animate(kf, {duration: clip.duration * 1000, iterations: once ? 1 : Infinity});
+      if (offset) e.frames.currentTime = offset * 1000;
+    });
+  }
+  const loop = (e, name, perFrame, opt = {}) => show(e, name, {...opt, clip: Motion.even(frames(name), perFrame)});
+  function walk(e, from, to, times) { // 1px 씩 끊어 옮긴다(폰 walk)
+    const dir = to > from ? 1 : -1, total = times[times.length - 1], kf = [];
+    for (let k = 0; k < times.length - 1; k++) kf.push({transform: `translateX(${from + dir * k}px)`, offset: times[k] / total, easing: 'steps(1, end)'});
+    kf.push({transform: `translateX(${to}px)`, offset: 1});
+    e.style.transform = `translateX(${to}px)`;
+    e.animate(kf, {duration: total * 1000});
+    return total;
+  }
+  function sp(host, z, x, y) { const e = el('div', 'sp'); Object.assign(e.style, {zIndex: z, left: x + 'px', bottom: y + 'px'}); host.append(e); return e; }
+  function ent(host, z, x) { const e = el('div', 'ent'), body = el('div', 'bd'); e.append(body); e.style.zIndex = z; e.style.transform = `translateX(${x}px)`; host.append(e); return {el: e, body}; }
+
+  // 일꾼: 무엇을 할지는 Motion.choose(맥·폰과 같은 규칙), 장면이 화면 밖이면 쉰다
+  class Mini {
+    constructor(L, w, x, slot) {
+      Object.assign(this, {L, role: w.r, variant: w.v ? 1 : 0, dye: DYE[w.d | 0] ?? null, tier: clamp(w.t | 0, 0, 4), x, facing: 1, steps: [], last: null, lastTree: null, streak: 0, sheetName: '', once: false});
+      this.speed = Motion.speed(this.role, slot);
+      Object.assign(this, ent(L.world, 20 + ROLES.indexOf(this.role) * 2 + slot, x));
+      const sh = el('div', 'sh'); this.el.prepend(sh); show(sh, 'fx-shadow-0', {center: false});
+      this.play('idle');
+    }
+    sheet(anim) { // 이 캐릭터·장비 단계 그림이 없으면 낮은 단계, 그다음 기본 캐릭터로(폰 Worker.sheet)
+      for (const v of this.variant ? ['b', ''] : ['']) for (let t = this.tier; t >= 0; t--) { const n = `w-${this.role}${v}-${t}-${anim}`; if (idx[n]) return n; }
+      return `w-${this.role}-0-${anim}`;
+    }
+    owns(anim) { return !!idx[`w-${this.role}${this.variant ? 'b' : ''}-${this.tier}-${anim}`]; }
+    face(dir) { this.facing = dir; this.body.style.transform = `scaleX(${dir})`; }
+    play(anim, once = false) {
+      const name = this.sheet(anim), n = frames(name);
+      let clip = Motion.clip(anim, n);
+      if (anim === 'walk' && n) clip = Motion.even(n, Motion.cycle(this.speed) / n);
+      if (!n || !(once || this.once || name !== this.sheetName)) return clip;
+      Object.assign(this, {sheetName: name, once});
+      show(this.body, name, {clip, once, dye: this.dye, theme: this.L.theme, offset: anim === 'idle' ? rnd(0, clip.duration) : 0});
+      return clip;
+    }
+    wait(s) { this.timer = setTimeout(() => this.next(), s * 1000); }
+    plan() {
+      const L = this.L, has = new Set(['dig', 'water', 'pick'].filter(a => idx[this.sheet(a)]).concat(['seed', 'tamp', 'wipe', 'wave', 'yawn', 'sniff', 'habit'].filter(a => this.owns(a))));
+      const c = Motion.choose({role: this.role, fruit: L.trees.map(t => t.s >= 5 ? 1 : 0), young: L.trees.map(t => t.s < 3), crateFull: false, night: L.theme === 'moon',
+        season: L.season, streak: this.streak, last: this.last, lastTree: this.lastTree, has, rain: false});
+      this.last = c; if (c.kind === 'work') { this.streak++; this.lastTree = c.tree; } else this.streak = 0;
+      const go = x => ({t: 'walk', x: Math.round(clamp(x, 20, L.W - 20))}), idle = secs => ({t: 'act', anim: 'idle', secs});
+      const rest = a => Motion.clip(a, frames(this.sheet(a))).loops ? {t: 'act', anim: a, secs: 1.44} : {t: 'clip', anim: a};
+      switch (c.kind) {
+        case 'work': return [go(treeX(c.tree) - ({water: 44, pick: 28}[c.anim] || 40)), ...Array(c.reps).fill({t: 'clip', anim: c.anim}), idle(rnd(1, 3))];
+        case 'rest': return [rest(c.anim), idle(rnd(1.5, 3))];
+        case 'look': return [{t: 'turn'}, idle(rnd(0.8, 1.4)), {t: 'turn'}, idle(rnd(0.8, 1.6))];
+        case 'stroll': return [go(treeX(c.tree) - 52 + rnd(-12, 12)), idle(rnd(2, 4))];
+        case 'idle': return [idle(c.secs)];
+      }
+      return [idle(3)];
+    }
+    next() {
+      if (!this.L.world.isConnected) return; // 목록을 다시 그리면 멈춘다
+      if (!this.L.on) return this.wait(1.5);
+      if (!this.steps.length) this.steps = this.plan();
+      const st = this.steps.shift();
+      if (st.t === 'turn') { this.face(-this.facing); return this.next(); }
+      if (st.t === 'walk') {
+        const dist = Math.abs(st.x - this.x); if (dist < 1) return this.next();
+        this.face(st.x > this.x ? 1 : -1); this.play('walk');
+        const s = walk(this.el, this.x, st.x, Motion.walkTimes(dist / 2, this.speed)); this.x = st.x; return this.wait(s);
+      }
+      if (TOWARD.has(st.anim)) this.face(1);
+      if (st.t === 'act') { this.play(st.anim); return this.wait(st.secs); }
+      this.wait(Math.max(this.play(st.anim, true).duration, 0.3));
+    }
+  }
+  // 개(0 진돗개, 1 웰시코기, 2 삽살개): 왼쪽 구역에서 앉고·꼬리 치고·종종걸음(Motion.dogNext)
+  class Pup {
+    constructor(L, kind, x) { Object.assign(this, {L, kind, x, last: null}, ent(L.world, 16, x)); this.still('sit'); }
+    get pre() { return 'dog-' + 'abc'[this.kind]; }
+    still(anim, f = 0) { show(this.body, `${this.pre}-${anim}`, {frame: f, theme: this.L.theme}); }
+    loop(anim, perFrame) { loop(this.body, `${this.pre}-${anim}`, perFrame, {theme: this.L.theme}); }
+    wait(s) { setTimeout(() => this.next(), s * 1000); }
+    next() {
+      if (!this.L.world.isConnected) return;
+      if (!this.L.on) return this.wait(2);
+      const night = this.L.theme === 'moon', a = Motion.dogNext(this.kind, false, night, this.last); this.last = a;
+      if (a.kind === 0) { this.still('sit'); return this.wait(a.secs); }
+      if (a.kind === 1) { this.loop('sit', 0.16); return this.wait(a.secs); }
+      if (a.kind === 3) { if (this.kind === 0) this.still('trick', night ? 1 : 0); else this.loop('trick', this.kind === 1 ? 0.18 : 0.1); return this.wait(a.secs); }
+      if (a.kind === 4) { this.loop('bark', 0.15); return this.wait(a.secs); }
+      const l = 24, r = l + Math.max(88, (this.L.W * 0.6 - l) * Motion.dogRange(this.kind)), target = Math.round(l + (r - l) * a.at), dist = Math.abs(target - this.x);
+      if (dist < 6) { this.still('sit'); return this.wait(0.8); }
+      const pace = Motion.dogPace(this.kind);
+      this.body.style.transform = `scaleX(${target > this.x ? 1 : -1})`; this.loop('walk', pace.cycle / 4);
+      const s = walk(this.el, this.x, target, Motion.walkTimes(dist / 2, pace.speed, 2)); this.x = target; this.wait(s);
+    }
+  }
+  // 화면에 보이는 장면만 움직인다(게시물 20개가 한꺼번에 돌지 않게)
+  const seen = 'IntersectionObserver' in window && new IntersectionObserver(es => es.forEach(e => {
+    const L = e.target.live; L.on = e.isIntersecting;
+    L.world.getAnimations({subtree: true}).forEach(a => L.on ? a.play() : a.pause());
+  }));
+  /** orchard.scene {trees: [{k, s}], workers: [{r, v, d, t}], dogs, theme, decor: [{id, x(0~1)}]} → 움직이는 띠 */
+  function liveStrip(sc, theme) {
+    const trees = (Array.isArray(sc.trees) ? sc.trees : []).slice(0, 10), W = treeX(Math.max(trees.length, 4) - 1) + 80;
+    const s = el('div', 'strip live ' + (THEME[theme] ? theme : '')), size = el('div', 'size'), world = el('div', 'world');
+    s.setAttribute('aria-hidden', 'true'); size.style.width = W / 2 + 'px'; world.style.width = W + 'px';
+    size.append(world); s.append(size);
+    const L = s.live = {world, trees, theme, W, on: !seen, season: Motion.season(new Date().getMonth() + 1)};
+    idxReady.then(() => {
+      if (!idx) return;
+      const gnd = el('div', 'gnd'); world.append(gnd);
+      art('ground-pair', null, theme).then(u => { gnd.style.backgroundImage = `url("${u}")`; });
+      // 소품 자리(0~1)는 맥 decorSpan(창고 오른쪽 ~ 10번째 나무 옆)과 같은 구간
+      for (const d of (Array.isArray(sc.decor) ? sc.decor : []).slice(0, 10)) {
+        const name = d && [d.id + '-0', d.id].find(n => idx[n]); if (!name) continue;
+        show(sp(world, 5, Math.round(clamp(X0 + 20 + (+d.x || 0) * (treeX(9) + 36 - X0 - 20), 20, W - 30)), 8), name, {theme});
+      }
+      trees.forEach((t, i) => show(sp(world, 10, treeX(i), 12), `tree-${t.k}-${clamp(t.s | 0, 0, 7)}`, {theme}));
+      const crew = (Array.isArray(sc.workers) ? sc.workers : []).filter(w => w && ROLES.includes(w.r)).slice(0, 7), count = {};
+      const minis = crew.map((w, k) => new Mini(L, w, Math.round(X0 + 30 + k * ((W - X0 - 60) / Math.max(1, crew.length))), (count[w.r] = (count[w.r] || 0) + 1) - 1));
+      const pups = Array.from({length: clamp(sc.dogs | 0, 0, 3)}, (_, k) => new Pup(L, k, 30 + k * 22));
+      if (seen) seen.observe(s);
+      if (calm) return; // 동작 줄이기: 서 있는 모습만
+      minis.forEach((m, k) => setTimeout(() => m.next(), 400 + k * 500));
+      pups.forEach((p, k) => setTimeout(() => p.next(), 600 + k * 600));
+    });
+    return s;
+  }
+
+  // 그림 하나를 size px 상자에 맞춘 아이콘(시트면 첫 프레임). 그림이 없으면 이모지
+  function icon(names, emoji, size = 28, dye = null, all = false) {
+    const e = el('span', 'ico'); e.setAttribute('aria-hidden', 'true'); e.style.width = e.style.height = size + 'px';
+    idxReady.then(() => {
+      const name = idx && names.find(n => idx[n]);
+      if (!name) { e.className = 'ico emoji'; e.textContent = emoji; return; }
+      const [w, h, n] = idx[name], k = Math.min(size / w, size / h);
+      art(name, dye, '', all).then(u => Object.assign(e.style, {width: w * k + 'px', height: h * k + 'px', backgroundImage: `url("${u}")`, backgroundSize: `${n * w * k}px ${h * k}px`}));
+    });
+    return e;
+  }
+
+  // 업적 배지: 이름·설명은 이 표(앱 Achievements.swift 의 이름·조건·힌트 그대로, 영어는 make-strings.py EN). 기본 목표는 '<종류>-<수>'(Goals.swift)
+  const HIDDEN = new Set(['midnight', 'mondayblues', 'tgif', 'fullnight', 'vacation', 'lonelytree', 'weekend', 'allsky']);
+  const ACH_ICON = {exact999: 'special-twin', rainseller: 'special-rain', underrainbow: 'special-rainbow', snowkumquat: 'special-snow', giftbottle: 'special-heart',
+    sunset: 'special-sunset', moonpair: 'special-moonpair', firstharvest: 'special-first', myvariety: 'fruit-eureka', lastone: 'prop-oneplate-0', recipes: 'prop-coffeecart-0',
+    rainbowcloset: 'prop-crown-0', ironfarm: 'prop-doghouse-0', friendship: 'prop-friendbench-0', fullnight: 'prop-plaque-0', weekend: 'prop-frame-0',
+    plant: 'tree-eureka-6', dex: 'badge-dex', rainbow: 'fruit-rainbow', crate: 'crate-2', worker: 'badge-crew', second: 'badge-crew', gear: 'badge-crew', sold: 'badge-rich',
+    earned: 'badge-rich', dogs: 'dog-a-sit', secrets: 'emote-star', neighbors: 'emote-heart', acts: 'emote-heart', thanks: 'emote-heart', land: 'badge-land',
+    finds: 'prop-chest-0', mentor: 'prop-mentorflag-0'};
+  function achInfo(id) {
+    const m = /^([a-z]+)-(\d+)$/.exec(id);
+    if (m && T.goals[m[1]]) return {name: T.goals[m[1]](+m[2]), kind: T.basic, icon: ACH_ICON[m[1]]};
+    if (HIDDEN.has(id)) return {name: T.hidden, desc: T.hint[id] || T.hiddenHint, kind: T.challenge, icon: ACH_ICON[id]}; // 이름·조건 대신 앱의 힌트만
+    const [name, desc] = T.ach[id] || [id, '']; return {name, desc, kind: T.challenge, icon: ACH_ICON[id]};
+  }
+  const counts = new Map();
+  const pop = $('ach-pop');
+  function openBadge(btn, id) {
+    const info = achInfo(id), line = el('p', 'muted', '…');
+    pop.replaceChildren(el('span', 'muted', info.kind), el('b', null, info.name), ...(info.desc ? [el('p', null, info.desc)] : []), line);
+    if (!counts.has(id)) counts.set(id, api('badges/' + encodeURIComponent(id)).catch(() => { counts.delete(id); return null; }));
+    counts.get(id).then(r => { line.textContent = r && Number.isFinite(r.count) ? T.badgeCount(r.count) : ''; });
+    if (pop.matches(':popover-open')) pop.hidePopover();
+    pop.showPopover();
+    const b = btn.getBoundingClientRect(), w = pop.offsetWidth, below = b.bottom + 8 + pop.offsetHeight < innerHeight;
+    pop.style.left = clamp(b.left, 12, innerWidth - w - 12) + 'px';
+    pop.style.top = (below ? b.bottom + 8 : Math.max(12, b.top - 8 - pop.offsetHeight)) + 'px';
+  }
+  function badgeRow(ids) {
+    const row = el('div', 'ach');
+    for (const id of ids.slice(0, 3)) {
+      if (typeof id !== 'string') continue;
+      const info = achInfo(id), b = el('button'); b.type = 'button'; b.setAttribute('aria-haspopup', 'dialog');
+      b.append(icon(info.icon ? [info.icon] : [], '🏅', 26), el('span', null, info.name));
+      b.onclick = () => openBadge(b, id);
+      row.append(b);
+    }
+    return row;
+  }
+  // 진열장 하나: 나만의 품종(열매를 hue 로 염색)·기념패·액자·트로피·일꾼 별명·우정 벤치(이웃 이름은 보이지 않는다)
+  function showcase(c) {
+    const kinds = {variety: [['fruit-eureka'], '🍋'], plaque: [['prop-plaque-0'], '🪧'], frame: [['prop-frame-0', 'prop-frame-small-0'], '🖼️'],
+      trophy: [['prop-trophy-week-0', 'prop-trophy-gold-0'], '🏆'], nickname: [[], '🏷️'], friend: [['prop-friendbench-0'], '🤝']};
+    if (!c || !kinds[c.kind]) return null;
+    const box = el('div', 'case'), txt = el('div'), friend = c.kind === 'friend', hue = c.kind === 'variety' && Number.isFinite(c.hue) ? clamp(c.hue, 0, 1) * 360 : null;
+    box.append(icon(kinds[c.kind][0], kinds[c.kind][1], 36, hue, hue != null));
+    txt.append(el('span', 'what', T.cases[c.kind]), el('b', null, friend ? T.withNeighbor : c.name || T.cases[c.kind]));
+    if (!friend && c.text) txt.append(el('p', null, c.text));
+    box.append(txt);
+    return box;
+  }
+  // 스탬프 4개: 게시물마다 브라우저당 하나(같은 것 다시 = 취소). 앱이 연 표가 있으면 같이 보낸다(구경꾼 기록)
+  const STAMPS = [['lemon', '🍋'], ['flower', '🌸'], ['laugh', '😂'], ['clap', '👏']];
+  // 표가 지났거나 맞지 않으면 서버가 표 없이 연 것처럼 반응만 센다
+  const withTicket = body => { const t = sessionStorage.getItem('ld-brag'); return JSON.stringify(t ? {...body, ticket: t} : body); };
+  const sendStamp = (p, kind) => api(`posts/${p.id}/stamp`, {method: 'POST', body: withTicket({kind, voter})});
+  function stampRow(p, readonly) {
+    const row = el('div', 'stamps'); row.setAttribute('role', 'group'); row.setAttribute('aria-label', T.stampsLabel);
+    const btns = STAMPS.map(([k, emoji]) => {
+      const b = el('button'); b.type = 'button'; b.disabled = readonly;
+      b.onclick = async () => {
+        btns.forEach(x => { x.disabled = true; });
+        try { const r = await sendStamp(p, k); p.stamps = r.stamps; p.mine = r.mine; draw(); }
+        catch (e) { $('note').textContent = e.status === 429 ? T.slow : T.loadFail; }
+        btns.forEach(x => { x.disabled = false; });
+      };
+      row.append(b); return b;
+    });
+    const draw = () => btns.forEach((b, i) => {
+      const [k, emoji] = STAMPS[i], n = (p.stamps || {})[k] || 0;
+      b.textContent = `${emoji} ${T.stampNames[k]} ${n}`; b.setAttribute('aria-pressed', p.mine === k ? 'true' : 'false'); b.setAttribute('aria-label', T.stampAria(T.stampNames[k], n));
+    });
+    draw();
+    return row;
+  }
+
   function card(p, {shared = false, readonly = false} = {}) {
-    const a = el('article', 'post' + (shared ? ' shared' : '')); a.id = 'p-' + p.id;
-    const h = el('header');
-    h.append(el('span', 'nick', p.nickname));
+    const a = el('article', 'post' + (shared ? ' shared' : '')); a.id = 'p-' + p.id; a.tabIndex = -1;
+    const h = el('header'), who = el('div', 'who'), o = p.orchard;
+    who.append(el('span', 'nick', p.nickname));
+    if (p.title) who.append(el('span', 'chip', p.title));
+    h.append(who);
     if (!readonly) h.append(starButton(p)); else h.append(el('span', 'muted', '★ ' + p.stars));
-    a.append(h, strip(p.orchard), el('p', 'stats', T.stats(p.card)));
+    a.append(h, o.scene && typeof o.scene === 'object' ? liveStrip(o.scene, o.scene.theme || o.theme) : strip(o), el('p', 'stats', T.stats(p.card)));
     const b = el('p', 'badges');
-    b.append(el('span', null, T.dexBadge(p.orchard.dex)), el('span', null, T.secretBadge(p.orchard.secrets)));
-    if (p.orchard.scrump) b.append(el('span', null, T.scrumpBadge(p.orchard.scrump))); // 1.8
-    if (p.orchard.rainbow) b.append(el('span', null, T.rainbow));
-    const crew = ['planter', 'caretaker', 'harvester'].filter(r => p.orchard.workers[r]).map(r => `${T.crew[r]} ${p.orchard.workers[r].level}`);
+    b.append(el('span', null, T.dexBadge(o.dex)), el('span', null, T.secretBadge(o.secrets)));
+    if (o.scrump) b.append(el('span', null, T.scrumpBadge(o.scrump))); // 1.8
+    if (o.rainbow) b.append(el('span', null, T.rainbow));
+    const crew = ['planter', 'caretaker', 'harvester'].filter(r => o.workers[r]).map(r => `${T.crew[r]} ${o.workers[r].level}`);
     if (crew.length) b.append(el('span', null, crew.join(' · ')));
     a.append(b);
+    if (Array.isArray(p.badges) && p.badges.length) a.append(badgeRow(p.badges));
+    const c = showcase(p.showcase); if (c) a.append(c);
+    a.append(stampRow(p, readonly));
+    const f = el('footer'), nb = el('span', 'nb'), link = el('a', null, T.nb);
+    link.href = 'lemondesk://neighbor?post=' + encodeURIComponent(p.id);
+    nb.append(link, el('small', null, T.nbNote)); f.append(nb);
     if (!readonly) {
       const r = el('button', 'report', T.report); r.type = 'button';
       r.onclick = async () => {
@@ -289,8 +662,9 @@
         try { await api(`posts/${p.id}/report`, {method: 'POST', body: '{}'}); r.textContent = T.reported; r.disabled = true; }
         catch (e) { $('note').textContent = e.status === 429 ? T.slow : T.loadFail; }
       };
-      a.append(r);
+      f.append(r);
     }
+    a.append(f);
     return a;
   }
 
@@ -304,7 +678,7 @@
     set(p.stars, p.starred);
     b.onclick = async () => {
       b.disabled = true;
-      try { const r = await api(`posts/${p.id}/star`, {method: 'POST', body: JSON.stringify({voter})}); p.stars = r.stars; set(r.stars, r.starred); }
+      try { const r = await api(`posts/${p.id}/star`, {method: 'POST', body: withTicket({voter})}); p.stars = r.stars; set(r.stars, r.starred); }
       catch (e) { $('note').textContent = e.status === 429 ? T.slow : T.loadFail; }
       b.disabled = false;
     };
@@ -312,14 +686,29 @@
   }
 
   // 하이라이트
+  function themeValue(id, p) { // 게시물 데이터로 보이는 숫자만(판정은 서버)
+    const sc = p.orchard.scene || {}, kinds = (sc.trees || []).map(t => t.k).concat(sc.trees ? [] : p.orchard.trees || []);
+    const n = {pink: kinds.filter(k => k === 'pink').length, even: new Set(kinds).size, dogs: sc.dogs, decor: (sc.decor || []).length,
+      manager: p.orchard.managerSold, stand: p.orchard.bottles}[id];
+    return T.themeVal[id] && Number.isFinite(n) && n > 0 ? T.themeVal[id](n) : '';
+  }
   let current = '';
   async function loadHighlights(week) {
     const h = await api('highlights?week=' + encodeURIComponent(week));
     $('hl-note').textContent = h.final ? T.final : T.live;
     const cats = $('cats'); cats.textContent = '';
-    for (const [key, val] of [['harvest', p => T.picked(p.card.harvested)], ['secrets', p => T.found(p.orchard.secrets)], ['dex', p => T.dexv(p.orchard.dex)]]) {
+    // 1.17 이주의 주제(응답의 themeId) 부문은 맨 앞, 아직 뽑힌 과수원이 없어도 주제는 보인다
+    const tid = h.themeId, tp = h.categories.theme;
+    if (tid && T.themes[tid]) {
+      const c = el('div', 'cat theme'); c.append(el('span', 'muted', T.themeOfWeek), el('b', null, T.themes[tid]));
+      if (tp) { const v = themeValue(tid, tp); c.append(el('span', 'val', tp.nickname + (v ? ' · ' + v : ''))); }
+      cats.append(c);
+    }
+    const rows = [['harvest', T.harvest, p => T.picked(p.card.harvested)], ['secrets', T.secrets, p => T.found(p.orchard.secrets)], ['dex', T.dex, p => T.dexv(p.orchard.dex)],
+      ...STAMPS.map(([k, emoji]) => ['stamp-' + k, `${emoji} ${T.stampTop(T.stampNames[k])}`, p => `${emoji} ${(p.stamps || {})[k] || 0}`])];
+    for (const [key, label, val] of rows) {
       const p = h.categories[key]; if (!p) continue;
-      const c = el('div', 'cat'); c.append(el('span', 'muted', T[key]), el('b', null, p.nickname), el('span', 'val', val(p)));
+      const c = el('div', 'cat'); c.append(el('span', 'muted', label), el('b', null, p.nickname), el('span', 'val', val(p)));
       cats.append(c);
     }
     const top = $('top'); top.textContent = '';
@@ -397,8 +786,17 @@
   });
 
   // 버그 신고: 앱이 ?bug=<일회용 표>#bug 로 연다. 표는 주소에서 바로 지우고(공유·화면에 남지 않게) 이 탭에만 둔다.
+  // 1.17 구경꾼 표: 앱의 '자랑 게시판…' 이 ?t=<일회용 표> 로 연다. 같은 방식으로 주소에서 지우고 스탬프에 같이 보낸다
   const qs = new URLSearchParams(location.search);
-  if (qs.get('bug')) { sessionStorage.setItem('ld-bug', qs.get('bug')); qs.delete('bug'); history.replaceState(null, '', location.pathname + (qs.toString() ? '?' + qs : '') + location.hash); }
+  for (const [q, key] of [['bug', 'ld-bug'], ['t', 'ld-brag']]) if (qs.get(q)) { sessionStorage.setItem(key, qs.get(q)); qs.delete(q); }
+  if (qs.toString() !== location.search.slice(1)) history.replaceState(null, '', location.pathname + (qs.toString() ? '?' + qs : '') + location.hash);
+  if ([12, 1, 2].includes(new Date().getMonth() + 1)) document.body.classList.add('winter');
+  $('random').onclick = () => { // 지금 목록에서 아무 과수원으로
+    const all = [...$('list').querySelectorAll('.post')]; if (!all.length) return;
+    const p = all[Math.floor(Math.random() * all.length)];
+    p.scrollIntoView({behavior: calm ? 'auto' : 'smooth', block: 'center'}); p.focus({preventScroll: true});
+    p.classList.add('flash'); setTimeout(() => p.classList.remove('flash'), 1600);
+  };
   let bugReady = false;
   const shots = [];
   async function openBug() {

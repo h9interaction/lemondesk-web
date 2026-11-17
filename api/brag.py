@@ -23,6 +23,8 @@
   mac·windows, laptop·desktop, 마지막 접속)을 저장한다. 진행하는 기기(홀더)는 하나, 다른 기기는 take 로 이어받는다.
   사용 통계 sync(off·on·holder).
 - 1.16: 폰 명령 mgr_set 의 plan 이 도담 모드로 늘고, 사용 통계 mm(도담 모드)과 /stats 의 모드 분포.
+- 1.17(docs/research/collection-1.17.md): 게시물 칭호·배지·진열장·장면, 스탬프(posts/<id>/stamp), 게시판 표(brag/ticket)와
+  구경꾼 날(소유 키 해시·날짜), 배지 수(badges/<id>), 이주의 주제·스탬프 부문, raid/status 의 brag 보상 요약, 게시물로 이웃 요청.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -75,7 +77,9 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
           # 1.15.1 기기 연동: 소유 키당(올리기 10초 몰아서 + 멈춘 기기 1분마다 확인), 코드 넣기는 IP 당
           "sync": (1200, 3600), "sync_redeem": (20, 3600),
           # 1.15.2 버그 신고: 표는 소유 키당, 올리기는 IP 당(하루 개수는 소유 키당 BUG_PER_DAY 로 따로 센다)
-          "bug_ticket": (10, 3600), "bug": (10, 3600)}
+          "bug_ticket": (10, 3600), "bug": (10, 3600),
+          # 1.17 스탬프는 IP 당, 게시판 표는 소유 키당
+          "stamp": (300, 3600), "brag_ticket": (30, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -283,6 +287,31 @@ SYNC_LABELS = {"laptop", "desktop"}
 SYNC_TARGET = re.compile(r"[0-9a-f]{8}")  # 기기 목록 id = sha256(device) 앞 8자
 SYNC_STATES = re.compile(r"(off|on|holder)?")  # 통계 ping 의 sync(옛 앱은 안 보낸다)
 MANAGER_PLANS = {"cheap", "dex", "crew", "rich", "garden", "barista", "land"}  # 1.16 도담 모드
+
+# 1.17 게시판(docs/research/collection-1.17.md 확정): 도전 id(앱 Achievements, 기본은 Goals id), 스탬프, 이주의 주제
+_GOALS = {"plant": (1, 10, 30), "dex": (6, 12, 20), "rainbow": (1,), "crate": (6, 12, 18), "worker": (10, 20), "second": (1,),
+          "gear": (3,), "sold": (100, 1_000, 10_000), "earned": (10_000, 1_000_000), "dogs": (3,), "secrets": (5, 10, 20),
+          "scrump": (5, 10, 20), "neighbors": (1, 5), "acts": (10, 50), "gifted": (5, 10, 20), "thanks": (5, 15, 40),
+          "land": (15, 20, 30, 50), "finds": (4, 8), "mentor": (1, 3, 5)}
+ACHIEVEMENTS = ({"%s-%d" % (k, n) for k, ns in _GOALS.items() for n in ns}
+                | {"exact999", "monoculture", "rainseller", "underrainbow", "lastone", "snowkumquat", "sevenfaces", "recipes",
+                   "rainbowcloset", "names", "caughtthrice", "ironfarm", "giftbottle", "sunset", "moonpair", "firstharvest",
+                   "myvariety", "friendship"}
+                | {"midnight", "mondayblues", "tgif", "fullnight", "vacation", "lonelytree", "weekend", "allsky"})
+BADGES_MAX = 3
+SHOWCASE = {"variety", "plaque", "frame", "nickname", "trophy", "friend"}
+BOARD_STAMPS = ("lemon", "flower", "laugh", "clap")  # 탐나요·예뻐요·웃겨요·대단해요
+WEEK_THEMES = ("pink", "even", "manager", "dogs", "decor", "stand", "rare")  # ISO 주 번호 % 7
+BRAG_TICKET_TTL = 3600
+BURST = (600, 2)             # 보상 집계: 게시 뒤 10분 안에 같은 IP 해시에서 2개 넘게 몰린 반응은 뺀다
+DECOR_ID = re.compile(r"[a-z0-9-]{1,32}")
+POST_ID = re.compile(r"[A-Za-z0-9_-]{1,32}")
+CATEGORIES = ("harvest", "secrets", "dex", "theme") + tuple("stamp-" + k for k in BOARD_STAMPS)  # 하이라이트 부문(1위 하나씩)
+
+
+def week_theme(week):
+    m = re.fullmatch(r"\d{4}-W(\d{2})", week or "")
+    return WEEK_THEMES[int(m.group(1)) % len(WEEK_THEMES)] if m else None
 
 
 def _twin(k):
@@ -614,18 +643,63 @@ def _int(v, lo, hi):
     return v
 
 
-def clean_nickname(v):
+def clean_nickname(v, most=12, code="bad_nickname"):
     if not isinstance(v, str):
-        raise BadRequest("bad_nickname")
+        raise BadRequest(code)
     n = " ".join(v.split())
     flat = n.replace(" ", "").lower()
-    if not 1 <= len(n) <= 12 or URLISH.search(n) or any(b in flat for b in BANNED) or any(ord(c) < 32 for c in n):
-        raise BadRequest("bad_nickname")
+    if not 1 <= len(n) <= most or URLISH.search(n) or any(b in flat for b in BANNED) or any(ord(c) < 32 for c in n):
+        raise BadRequest(code)
     return n
 
 
-def clean_post(body, baskets=0, dispatches=0):
-    """앱이 보낸 내용을 검사해 저장할 형태로. 범위를 벗어나면 BadRequest."""
+def _num(v, lo, hi):
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not lo <= v <= hi:
+        raise BadRequest()
+    return v
+
+
+def clean_scene(v):
+    """1.17 살아 있는 과수원(앞 10칸): 나무 종류·단계, 일꾼 역할·variant·염색·장비 단계, 개 수, 테마, 놓은 소품과 자리(0~1)"""
+    if not isinstance(v, dict) or not all(isinstance(v.get(k, []), list) for k in ("trees", "workers", "decor")):
+        raise BadRequest()
+    trees, workers, decor = v.get("trees", []), v.get("workers", []), v.get("decor", [])
+    if len(trees) > MAX_TREES or len(workers) > 2 * len(ROLES) or len(decor) > 64 or v.get("theme") not in THEMES:
+        raise BadRequest()
+    d = lambda x: x if isinstance(x, dict) else {}  # noqa: E731
+    return {"trees": [{"k": _one(d(t).get("k"), KINDS), "s": _int(d(t).get("s"), 0, 7)} for t in trees],
+            "workers": [{"r": _one(d(w).get("r"), ROLES), "v": _int(d(w).get("v"), 0, 1), "d": _int(d(w).get("d"), 0, 6),
+                         "t": _int(d(w).get("t"), 0, 4)} for w in workers],
+            "dogs": _int(v.get("dogs", 0), 0, 3), "theme": v["theme"],
+            "decor": [{"id": _match(d(p).get("id"), DECOR_ID), "x": _num(d(p).get("x"), 0, 1)} for p in decor]}
+
+
+def clean_showcase(v):
+    if not isinstance(v, dict) or v.get("kind") not in SHOWCASE:
+        raise BadRequest("bad_showcase")
+    out = {"kind": v["kind"]}
+    if v.get("name") is not None and v["kind"] != "friend":  # 우정 소품은 이웃 이름 대신 '이웃과 함께'(게시판이 쓴다)
+        out["name"] = clean_nickname(v["name"], 24, "bad_showcase")
+    if v.get("text") is not None:
+        out["text"] = clean_nickname(v["text"], 60, "bad_showcase")
+    if v.get("hue") is not None:
+        out["hue"] = _num(v["hue"], 0, 1)
+    return out
+
+
+def _badge_ok(b, post, crate, dogs):
+    """게시물 숫자로 볼 수 있는 기본 도전만 대조한다(plant 는 주간 숫자뿐이라 못 본다, 도전·숨은 것은 못 본다)"""
+    prefix, _, n = b.rpartition("-")
+    o, land = post["orchard"], post["land"]
+    have = {"crate": crate, "dex": o["dex"], "secrets": o["secrets"], "scrump": o["scrump"], "rainbow": int(o["rainbow"]),
+            "worker": max([w["level"] for w in o["workers"].values()] or [0]),
+            "second": int(any(len(w["looks"]) >= 2 for w in o["workers"].values())),
+            "land": land["plots"], "earned": land["earned"], "dogs": dogs}.get(prefix)
+    return have is None or not n.isdigit() or have >= int(n)
+
+
+def clean_post(body, baskets=0, dispatches=0, farm=(0, 0)):
+    """앱이 보낸 내용을 검사해 저장할 형태로. 범위를 벗어나면 BadRequest. farm: 서버가 아는 (창고 레벨, 개 수)"""
     if not isinstance(body, dict):
         raise BadRequest()
     card, orch = body.get("card"), body.get("orchard")
@@ -660,6 +734,25 @@ def clean_post(body, baskets=0, dispatches=0):
     }
     if not plausible(post, baskets, dispatches):
         raise BadRequest("implausible")
+    # 1.17 진열장: 칭호·배지·진열장 소품, 장면, 이주의 주제에 쓰는 도담 판매·만든 병(모두 옛 앱은 안 보낸다)
+    o = post["orchard"]
+    if orch.get("scene") is not None:
+        o["scene"] = clean_scene(orch["scene"])
+    for k in ("managerSold", "bottles"):
+        if orch.get(k) is not None:
+            o[k] = _int(orch[k], 0, 10**9)
+    if body.get("title") is not None:
+        post["title"] = clean_nickname(body["title"], 24, "bad_title")
+    badges = body.get("badges")
+    if badges is not None:
+        crate = max(farm[0], _int(orch.get("crate", 0), 0, 99))
+        dogs = max(farm[1], o.get("scene", {}).get("dogs", 0))
+        if (not isinstance(badges, list) or len(badges) > BADGES_MAX or len(set(map(str, badges))) < len(badges)
+                or any(not isinstance(b, str) or b not in ACHIEVEMENTS or not _badge_ok(b, post, crate, dogs) for b in badges)):
+            raise BadRequest("bad_badge")
+        post["badges"] = badges
+    if body.get("showcase") is not None:
+        post["showcase"] = clean_showcase(body["showcase"])
     return post
 
 
@@ -750,6 +843,15 @@ class Board:
                 os TEXT NOT NULL, platform TEXT NOT NULL, text TEXT NOT NULL, images INTEGER NOT NULL, done INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE IF NOT EXISTS bug_images(bug TEXT NOT NULL, n INTEGER NOT NULL, mime TEXT NOT NULL, data BLOB NOT NULL,
                 PRIMARY KEY(bug, n));
+            -- 1.17 게시판: 스탬프(별처럼 브라우저 ID·IP 해시, own: 주인이 자기 표로 준 것), 구경꾼 날(소유 키 해시·날짜),
+            -- 게시판 표(1시간), 8주 뒤 지운 게시물의 보상 집계(지금까지 받은 별·스탬프가 줄지 않게)
+            CREATE TABLE IF NOT EXISTS stamps(post TEXT NOT NULL, voter TEXT NOT NULL, ip TEXT NOT NULL, kind TEXT NOT NULL,
+                created REAL NOT NULL, own INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(post, voter));
+            CREATE TABLE IF NOT EXISTS visits(owner TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(owner, day));
+            CREATE TABLE IF NOT EXISTS brag_tickets(ticket TEXT PRIMARY KEY, owner TEXT NOT NULL, expires REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS brag_kept(owner TEXT PRIMARY KEY, posts INTEGER NOT NULL, stars INTEGER NOT NULL,
+                lemon INTEGER NOT NULL, flower INTEGER NOT NULL, laugh INTEGER NOT NULL, clap INTEGER NOT NULL);
+            CREATE INDEX IF NOT EXISTS highlights_owner ON highlights(owner);
         """)
         # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
         # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by). 1.12: 내 과수원 이름
@@ -769,7 +871,8 @@ class Board:
                                  ("pings", "ms", "INTEGER NOT NULL DEFAULT 0"),
                                  # 1.15.1 통계: 기기 연동(off·on·holder, 옛 앱은 '')
                                  ("pings", "sync", "TEXT NOT NULL DEFAULT ''"),
-                                 ("pings", "mm", "TEXT NOT NULL DEFAULT ''")):  # 1.16 도담 모드
+                                 ("pings", "mm", "TEXT NOT NULL DEFAULT ''"),  # 1.16 도담 모드
+                                 ("stars", "own", "INTEGER NOT NULL DEFAULT 0")):  # 1.17 주인이 자기 표로 준 별
             if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
                 self.db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
         self.db.execute("CREATE INDEX IF NOT EXISTS raids_beneficiary ON raids(beneficiary, end)")
@@ -808,10 +911,30 @@ class Board:
         pid, week, nick, data, created, stars = r
         d = json.loads(data)
         out = {"id": pid, "week": week, "nickname": nick, "card": d["card"], "orchard": d["orchard"],
-               "stars": stars, "created": int(created)}
+               "stars": stars, "created": int(created), "stamps": self._stamps(pid)}
+        out.update({k: d[k] for k in ("title", "badges", "showcase") if k in d})  # 1.17 진열장
         if voter is not None:
             out["starred"] = self.db.execute("SELECT 1 FROM stars WHERE post=? AND voter=?", (pid, sha(voter))).fetchone() is not None
+            m = self.db.execute("SELECT kind FROM stamps WHERE post=? AND voter=?", (pid, sha(voter))).fetchone()
+            out["mine"] = m[0] if m else None
         return out
+
+    def _stamps(self, pid):
+        n = dict(self.db.execute("SELECT kind, COUNT(*) FROM stamps WHERE post=? GROUP BY kind", (pid,)).fetchall())
+        return {k: n.get(k, 0) for k in BOARD_STAMPS}
+
+    def _post_owner(self, pid):
+        r = self.db.execute("SELECT owner FROM posts WHERE id=? AND hidden=0", (pid,)).fetchone()
+        if not r:
+            raise KeyError(pid)
+        return r[0]
+
+    def _brag_ticket(self, ticket, now):
+        """게시판 표의 소유자. 없거나 지났으면 None(표 없이 연 게시판처럼 반응만 센다)"""
+        if not isinstance(ticket, str) or not re.fullmatch(r"[0-9a-f]{32}", ticket):
+            return None
+        r = self.db.execute("SELECT owner FROM brag_tickets WHERE ticket=? AND expires>?", (sha(ticket), now.timestamp())).fetchone()
+        return r[0] if r else None
 
     SELECT = ("SELECT p.id, p.week, p.nickname, p.data, p.created, "
               "(SELECT COUNT(*) FROM stars s WHERE s.post=p.id) AS n FROM posts p")
@@ -825,11 +948,12 @@ class Board:
         baskets, dispatches = self.db.execute(
             "SELECT COALESCE(SUM(CASE WHEN kind='basket' THEN count END), 0), COALESCE(SUM(kind='dispatch'), 0) FROM carries "
             "WHERE receiver=? AND kind IN ('basket', 'dispatch') AND end>=?", (owner, week_start(now))).fetchone()
-        post = clean_post(body, baskets, dispatches)
+        f = self._farm(owner)
+        post = clean_post(body, baskets, dispatches, (f["level"], f["dogs"]) if f else (0, 0))
         with self.lock:
             self.limit("post", self.ip(ip), now)
             week = self.week(now)
-            data = json.dumps({"card": post["card"], "orchard": post["orchard"]}, ensure_ascii=False)
+            data = json.dumps({k: post[k] for k in ("card", "orchard", "title", "badges", "showcase") if k in post}, ensure_ascii=False)
             row = self.db.execute("SELECT id FROM posts WHERE owner=? AND week=?", (owner, week)).fetchone()
             t = now.timestamp()
             if row:
@@ -855,22 +979,67 @@ class Board:
         return [self._row(r, voter) for r in rows]
 
     @locked
-    def toggle_star(self, pid, voter, ip, now):
+    def toggle_star(self, pid, voter, ip, now, ticket=None):
+        """ticket(1.17): 앱이 연 게시판이면 게시판 표. 주인이 자기 게시물에 준 별은 보상에서 뺀다."""
         if not isinstance(voter, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", voter):
             raise BadRequest()
         with self.lock:
-            if not self.db.execute("SELECT 1 FROM posts WHERE id=? AND hidden=0", (pid,)).fetchone():
-                raise KeyError(pid)
+            owner = self._post_owner(pid)
             self.limit("star", self.ip(ip), now)
             v = sha(voter)
             if self.db.execute("DELETE FROM stars WHERE post=? AND voter=?", (pid, v)).rowcount:
                 starred = False
             else:
-                self.db.execute("INSERT INTO stars VALUES(?,?,?,?)", (pid, v, self.ip(ip), now.timestamp()))
+                self.db.execute("INSERT INTO stars(post, voter, ip, created, own) VALUES(?,?,?,?,?)",
+                                (pid, v, self.ip(ip), now.timestamp(), int(self._brag_ticket(ticket, now) == owner)))
                 starred = True
             self.db.commit()
             n = self.db.execute("SELECT COUNT(*) FROM stars WHERE post=?", (pid,)).fetchone()[0]
         return {"stars": n, "starred": starred}
+
+    @locked
+    def stamp(self, pid, body, ip, now):
+        """1.17 스탬프 {voter, kind, ticket?} → {stamps, mine}. 브라우저마다 게시물에 하나: 같은 것 다시 = 취소, 다른 것 = 바꿈.
+        살아 있는 표로 남의 게시물에 남기면 표 주인의 오늘이 구경꾼 날이 된다."""
+        b = body if isinstance(body, dict) else {}
+        voter, kind = b.get("voter"), b.get("kind")
+        if not isinstance(voter, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", voter) or kind not in BOARD_STAMPS:
+            raise BadRequest()
+        owner = self._post_owner(pid)
+        self.limit("stamp", self.ip(ip), now)
+        v, who = sha(voter), self._brag_ticket(b.get("ticket"), now)
+        old = self.db.execute("SELECT kind FROM stamps WHERE post=? AND voter=?", (pid, v)).fetchone()
+        mine = None if old and old[0] == kind else kind
+        if mine is None:
+            self.db.execute("DELETE FROM stamps WHERE post=? AND voter=?", (pid, v))
+        elif old:
+            self.db.execute("UPDATE stamps SET kind=?, own=MAX(own, ?) WHERE post=? AND voter=?", (kind, int(who == owner), pid, v))
+        else:
+            self.db.execute("INSERT INTO stamps VALUES(?,?,?,?,?,?)", (pid, v, self.ip(ip), kind, now.timestamp(), int(who == owner)))
+        if mine and who and who != owner:
+            self.db.execute("INSERT OR IGNORE INTO visits VALUES(?,?)", (who, day_key(now)))
+        self.db.commit()
+        return {"stamps": self._stamps(pid), "mine": mine}
+
+    @locked
+    def brag_ticket(self, owner_key, now):
+        """1.17 앱이 '자랑 게시판…'을 열 때 받는 표(1시간, 그 동안 여러 번). 구경꾼 날과 내 반응 빼기에만 쓴다."""
+        me = self.owner(owner_key)
+        self.limit("brag_ticket", me, now)
+        t = self._active(me, now)
+        ticket = secrets.token_hex(16)
+        self.db.execute("DELETE FROM brag_tickets WHERE expires<=?", (t,))
+        self.db.execute("INSERT INTO brag_tickets VALUES(?,?,?)", (sha(ticket), me, t + BRAG_TICKET_TTL))
+        self.db.commit()
+        return {"ticket": ticket, "expires": int(t + BRAG_TICKET_TTL)}
+
+    @locked
+    def badge_count(self, bid):
+        """그 배지를 건 게시물의 과수원 수(숨김 제외, 남아 있는 게시물에서)"""
+        if bid not in ACHIEVEMENTS:
+            raise KeyError(bid)
+        rows = self.db.execute("SELECT owner, data FROM posts WHERE hidden=0 AND data LIKE ?", ('%"' + bid + '"%',)).fetchall()
+        return {"count": len({o for o, d in rows if bid in json.loads(d).get("badges", ())})}
 
     @locked
     def report(self, pid, ip, now):
@@ -898,6 +1067,7 @@ class Board:
         ids = [r[0] for r in self.db.execute("SELECT id FROM posts WHERE owner=?", (owner,))]
         for pid in ids:
             self.db.execute("DELETE FROM stars WHERE post=?", (pid,))
+            self.db.execute("DELETE FROM stamps WHERE post=?", (pid,))
             self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
         self.db.execute("DELETE FROM posts WHERE owner=?", (owner,))
         self.db.execute("DELETE FROM highlights WHERE owner=?", (owner,))
@@ -930,6 +1100,8 @@ class Board:
             self.db.execute("DELETE FROM relay_link WHERE owner=?", (owner,))
             self._drop_sync(owner)  # 1.15.1 기기 연동
             self._drop_bugs(owner)  # 1.15.2 버그 신고
+            for table in ("visits", "brag_tickets", "brag_kept"):  # 1.17 구경꾼 날·게시판 표·지운 게시물의 보상 집계
+                self.db.execute("DELETE FROM %s WHERE owner=?" % table, (owner,))
             self.db.commit()
         return n
 
@@ -1070,13 +1242,30 @@ class Board:
         posts = [self._row(r) for r in rows]
         top = sorted([p for p in posts if p["stars"] > 0], key=lambda p: (-p["stars"], p["created"]))[:TOP_N]
 
-        def best(value):  # 1.7.1: 별을 하나라도 받은 게시물에서만(사람 눈을 한 번 거친다)
-            c = [p for p in posts if value(p) > 0 and p["stars"] > 0]
+        def best(value, starred=True):  # 1.7.1: 별을 하나라도 받은 게시물에서만(사람 눈을 한 번 거친다)
+            c = [p for p in posts if value(p) > 0 and (p["stars"] > 0 or not starred)]
             return min(c, key=lambda p: (-value(p), -p["stars"], p["created"])) if c else None
 
+        # 1.17 이주의 주제(게시물 데이터로만). rare: 그 주 별 받은 게시물 중 가장 적게 걸린 배지
+        seen = defaultdict(int)
+        for p in posts:
+            if p["stars"] > 0:
+                for b in p.get("badges", ()):
+                    seen[b] += 1
+        scene = lambda p: p["orchard"].get("scene", {})  # noqa: E731
+        theme = {"pink": lambda p: p["orchard"]["trees"].count("pink"),
+                 "even": lambda p: len(set(p["orchard"]["trees"])),
+                 "manager": lambda p: p["orchard"].get("managerSold", 0),
+                 "dogs": lambda p: scene(p).get("dogs", 0),
+                 "decor": lambda p: len(scene(p).get("decor", ())),
+                 "stand": lambda p: p["orchard"].get("bottles", 0),
+                 "rare": lambda p: max([1 / seen[b] for b in p.get("badges", ()) if seen[b]] or [0])}.get(week_theme(week), lambda p: 0)
         cats = {"harvest": best(lambda p: p["card"]["harvested"]),
                 "secrets": best(lambda p: p["orchard"]["secrets"]),
-                "dex": best(lambda p: p["orchard"]["dex"])}
+                "dex": best(lambda p: p["orchard"]["dex"]),
+                "theme": best(theme)}
+        for k in BOARD_STAMPS:  # 스탬프 부문: 그 스탬프를 가장 많이 받은 게시물(스탬프가 곧 사람 눈이라 별은 안 따진다)
+            cats["stamp-" + k] = best(lambda p, k=k: p["stamps"][k], starred=False)
         return top, cats
 
     @locked
@@ -1085,11 +1274,11 @@ class Board:
         closed = self.db.execute("SELECT 1 FROM closed WHERE week=?", (week,)).fetchone() is not None
         if closed:
             top = [json.loads(s) for k, _, s in rows if k == "top"]
-            cats = {k: None for k in ("harvest", "secrets", "dex")}
+            cats = {k: None for k in CATEGORIES}
             cats.update({k: json.loads(s) for k, _, s in rows if k != "top"})
-            return {"week": week, "top": top, "categories": cats, "final": True}
+            return {"week": week, "top": top, "categories": cats, "themeId": week_theme(week), "final": True}
         top, cats = self._compute(week)
-        return {"week": week, "top": top, "categories": cats, "final": False}
+        return {"week": week, "top": top, "categories": cats, "themeId": week_theme(week), "final": False}
 
     @locked
     def weeks(self):
@@ -1117,10 +1306,17 @@ class Board:
                         self._snap(w, k, 1, p)
                 self.db.execute("INSERT OR IGNORE INTO closed VALUES(?)", (w,))
             cutoff = week_key(now - timedelta(weeks=KEEP_WEEKS))
-            old = [r[0] for r in self.db.execute(
-                "SELECT id FROM posts WHERE week < ? AND id NOT IN (SELECT post FROM highlights)", (cutoff,))]
-            for pid in old:
+            old = self.db.execute("SELECT id, owner, created, hidden FROM posts WHERE week < ? AND id NOT IN (SELECT post FROM highlights)",
+                                  (cutoff,)).fetchall()
+            for pid, owner, created, hidden in old:
+                if not hidden:  # 1.17: 지운 게시물의 보상 집계는 소유자 합계로 남긴다
+                    n = self._fair(pid, created)
+                    self.db.execute("INSERT OR IGNORE INTO brag_kept VALUES(?,0,0,0,0,0,0)", (owner,))
+                    self.db.execute("UPDATE brag_kept SET posts=posts+1, stars=stars+?, lemon=lemon+?, flower=flower+?, laugh=laugh+?, "
+                                    "clap=clap+? WHERE owner=?", (n["stars"],) + tuple(n[k] for k in BOARD_STAMPS) + (owner,))
+            for pid in [r[0] for r in old]:
                 self.db.execute("DELETE FROM stars WHERE post=?", (pid,))
+                self.db.execute("DELETE FROM stamps WHERE post=?", (pid,))
                 self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
                 self.db.execute("DELETE FROM posts WHERE id=?", (pid,))
             # 사용 통계 원본은 90일 뒤 지우고 날짜별 합계만 남긴다
@@ -1134,6 +1330,7 @@ class Board:
             self.db.execute("DELETE FROM pings WHERE day < ?", (stats_cut,))
             # 1.15.2 버그 신고: 지난 표, 180일 지난 신고와 이미지
             self.db.execute("DELETE FROM bug_tickets WHERE expires<=?", (t,))
+            self.db.execute("DELETE FROM brag_tickets WHERE expires<=?", (t,))
             self.db.execute("DELETE FROM bug_images WHERE bug IN (SELECT id FROM bugs WHERE created<?)", (t - BUG_KEEP_DAYS * 86400,))
             self.db.execute("DELETE FROM bugs WHERE created<?", (t - BUG_KEEP_DAYS * 86400,))
             # 서리: 8주 소식 없는 설치와 8주 지난 기록
@@ -1320,7 +1517,37 @@ class Board:
                 self.db.execute("UPDATE farms SET thanks=thanks+? WHERE owner=?", (CARRY_THANKS[c[0]], c[1]))
             self.db.execute("UPDATE carries SET seen=1 WHERE id=? AND sender=? AND kind='step'", (rid, me))
         self.db.commit()
-        return self._raid_view(me, now)
+        return dict(self._raid_view(me, now), brag=self._brag(me))
+
+    def _fair(self, pid, created):
+        """보상용 반응 수(1.17): IP 해시마다 하나, 주인이 자기 표로 준 것과 게시 뒤 10분 안에 같은 IP 해시에서 몰린 것(2개 넘음)은 뺀다."""
+        out = dict.fromkeys(("stars",) + BOARD_STAMPS, 0)
+        for table, kind in (("stars", "'stars'"), ("stamps", "kind")):
+            by = defaultdict(list)
+            for ip, at, k in self.db.execute("SELECT ip, created, %s FROM %s WHERE post=? AND own=0" % (kind, table), (pid,)):
+                by[ip].append((at, k))
+            for rows in by.values():
+                if sum(at < created + BURST[0] for at, _ in rows) <= BURST[1]:
+                    for k in {k for _, k in rows}:
+                        out[k] += 1
+        return out
+
+    def _brag(self, me):
+        """raid/status 의 게시판 보상 요약: 지금까지(지운 게시물 합계 포함) 게시물·별·스탬프, 구경꾼 날, 확정된 주의 트로피.
+        숨긴 게시물은 뺀다. 트로피는 top 1~3위와 부문 1위."""
+        q = self.db.execute
+        kept = q("SELECT posts, stars, lemon, flower, laugh, clap FROM brag_kept WHERE owner=?", (me,)).fetchone() or (0,) * 6
+        n = dict(zip(("posts", "stars") + BOARD_STAMPS, kept))
+        for pid, created in q("SELECT id, created FROM posts WHERE owner=? AND hidden=0", (me,)).fetchall():
+            n["posts"] += 1
+            for k, v in self._fair(pid, created).items():
+                n[k] += v
+        trophies = q("SELECT h.week, h.kind, h.rank FROM highlights h JOIN closed c ON c.week = h.week "
+                     "WHERE h.owner=? AND h.rank<=3 AND NOT EXISTS (SELECT 1 FROM posts p WHERE p.id = h.post AND p.hidden=1) "
+                     "ORDER BY h.week, h.kind", (me,)).fetchall()
+        return {"posts": n["posts"], "stars": n["stars"], "stamps": {k: n[k] for k in BOARD_STAMPS},
+                "visits": q("SELECT COUNT(*) FROM visits WHERE owner=?", (me,)).fetchone()[0],
+                "trophies": [{"week": w, "kind": k, "rank": r} for w, k, r in trophies]}
 
     def _steps(self, me, old, new, now):
         """사제 단계(1.13): 이번 맞추기에서 넘은 단계마다, 넘기 전 내 창고 레벨보다 4 이상 높은 이웃(선배)에게 한 번씩
@@ -1584,13 +1811,20 @@ class Board:
 
     @locked
     def neighbor_request(self, owner_key, body, now):
-        """이웃 요청(1.14) {id, stamp?} → {ok}. 상대가 이미 나에게 요청해 두었으면 바로 이웃({ok, added}).
+        """이웃 요청(1.14) {id 또는 post(1.17 게시물 id), stamp?} → {ok}. 상대가 이미 나에게 요청해 두었으면 바로 이웃({ok, added}).
         차단(어느 쪽이든)이면 조용히 ok. 보낸 요청 하루 20·대기 30, 거절·만료 뒤 같은 곳은 7일 뒤에."""
         me, mine = self._member(owner_key, "neighbor_request", now)
         if not isinstance(body, dict) or not _v_opt(_STAMP)(body.get("stamp")):
             raise BadRequest()
         t = now.timestamp()
-        other = self._find(me, body.get("id"), [r[0] for r in self.db.execute("SELECT owner FROM farms WHERE owner<>?", (me,))])
+        if "post" in body:  # 1.17 게시판 '이웃 되기': 게시물 주인에게
+            other = self._post_owner(_match(body["post"], POST_ID))
+            if other == me:
+                raise BadRequest("self")
+            if not self._farm(other):
+                raise KeyError(other)
+        else:
+            other = self._find(me, body.get("id"), [r[0] for r in self.db.execute("SELECT owner FROM farms WHERE owner<>?", (me,))])
         if self._blocked(me, other):
             return {"ok": True}
         if self.db.execute("SELECT 1 FROM neighbors WHERE owner=? AND other=?", (me, other)).fetchone():
@@ -1979,10 +2213,7 @@ class Board:
         """앱이 '버그 신고…'를 누르면: 최근에 게임을 켠 과수원에만 1시간짜리 일회용 표를 준다(웹페이지는 누가 쓰는지 모르므로)."""
         me = self.owner(owner_key)
         self.limit("bug_ticket", me, now)
-        t = now.timestamp()
-        seen = self.db.execute("SELECT seen FROM farms WHERE owner=?", (me,)).fetchone()
-        if not seen or seen[0] < t - BUG_ACTIVE_DAYS * 86400:
-            raise BadRequest("inactive")
+        t = self._active(me, now)
         b = body if isinstance(body, dict) else {}
         app = b.get("app") if isinstance(b.get("app"), str) and re.fullmatch(r"\d{1,2}\.\d{1,2}(\.\d{1,2})?", b.get("app")) else "?"
         osv = b.get("os") if isinstance(b.get("os"), str) else ""
@@ -1993,6 +2224,14 @@ class Board:
         self.db.execute("INSERT INTO bug_tickets VALUES(?,?,?,?,?,?)", (sha(ticket), me, app, osv, platform, t + BUG_TICKET_TTL))
         self.db.commit()
         return {"ticket": ticket, "expires": int(t + BUG_TICKET_TTL)}
+
+    def _active(self, me, now):
+        """14일 안에 서리 맞추기(farms.seen)가 있는 과수원만. 지금 시각(초)을 돌려준다."""
+        t = now.timestamp()
+        seen = self.db.execute("SELECT seen FROM farms WHERE owner=?", (me,)).fetchone()
+        if not seen or seen[0] < t - BUG_ACTIVE_DAYS * 86400:
+            raise BadRequest("inactive")
+        return t
 
     def _ticket(self, ticket, now):
         if not isinstance(ticket, str) or not re.fullmatch(r"[0-9a-f]{32}", ticket):
@@ -2520,7 +2759,14 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 if method == "POST" and parts == ["posts"]:
                     return self.send(200, board.create_or_update(owner, self.body(), self.client_ip(), now))
                 if method == "POST" and len(parts) == 3 and parts[0] == "posts" and parts[2] == "star":
-                    return self.send(200, board.toggle_star(parts[1], self.body().get("voter"), self.client_ip(), now))
+                    b = self.body()
+                    return self.send(200, board.toggle_star(parts[1], b.get("voter"), self.client_ip(), now, b.get("ticket")))
+                if method == "POST" and len(parts) == 3 and parts[0] == "posts" and parts[2] == "stamp":  # 1.17
+                    return self.send(200, board.stamp(parts[1], self.body(), self.client_ip(), now))
+                if method == "POST" and parts == ["brag", "ticket"]:
+                    return self.send(200, board.brag_ticket(owner, now))
+                if method == "GET" and len(parts) == 2 and parts[0] == "badges":
+                    return self.send(200, board.badge_count(parts[1]))
                 if method == "POST" and len(parts) == 3 and parts[0] == "posts" and parts[2] == "report":
                     board.report(parts[1], self.client_ip(), now)
                     return self.send(200, {"ok": True})
@@ -2757,6 +3003,7 @@ def main(argv):
             board.db.commit()
         elif cmd == "delete":
             board.db.execute("DELETE FROM stars WHERE post=?", (pid,))
+            board.db.execute("DELETE FROM stamps WHERE post=?", (pid,))
             board.db.execute("DELETE FROM reports WHERE post=?", (pid,))
             board.db.execute("DELETE FROM highlights WHERE post=?", (pid,))
             board.db.execute("DELETE FROM posts WHERE id=?", (pid,))

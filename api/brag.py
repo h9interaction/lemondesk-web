@@ -22,6 +22,7 @@
 - 기기 연동(1.15.1, docs/research/sync-1.15.1.md, sync/…): 켠 소유 키만 과수원 저장 사본(bundle)·홀더 기기·기기 목록(기기 키 해시,
   mac·windows, laptop·desktop, 마지막 접속)을 저장한다. 진행하는 기기(홀더)는 하나, 다른 기기는 take 로 이어받는다.
   사용 통계 sync(off·on·holder).
+- 1.16: 폰 명령 mgr_set 의 plan 이 도담 모드로 늘고, 사용 통계 mm(도담 모드)과 /stats 의 모드 분포.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -172,6 +173,8 @@ def land_total(plots, stop=float("inf")):
 
 
 GOODS = 1.5 * 1.45  # 1.15 병 값 배율 × 주문 보상 최대 배율(앱 Balance.Stand)
+MANAGER_TOP = 2.0  # 앱 Balance.Manager.rates 의 가장 큰 값
+SELL_TOP = max(GOODS, 1.5 * MANAGER_TOP)
 
 
 def plausible(post, baskets=0, dispatches=0):
@@ -195,7 +198,7 @@ def plausible(post, baskets=0, dispatches=0):
         return False
     extra = dispatches * (MAX_CRATE + lifted) * MAX_FRUIT_PRICE * (1 + PRICE_PER_LEVEL * DISPATCH_LEVEL_CAP * CREW2) * SEASON_PRICE * SLACK
     # 1.15 가판대: 병은 제값의 1.5배, 병 주문 보상은 그 1.45배까지(Balance.Stand) → 레몬 하나당 최대 GOODS 배
-    if card["earned"] > card["sold"] * MAX_FRUIT_PRICE * GOODS * boost("planter", PRICE_PER_LEVEL) * SEASON_PRICE * SLACK + extra:
+    if card["earned"] > card["sold"] * MAX_FRUIT_PRICE * SELL_TOP * boost("planter", PRICE_PER_LEVEL) * SEASON_PRICE * SLACK + extra:
         return False
     kinds = set(orch["trees"]) - {"rainbow"}
     if len(kinds) > orch["dex"] or (orch["rainbow"] and orch["dex"] < 12) or ("rainbow" in orch["trees"] and not orch["rainbow"]):
@@ -279,6 +282,7 @@ SYNC_PLATFORMS = {"mac", "windows"}
 SYNC_LABELS = {"laptop", "desktop"}
 SYNC_TARGET = re.compile(r"[0-9a-f]{8}")  # 기기 목록 id = sha256(device) 앞 8자
 SYNC_STATES = re.compile(r"(off|on|holder)?")  # 통계 ping 의 sync(옛 앱은 안 보낸다)
+MANAGER_PLANS = {"cheap", "dex", "crew", "rich", "garden", "barista", "land"}  # 1.16 도담 모드
 
 
 def _twin(k):
@@ -486,7 +490,7 @@ MINE = {  # '내 과수원' 명령: Mac 이 잠들었으면 예약(1.14). hire2�
               "pos": _v_opt(lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1)},
     # 1.15 매니저(고용·레벨 업, 할 일 켜고 끄기·사는 방식·남길 코인 %)·가판대(열기·레벨 업, 만들기)·손님 주문 채우기
     "mgr_hire": {}, "mgr_set": {"sell": _v_opt(_BOOL), "plant": _v_opt(_BOOL), "buy": _v_opt(_BOOL),
-                                "plan": _v_opt(_v_in({"cheap", "fruit", "crew"})),
+                                "plan": _v_opt(_v_in(MANAGER_PLANS | {"fruit"})),
                                 "keep": _v_opt(lambda v: isinstance(v, int) and not isinstance(v, bool) and v in (0, 30, 50))},
     "stand_up": {}, "make": {"recipe": _v_in({"lemonade", "syrup", "jam"})}, "fill": {"order": _v_re(re.compile(r"[a-z0-9]{1,16}"))}}
 SERVER = {  # '서버' 명령: Mac 이 깨어 있으면 Mac 이 서버에 보내고, 잠들었으면 nb_* 만 서버가 대리로(서리는 mac_asleep)
@@ -552,7 +556,9 @@ def clean_ping(b, now):
             # 1.15: 매니저 레벨, 폰으로 보기 켬(0/1), 그날 매니저가 판 횟수. 옛 앱은 안 보내므로 0
             "mg": _int(b.get("mg", 0), 0, 20), "pv": _int(b.get("pv", 0), 0, 1), "ms": _int(b.get("ms", 0), 0, 100000),
             # 1.15.1: 기기 연동 끔·켬(멈춤)·홀더. 옛 앱은 안 보내므로 ''
-            "sync": _match(b.get("sync", ""), SYNC_STATES)}
+            "sync": _match(b.get("sync", ""), SYNC_STATES),
+            # 1.16: 도담 모드(모르는 값·옛 앱은 '')
+            "mm": b.get("mm") if b.get("mm") in MANAGER_PLANS else ""}
 
 
 def clean_sync(b, now, *fields):
@@ -762,7 +768,8 @@ class Board:
                                  ("pings", "mg", "INTEGER NOT NULL DEFAULT 0"), ("pings", "pv", "INTEGER NOT NULL DEFAULT 0"),
                                  ("pings", "ms", "INTEGER NOT NULL DEFAULT 0"),
                                  # 1.15.1 통계: 기기 연동(off·on·holder, 옛 앱은 '')
-                                 ("pings", "sync", "TEXT NOT NULL DEFAULT ''")):
+                                 ("pings", "sync", "TEXT NOT NULL DEFAULT ''"),
+                                 ("pings", "mm", "TEXT NOT NULL DEFAULT ''")):  # 1.16 도담 모드
             if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
                 self.db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
         self.db.execute("CREATE INDEX IF NOT EXISTS raids_beneficiary ON raids(beneficiary, end)")
@@ -944,15 +951,15 @@ class Board:
         inst = sha(p["install"])
         self.db.execute("INSERT INTO participants VALUES(?,?) "
                         "ON CONFLICT(install) DO UPDATE SET first_day = min(first_day, excluded.first_day)", (inst, p["day"]))
-        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform, nb, rb, mg, pv, ms, sync) "
-                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET "
+        self.db.execute("INSERT INTO pings(install, day, version, os, lang, arch, minutes, opens, sales, kinds, received, platform, nb, rb, mg, pv, ms, sync, mm) "
+                        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(install, day) DO UPDATE SET mm=excluded.mm, "
                         "sync=CASE WHEN excluded.sync<>'' THEN excluded.sync ELSE sync END, "
                         "version=excluded.version, os=excluded.os, lang=excluded.lang, arch=excluded.arch, platform=excluded.platform, "
                         "minutes=max(minutes, excluded.minutes), opens=max(opens, excluded.opens), "
                         "sales=max(sales, excluded.sales), kinds=excluded.kinds, received=excluded.received, "
                         "nb=max(nb, excluded.nb), rb=max(rb, excluded.rb), mg=max(mg, excluded.mg), pv=max(pv, excluded.pv), ms=max(ms, excluded.ms)",
                         (inst, p["day"], p["version"], p["os"], p["lang"], p["arch"], p["minutes"], p["opens"],
-                         p["sales"], p["kinds"], now.timestamp(), p["platform"], p["nb"], p["rb"], p["mg"], p["pv"], p["ms"], p["sync"]))
+                         p["sales"], p["kinds"], now.timestamp(), p["platform"], p["nb"], p["rb"], p["mg"], p["pv"], p["ms"], p["sync"], p["mm"]))
         self.db.commit()
 
     @locked
@@ -1010,7 +1017,10 @@ class Board:
         mg_with, mg_avg, ms_sum, pv_with = self.db.execute(
             "SELECT COALESCE(SUM(mg >= 1), 0), AVG(CASE WHEN mg >= 1 THEN mg END), COALESCE(SUM(ms), 0), COALESCE(SUM(pv), 0) "
             "FROM (SELECT MAX(mg) AS mg, SUM(ms) AS ms, MAX(pv) AS pv FROM pings WHERE day >= ? GROUP BY install)", (ago(6),)).fetchone()
-        usage["manager"] = {"with": mg_with, "avg_level": round(mg_avg or 0, 1), "sold": ms_sum}
+        modes = dict(self.db.execute(  # 1.16: 7일 안에 쓴 설치마다 가장 최근 날의 도담 모드
+            "SELECT p.mm, COUNT(*) FROM pings p JOIN (SELECT install, MAX(day) AS d FROM pings WHERE day >= ? GROUP BY install) m "
+            "ON p.install = m.install AND p.day = m.d WHERE p.mm <> '' GROUP BY p.mm ORDER BY 2 DESC", (ago(6),)).fetchall())
+        usage["manager"] = {"with": mg_with, "avg_level": round(mg_avg or 0, 1), "sold": ms_sum, "modes": modes}
         usage["phone"] = {"with": pv_with}
         start = ago(days - 1)
         rows = {d: {"day": d, "installs": 0, "active": a, "new": nw, "avg_minutes": round(m / a) if a else 0, "opens": o, "sales": sl}

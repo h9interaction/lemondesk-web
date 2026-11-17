@@ -212,6 +212,9 @@
     dist('설치 플랫폼 (누적)', i.platform || {}); dist('활성 플랫폼 (7일)', u.platform || {});
     dist('활성 버전 (7일)', u.versions); dist('활성 OS (7일)', u.os);
     dist('연 나무 종류 수 (설치마다 마지막 날, 90일)', u.kinds || {});
+    // 1.16 도담 모드(7일 안 설치마다 가장 최근 날). 옛 API 면 없다
+    const MODES = {cheap: '알뜰', dex: '수집가', crew: '반장', rich: '사장님', garden: '정원사', barista: '바리스타', land: '개척자'};
+    dist('도담 모드 (설치마다 최근, 7일)', Object.fromEntries(Object.entries(mg.modes || {}).map(([k, v]) => [MODES[k] || k, v])));
     $('foot').textContent = `기준일 ${s.today} (한국 시간) · 이번 주 게시판: 게시물 ${n(s.board.posts_this_week)}개, 별 ${n(s.board.stars_this_week)}개`;
   }
 

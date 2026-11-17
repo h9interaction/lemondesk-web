@@ -1,5 +1,24 @@
 [
   {
+    "version": "1.15.1",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.1/LemonDesk-1.15.1.dmg",
+    "notes": {
+      "ko": [
+        "기기 연동이 생겼어요. 설정 › 기기 연동을 켜고 다른 기기에서 코드를 넣으면, 회사 Mac·집 Mac·Windows PC 가 한 과수원을 이어서 키워요. Mac 과 PC 를 섞어 써도 돼요",
+        "과수원은 한 번에 한 기기에서만 자라요. 다른 기기에서는 일꾼이 낮잠을 자고, '여기서 이어 키우기'를 누르면 그 기기에서 이어져요. 기기를 바꾸는 동안 흐른 시간도 그대로 들어가요",
+        "맥북·PC 를 바꿀 때도 새 기기에서 코드만 넣으면 과수원·이웃·꾸미기가 그대로 옮겨져요. 팔았거나 잃어버린 기기는 연동된 기기 목록에서 끊을 수 있어요",
+        "자동 업데이트가 받는 중이거나 설치를 기다리는 동안 '지금 업데이트 확인'을 눌러도 아무 일이 없던 문제를 고쳤어요. 받아 둔 새 버전은 '지금 설치하고 다시 켜기'로 바로 설치돼요"
+      ],
+      "en": [
+        "New: device sync. Turn on Settings › Device Sync and enter the code on another device, and your work Mac, home Mac and Windows PC all grow the same orchard. Mixing Macs and PCs is fine",
+        "The orchard grows on one device at a time. On the others the workers nap; choose 'Continue Here' to pick up on that device. Time that passed while switching still counts",
+        "Changing your MacBook or PC? Enter the code on the new one and your orchard, neighbors and decorations come along. You can unlink a sold or lost device from the linked devices list",
+        "Fixed 'Check for Updates Now' doing nothing while an automatic update was downloading or waiting to install. A downloaded update now installs right away with 'Install and Relaunch Now'"
+      ]
+    }
+  },
+  {
     "version": "1.15.0",
     "date": "2026-11-16",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.0/LemonDesk-1.15.0.dmg",

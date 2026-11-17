@@ -234,7 +234,7 @@ RAID_ID = re.compile(r"[A-Za-z0-9_-]{8,24}")
 TARGET_ID = re.compile(r"[0-9a-f]{16}")  # 서리 대상·이웃 id(요청한 사람에게만 통하는 HMAC)
 
 # 이웃(1.11). 앱 Balance.Neighbors 와 같은 값. 계정 없이 서리와 같은 소유 키로 맺는다.
-MAX_NEIGHBORS = 10
+MAX_NEIGHBORS = 20  # 1.15.4: 10 → 20(앱 Balance.Neighbors.maxNeighbors)
 NEIGHBOR_DOG, MAX_NEIGHBOR_DOGS = 0.05, 3  # 개가 있는 이웃 한 곳마다 서리 −5%(최대 3곳, GUARD_MAX 안에서)
 CODE_CHARS, CODE_LEN = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6  # I·O·0·1 없음. 화면에는 ABC-DEF
 STAMPS = {"heart", "note", "star"}       # 고마워요·반가워요·멋져요(자유 글은 없다)

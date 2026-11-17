@@ -18,9 +18,9 @@
 <meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="../icon.png?v=1">
 <link rel="icon" href="sprites/icon-64.png">
-<link rel="preload" href="fonts/galmuri11-bold.woff2?v=1153" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/galmuri11-bold.woff2?v=1154" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=1153) format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=1154) format("woff2"); font-display: swap; }
   :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
   @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
@@ -340,6 +340,7 @@
     crateLevel: (l, c) => `Level ${l} · holds ${c}`, plantBtn: 'Plant', swapBtn: 'Replant', unlockBtn: 'Unlock', hireBtn: 'Hire', upBtn: 'Level up', hire2Btn: 'Hire one more',
     growBtn: 'Expand', maxed: 'Max level', poor: 'Not enough coins', fieldIsFull: 'Field is full', more: n => `${n} more kinds after this`,
     swapTitle: k => `Replace which tree with ${k}?`, cancel: 'Cancel', plot: n => `Plot ${n}`,
+    plotRow: (n, k) => `Plot ${n} · ${k}`, eachCoin: v => `${v} coins each`, cheapFirst: 'Cheapest trees first',
     connecting: 'Connecting…', online: 'Mac connected', asleepChip: 'Mac asleep', offline: "Can't connect", staleChip: ago => `As of ${ago}`,
     asleep: ago => `Your Mac is asleep${ago ? ` (last seen ${ago})` : ''}. You can only look for now.`, noState: 'Wake your Mac to see your orchard.',
     offlineText: "Can't reach the server. Showing the last orchard you saw.", retry: 'Retry', pan: 'Swipe the orchard sideways to look around.',
@@ -393,7 +394,7 @@
       nb_help: 'Watered', nb_gift: 'Gift sent', nb_add: 'You are neighbors now', nb_name: 'Name changed', nb_dispatch: 'Worker sent', nb_basket: 'Basket sent', nb_sapling: 'Sapling sent',
       nb_request: 'Request sent', nb_accept: 'You are neighbors now', nb_decline: 'Request declined', nb_block: 'Blocked', raid_send: 'Scrumper sent', raid_revenge: 'Off to pay back', raid_recover: 'Off to get it back',
       mgr_set: "Changed Dodam's settings"},
-    why: {full: 'Neighbor list is full (10 max)', already: 'Already neighbors', pending: 'Already requested', cooldown: 'You can ask again in a few days', closed: "This orchard isn't taking requests",
+    why: {full: 'Neighbor list is full (20 max)', already: 'Already neighbors', pending: 'Already requested', cooldown: 'You can ask again in a few days', closed: "This orchard isn't taking requests",
       rate_limited: 'Try again in a moment', too_new: 'New orchards can scrump from the next day.', busy: 'That worker is already out.', no_raids_left: 'No scrumps left today. Try tomorrow.',
       guarded: 'A dog is barking. Pick another orchard.', empty: 'Nothing to take.', not_found: "That orchard isn't available anymore. Refresh the list.", bad_code: "That code doesn't work",
       done_today: 'Already done today. Try again later.', not_junior: 'Only juniors can get that', taken_today: 'They already got one today', taken_week: 'They already got a sapling this week',
@@ -434,6 +435,7 @@
     crateLevel: (l, c) => `레벨 ${l} · ${c}개 보관`, plantBtn: '심기', swapBtn: '바꿔 심기', unlockBtn: '해금', hireBtn: '고용', upBtn: '레벨업', hire2Btn: '한 명 더 고용',
     growBtn: '넓히기', maxed: '최고 레벨', poor: '코인이 모자라요', fieldIsFull: '밭이 다 찼어요', more: n => `그 뒤로 ${n}종이 더 있어요`,
     swapTitle: k => `어느 나무를 ${ro(k)} 바꿀까요?`, cancel: '취소', plot: n => `${n}번 밭`,
+    plotRow: (n, k) => `${n}번 밭 · ${k}`, eachCoin: v => `개당 ${v}코인`, cheapFirst: '값이 낮은 나무부터 보여요',
     connecting: '연결하는 중…', online: 'Mac 연결됨', asleepChip: 'Mac 잠자는 중', offline: '연결할 수 없어요', staleChip: ago => `${ago} 모습`,
     asleep: ago => `Mac이 잠자는 중이에요${ago ? `(마지막 연결 ${ago})` : ''}. 지금은 보기만 돼요.`, noState: 'Mac을 깨우면 과수원이 보여요.',
     offlineText: '서버에 닿지 못했어요. 마지막으로 본 과수원이에요.', retry: '다시 시도', pan: '과수원을 옆으로 밀어서 둘러보세요.',
@@ -487,7 +489,7 @@
       nb_help: '물을 줬어요', nb_gift: '선물을 보냈어요', nb_add: '이웃이 됐어요', nb_name: '이름을 바꿨어요', nb_dispatch: '출장 보냈어요', nb_basket: '바구니 보냈어요', nb_sapling: '묘목 보냈어요',
       nb_request: '이웃 요청을 보냈어요', nb_accept: '이웃이 됐어요', nb_decline: '요청을 거절했어요', nb_block: '차단했어요', raid_send: '서리를 보냈어요', raid_revenge: '되갚으러 갔어요', raid_recover: '되찾으러 갔어요',
       mgr_set: '도담 설정을 바꿨어요'},
-    why: {full: '이웃은 10명까지예요', already: '이미 이웃이에요', pending: '이미 요청했어요', cooldown: '며칠 뒤에 다시 요청할 수 있어요', closed: '요청을 받지 않는 과수원이에요',
+    why: {full: '이웃은 20명까지예요', already: '이미 이웃이에요', pending: '이미 요청했어요', cooldown: '며칠 뒤에 다시 요청할 수 있어요', closed: '요청을 받지 않는 과수원이에요',
       rate_limited: '잠시 뒤에 다시 해 보세요.', too_new: '새로 시작한 과수원은 하루 뒤부터 서리할 수 있어요.', busy: '그 일꾼은 이미 나가 있어요.', no_raids_left: '오늘 서리는 다 했어요. 내일 다시 해요.',
       guarded: '개가 짖고 있어요. 다른 과수원을 골라요.', empty: '가져올 게 없어요.', not_found: '그 과수원은 이제 없어요. 목록을 새로 고쳐요.', bad_code: '쓸 수 없는 코드예요',
       done_today: '오늘은 이미 했어요. 다음에 또 해요.', not_junior: '후배에게만 보낼 수 있어요', taken_today: '이 이웃은 오늘 이미 받았어요', taken_week: '이 이웃은 이번 주에 묘목을 이미 받았어요',
@@ -1376,14 +1378,18 @@
     }
   }
   // 바꿔 심기: 어느 밭과 바꿀지 고른다
+  // 1.15.4: 그림과 번호만으로는 무슨 나무인지 몰라서 한 줄에 하나씩 이름·개당 값을 쓰고, 값이 낮은 나무부터(같으면 칸 번호 순) 보인다
   function pickPlot(kind, action = 'replant') {
-    const s = state();
-    $('plots').className = 'plots';
+    const s = state(), each = Object.fromEntries((s.kinds || []).map(k => [k.kind, k.each]));
+    $('plots').className = 'plots list';
     $('sheet-title').textContent = T.swapTitle(T.kinds[kind] || kind);
-    $('plots').replaceChildren(...s.plots.map((p, i) => {
+    const order = s.plots.map((p, i) => [p, i]).sort((a, b) => (each[a[0].kind] ?? Infinity) - (each[b[0].kind] ?? Infinity) || a[1] - b[1]); // 값을 모르면(옛 앱) 맨 뒤
+    const note = el('p', 'note', T.cheapFirst); note.style.margin = '0 0 4px';
+    $('plots').replaceChildren(note, ...order.map(([p, i]) => {
       const b = el('button'); b.type = 'button'; b.disabled = p.kind === kind;
       const im = el('img'); im.src = `${S}tree-${p.kind}-${Math.min(7, p.stage)}.png`; im.alt = ''; im.loading = 'lazy';
-      b.append(im, document.createTextNode(String(i + 1))); b.setAttribute('aria-label', `${T.plot(i + 1)}, ${T.kinds[p.kind] || p.kind}`);
+      b.append(im, el('span', 'grow', T.plotRow(i + 1, kindName(p.kind))));
+      if (each[p.kind] != null) { const v = el('span', 'note num', T.eachCoin(fmt(each[p.kind]))); v.style.marginLeft = 'auto'; b.append(v); }
       b.onclick = () => { closeSheet(); send(action === 'seedling' ? {action, plot: i} : {action, kind, plot: i}); }; // 1.12: 어느 칸이든(칸 번호 < land)
       return b;
     }));

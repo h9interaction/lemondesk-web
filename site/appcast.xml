@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.15.3</title>
-      <pubDate>Tue, 17 Nov 2026 05:58:11 GMT</pubDate>
-      <sparkle:version>27</sparkle:version>
-      <sparkle:shortVersionString>1.15.3</sparkle:shortVersionString>
+      <title>1.15.4</title>
+      <pubDate>Tue, 17 Nov 2026 06:11:34 GMT</pubDate>
+      <sparkle:version>28</sparkle:version>
+      <sparkle:shortVersionString>1.15.4</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>손님 주문과 가판대에서 창고·선반에 지금 몇 개가 있고 몇 개가 모자라는지 보여 줘요. 예: &#x27;창고 12 / 30 · 18개 부족&#x27;, &#x27;선반 1 / 2 · 만드는 중 1 · 1병 부족&#x27;</li><li>가판대 만들기 줄에 재료 과일이 창고에 몇 개 있는지, 지금 몇 병을 만들 수 있는지 보여 줘요</li></ul><ul><li>Customer orders and the stand now show how many you have in the crate or on the shelf, and how many you&#x27;re short. e.g. &#x27;Crate 12 / 30 · 18 short&#x27;, &#x27;Shelf 1 / 2 · Making 1 · 1 short&#x27;</li><li>Each stand recipe now shows how much of its fruit is in the crate and how many bottles you can make</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.3/LemonDesk-1.15.3.dmg" type="application/octet-stream" sparkle:edSignature="qafj09KgZJZkm2ZN9Ydz4CBhovPhnUj/G6SbBj584FluyuzaRyQd63r6x9iXTxMH0Ql7xPccsTVnD615vZOmDg==" length="18562318"/>
+      <description><![CDATA[<ul><li>이웃을 20명까지 맺을 수 있어요(전에는 10명)</li><li>이웃이 많아도 띠가 붐비지 않게, 띠로 찾아오는 이웃은 하루 24명까지예요. 그 뒤에 온 돕기·선물도 그대로 받아요</li><li>폰에서 바꿔 심을 때 칸마다 나무 이름과 개당 값이 보이고, 값이 낮은 나무부터 나와요</li></ul><ul><li>You can now have up to 20 neighbors (was 10)</li><li>To keep the strip calm, up to 24 neighbors visit it each day. Help and gifts after that still arrive</li><li>When replanting from your phone, each plot now shows its tree&#x27;s name and price per fruit, cheapest first</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.4/LemonDesk-1.15.4.dmg" type="application/octet-stream" sparkle:edSignature="QVPEQ/NUJ7bDz5S9r2HjZ3oLaZk5+Tf998lL84Vsam4D57/OKyZUFaViHRd0ab713l97rhkjf+HQnYAS/0DABA==" length="18560743"/>
     </item>
   </channel>
 </rss>

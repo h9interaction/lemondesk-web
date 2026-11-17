@@ -1,5 +1,22 @@
 [
   {
+    "version": "1.15.4",
+    "date": "2026-11-17",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.4/LemonDesk-1.15.4.dmg",
+    "notes": {
+      "ko": [
+        "이웃을 20명까지 맺을 수 있어요(전에는 10명)",
+        "이웃이 많아도 띠가 붐비지 않게, 띠로 찾아오는 이웃은 하루 24명까지예요. 그 뒤에 온 돕기·선물도 그대로 받아요",
+        "폰에서 바꿔 심을 때 칸마다 나무 이름과 개당 값이 보이고, 값이 낮은 나무부터 나와요"
+      ],
+      "en": [
+        "You can now have up to 20 neighbors (was 10)",
+        "To keep the strip calm, up to 24 neighbors visit it each day. Help and gifts after that still arrive",
+        "When replanting from your phone, each plot now shows its tree's name and price per fruit, cheapest first"
+      ]
+    }
+  },
+  {
     "version": "1.15.3",
     "date": "2026-11-17",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.15.3/LemonDesk-1.15.3.dmg",

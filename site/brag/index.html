@@ -211,7 +211,7 @@
     <label for="bug-text" data-t="bugText">어떤 일이 있었나요?</label>
     <textarea id="bug-text" maxlength="2000" required aria-describedby="bug-count" placeholder="무엇을 하다가, 무엇이 어떻게 됐는지 적어 주세요."></textarea>
     <p class="count muted" id="bug-count">0 / 2000</p>
-    <label for="bug-files" data-t="bugImages">스크린샷(선택, 3장까지)</label>
+    <label for="bug-files" data-t="bugImages">스크린샷(선택, 3장까지 · 붙여넣기도 돼요)</label>
     <input type="file" id="bug-files" accept="image/*" multiple>
     <div class="shots" id="bug-shots"></div>
     <p class="muted" style="font-size:14px" data-t="bugPrivacy">스크린샷에 이름이나 다른 창 내용이 보이지 않는지 확인해 주세요. 신고는 앱 버전·OS 와 함께 180일 동안 보관해요.</p>
@@ -251,7 +251,7 @@
     latest: 'Latest', download: 'Download for Mac', notesFail: "Couldn't load the updates. Please refresh in a moment.",
     bugTab: 'Report a bug', bugTitle: 'Report a bug', bugLead: 'Found something odd in the game? Let us know. Only the team reads these; they never appear on the board.',
     bugClosed: "Bug reports have to be opened from the Lemon Desk app. In the app, go to the window › Settings › 'Report a Bug…' (only orchards played recently can report).",
-    bugText: 'What happened?', bugImages: 'Screenshots (optional, up to 3)', bugSend: 'Send',
+    bugText: 'What happened?', bugImages: 'Screenshots (optional, up to 3 · you can paste them)', bugSend: 'Send',
     bugPrivacy: "Check that your screenshots don't show your name or other windows. Reports are kept for 180 days along with the app version and OS.",
     bugPlaceholder: 'What were you doing, and what went wrong?', bugExpired: 'This page has expired. Open it again from the app.',
     bugShort: 'Please write a little more (5 characters or more).', bugTooMany: 'Up to 3 screenshots.', bugBadImage: "Couldn't read that image. Try a PNG or JPEG.",
@@ -831,14 +831,22 @@
       f.append(img, x); box.append(f);
     });
   }
-  $('bug-files').onchange = async e => {
-    const files = [...e.target.files]; e.target.value = '';
+  async function addShots(files) {
     for (const f of files) {
       if (shots.length >= 3) { $('bug-note').textContent = T.bugTooMany; break; }
       try { shots.push(await shrink(f)); } catch (err) { $('bug-note').textContent = T.bugBadImage; }
     }
     drawShots();
-  };
+  }
+  $('bug-files').onchange = e => { const files = [...e.target.files]; e.target.value = ''; addShots(files); };
+  // 붙여넣기(⌘V·Ctrl+V): 클립보드의 이미지만 받는다. 글은 그대로 붙는다.
+  document.addEventListener('paste', e => {
+    if ($('bug-form').hidden || $('v-bug').hidden) return;
+    const files = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
+    e.preventDefault();
+    addShots(files);
+  });
   $('bug-form').onsubmit = async e => {
     e.preventDefault();
     const text = $('bug-text').value.trim();

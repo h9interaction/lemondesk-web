@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.17.2",
+    "date": "2026-11-18",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.2/LemonDesk-1.17.2.dmg",
+    "notes": {
+      "ko": [
+        "동네 과수원에 물을 주거나 선물하면 바로 '했어요'로 바뀌어요",
+        "버그 신고에 스크린샷을 붙여넣기로 넣을 수 있어요"
+      ],
+      "en": [
+        "Watering or sending a gift to a village orchard now shows as done right away",
+        "You can paste screenshots into a bug report"
+      ]
+    }
+  },
+  {
     "version": "1.17.1",
     "date": "2026-11-18",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.1/LemonDesk-1.17.1.dmg",

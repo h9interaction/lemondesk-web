@@ -1,5 +1,26 @@
 [
   {
+    "version": "1.17.3",
+    "date": "2026-11-18",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.3/LemonDesk-1.17.3.dmg",
+    "notes": {
+      "ko": [
+        "창고의 과일을 종류별로 골라 팔 수 있어요. 손님 주문에 쓸 과일은 남겨 두세요",
+        "자랑 게시판에 넓힌 밭이 모두 보여요",
+        "이웃 찾기 목록이 짧아졌어요. 더 보기로 이어서 볼 수 있어요",
+        "후배 과수원에 출장 간 일꾼이 서리 탭에 출장 중으로 보여요",
+        "버그 신고에서 건의도 보낼 수 있어요"
+      ],
+      "en": [
+        "Sell just one kind of fruit from the crate, so you can keep what a customer ordered",
+        "The brag board now shows your whole expanded field",
+        "The neighbor search list is shorter; use Show More to see the rest",
+        "Workers lent to a junior's orchard now show as lent in the Scrumping tab",
+        "Send suggestions as well as bug reports"
+      ]
+    }
+  },
+  {
     "version": "1.17.2",
     "date": "2026-11-18",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.2/LemonDesk-1.17.2.dmg",

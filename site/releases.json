@@ -1,5 +1,24 @@
 [
   {
+    "version": "1.18.0",
+    "date": "2026-11-18",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.18.0/LemonDesk-1.18.0.dmg",
+    "notes": {
+      "ko": [
+        "커스텀 도담: 할 일 슬롯에 원하는 일을 순서대로 넣으면 도담이 위에서부터 해결해요",
+        "땅 넓히기·일꾼 키우기·새 나무 열기·서리·이웃 돕기를 맡길 수 있고, 도담 레벨이 오르면 슬롯이 늘어요",
+        "할 일마다 예상 시간이 보이고, 끝내면 띠에서 도담이 축하해요",
+        "할 일을 끝내면 받는 도전과제와 새 소품 '할 일 게시판'"
+      ],
+      "en": [
+        "Custom Dodam: put to-dos in slots and Dodam works through them from the top",
+        "Hand off expanding land, training workers, unlocking trees, scrumping and helping neighbors. More slots open as Dodam levels up",
+        "Each to-do shows how long it should take, and Dodam celebrates on the strip when one is done",
+        "New achievements for finished to-dos and a new prop, the To-Do Board"
+      ]
+    }
+  },
+  {
     "version": "1.17.4",
     "date": "2026-11-18",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.4/LemonDesk-1.17.4.dmg",

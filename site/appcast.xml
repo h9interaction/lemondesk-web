@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.17.4</title>
-      <pubDate>Wed, 18 Nov 2026 08:30:45 GMT</pubDate>
-      <sparkle:version>37</sparkle:version>
-      <sparkle:shortVersionString>1.17.4</sparkle:shortVersionString>
+      <title>1.18.0</title>
+      <pubDate>Wed, 18 Nov 2026 10:55:23 GMT</pubDate>
+      <sparkle:version>38</sparkle:version>
+      <sparkle:shortVersionString>1.18.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>&#x27;모두 팔기&#x27;와 도담이 손님 주문에 쓸 병은 남겨 둬요</li><li>손님 주문 칸에서 주문에 쓸 병까지 모두 팔도록 바꿀 수 있어요</li></ul><ul><li>Sell All and Dodam now keep the bottles your customer orders need</li><li>Turn on selling order bottles too in the Customer Orders section</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.4/LemonDesk-1.17.4.dmg" type="application/octet-stream" sparkle:edSignature="2AyryTtcnxPNUAagT+LQQ2i+i+U5z463JurBbMm8QPxEVx2pGtxFEXA19o2oiJqGPCi26VmrKKmCvUj/YqjKAA==" length="19474016"/>
+      <description><![CDATA[<ul><li>커스텀 도담: 할 일 슬롯에 원하는 일을 순서대로 넣으면 도담이 위에서부터 해결해요</li><li>땅 넓히기·일꾼 키우기·새 나무 열기·서리·이웃 돕기를 맡길 수 있고, 도담 레벨이 오르면 슬롯이 늘어요</li><li>할 일마다 예상 시간이 보이고, 끝내면 띠에서 도담이 축하해요</li><li>할 일을 끝내면 받는 도전과제와 새 소품 &#x27;할 일 게시판&#x27;</li></ul><ul><li>Custom Dodam: put to-dos in slots and Dodam works through them from the top</li><li>Hand off expanding land, training workers, unlocking trees, scrumping and helping neighbors. More slots open as Dodam levels up</li><li>Each to-do shows how long it should take, and Dodam celebrates on the strip when one is done</li><li>New achievements for finished to-dos and a new prop, the To-Do Board</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.18.0/LemonDesk-1.18.0.dmg" type="application/octet-stream" sparkle:edSignature="672Kg5GA8WKFdF3D10M4tHi9vJx7q+8W5bwOYvJkWVHuNVHZMXPnB0vg2GtFMwxr6vV9erCxcW5gBb6neDHTBg==" length="19667217"/>
     </item>
   </channel>
 </rss>

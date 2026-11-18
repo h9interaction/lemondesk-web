@@ -25,6 +25,8 @@
 - 1.16: 폰 명령 mgr_set 의 plan 이 도담 모드로 늘고, 사용 통계 mm(도담 모드)과 /stats 의 모드 분포.
 - 1.17(docs/research/collection-1.17.md): 게시물 칭호·배지·진열장·장면, 스탬프(posts/<id>/stamp), 게시판 표(brag/ticket)와
   구경꾼 날(소유 키 해시·날짜), 배지 수(badges/<id>), 이주의 주제·스탬프 부문, raid/status 의 brag 보상 요약, 게시물로 이웃 요청.
+- 1.18.1(docs/research/comments-1.18.1.md): 게시물 댓글(posts/<id>/comments, comments/<id>/delete|report, 게시판 표 필요),
+  게시물 소개 한 줄(intro), 이웃 모습 look.names·장면 scene.workers[].n 의 일꾼 이름.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -32,6 +34,7 @@
   회사 인프라: python brag.py --host 0.0.0.0 --prefix /api/ --board https://lemondesk.interaction.hnine.com/brag/ --cors https://lemondesk.interaction.hnine.com
               (PORT, IX_DATA_DIR 은 인프라가 넣어 준다)
 관리: python3 brag.py admin list|hide ID|unhide ID|delete ID|clear-name 과수원 이름
+      python3 brag.py admin comments|hide-comment ID|unhide-comment ID|delete-comment ID
 """
 import base64
 import hashlib
@@ -79,7 +82,9 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
           # 1.15.2 버그 신고: 표는 소유 키당, 올리기는 IP 당(하루 개수는 소유 키당 BUG_PER_DAY 로 따로 센다)
           "bug_ticket": (10, 3600), "bug": (10, 3600),
           # 1.17 스탬프는 IP 당, 게시판 표는 소유 키당
-          "stamp": (300, 3600), "brag_ticket": (30, 3600)}
+          "stamp": (300, 3600), "brag_ticket": (30, 3600),
+          # 1.18.1 댓글: 소유 키당, comment_post 는 소유 키+게시물
+          "comment": (30, 86400), "comment_post": (1, 60)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -483,6 +488,9 @@ def clean_look(v):
             out[k] = check(v[k])
         except (KeyError, BadRequest):
             pass
+    names = v.get("names")  # 1.18.1 일꾼 이름(workers 와 같은 길이, 칸마다 문자열 또는 null)
+    if isinstance(names, list) and len(names) == len(out.get("workers", ())):
+        out["names"] = [_name(n) for n in names]
     return out
 
 
@@ -647,7 +655,7 @@ def _int(v, lo, hi):
     return v
 
 
-def clean_nickname(v, most=12, code="bad_nickname"):
+def clean_text(v, most=12, code="bad_nickname"):
     if not isinstance(v, str):
         raise BadRequest(code)
     n = " ".join(v.split())
@@ -655,6 +663,17 @@ def clean_nickname(v, most=12, code="bad_nickname"):
     if not 1 <= len(n) <= most or URLISH.search(n) or any(b in flat for b in BANNED) or any(ord(c) < 32 for c in n):
         raise BadRequest(code)
     return n
+
+
+clean_nickname = clean_text
+
+
+def _name(v):
+    """1.18.1 일꾼 이름: 걸리면 None"""
+    try:
+        return clean_text(v, 12)
+    except BadRequest:
+        return None
 
 
 def _num(v, lo, hi):
@@ -671,9 +690,13 @@ def clean_scene(v):
     if len(trees) > MAX_BRAG_TREES or len(workers) > 2 * len(ROLES) or len(decor) > 64 or v.get("theme") not in THEMES:
         raise BadRequest()
     d = lambda x: x if isinstance(x, dict) else {}  # noqa: E731
+
+    def worker(w):
+        out = {"r": _one(d(w).get("r"), ROLES), "v": _int(d(w).get("v"), 0, 1), "d": _int(d(w).get("d"), 0, 6), "t": _int(d(w).get("t"), 0, 4)}
+        n = _name(w["n"]) if "n" in d(w) else None  # 1.18.1 일꾼 이름
+        return dict(out, n=n) if n else out
     return {"trees": [{"k": _one(d(t).get("k"), KINDS), "s": _int(d(t).get("s"), 0, 7)} for t in trees],
-            "workers": [{"r": _one(d(w).get("r"), ROLES), "v": _int(d(w).get("v"), 0, 1), "d": _int(d(w).get("d"), 0, 6),
-                         "t": _int(d(w).get("t"), 0, 4)} for w in workers],
+            "workers": [worker(w) for w in workers],
             "dogs": _int(v.get("dogs", 0), 0, 3), "theme": v["theme"],
             "decor": [{"id": _match(d(p).get("id"), DECOR_ID), "x": _num(d(p).get("x"), 0, 1)} for p in decor]}
 
@@ -757,6 +780,8 @@ def clean_post(body, baskets=0, dispatches=0, farm=(0, 0)):
         post["badges"] = badges
     if body.get("showcase") is not None:
         post["showcase"] = clean_showcase(body["showcase"])
+    if body.get("intro") not in (None, ""):  # 1.18.1 소개 한 줄
+        post["intro"] = clean_text(body["intro"], 40, "bad_intro")
     return post
 
 
@@ -856,6 +881,11 @@ class Board:
             CREATE TABLE IF NOT EXISTS brag_kept(owner TEXT PRIMARY KEY, posts INTEGER NOT NULL, stars INTEGER NOT NULL,
                 lemon INTEGER NOT NULL, flower INTEGER NOT NULL, laugh INTEGER NOT NULL, clap INTEGER NOT NULL);
             CREATE INDEX IF NOT EXISTS highlights_owner ON highlights(owner);
+            -- 1.18.1 댓글(owner 는 소유 키 해시)과 댓글 신고(IP 해시)
+            CREATE TABLE IF NOT EXISTS comments(id TEXT PRIMARY KEY, post TEXT NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL,
+                text TEXT NOT NULL, created REAL NOT NULL, hidden INTEGER NOT NULL DEFAULT 0);
+            CREATE INDEX IF NOT EXISTS comments_post ON comments(post, created);
+            CREATE TABLE IF NOT EXISTS comment_reports(comment TEXT NOT NULL, ip TEXT NOT NULL, at REAL NOT NULL, UNIQUE(comment, ip));
         """)
         # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
         # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by). 1.12: 내 과수원 이름
@@ -912,11 +942,11 @@ class Board:
         return sha(key)
 
     def _row(self, r, voter=None):
-        pid, week, nick, data, created, stars = r
+        pid, week, nick, data, created, stars, comments = r
         d = json.loads(data)
         out = {"id": pid, "week": week, "nickname": nick, "card": d["card"], "orchard": d["orchard"],
-               "stars": stars, "created": int(created), "stamps": self._stamps(pid)}
-        out.update({k: d[k] for k in ("title", "badges", "showcase") if k in d})  # 1.17 진열장
+               "stars": stars, "created": int(created), "stamps": self._stamps(pid), "comments": comments}
+        out.update({k: d[k] for k in ("title", "badges", "showcase", "intro") if k in d})  # 1.17 진열장, 1.18.1 소개
         if voter is not None:
             out["starred"] = self.db.execute("SELECT 1 FROM stars WHERE post=? AND voter=?", (pid, sha(voter))).fetchone() is not None
             m = self.db.execute("SELECT kind FROM stamps WHERE post=? AND voter=?", (pid, sha(voter))).fetchone()
@@ -941,7 +971,8 @@ class Board:
         return r[0] if r else None
 
     SELECT = ("SELECT p.id, p.week, p.nickname, p.data, p.created, "
-              "(SELECT COUNT(*) FROM stars s WHERE s.post=p.id) AS n FROM posts p")
+              "(SELECT COUNT(*) FROM stars s WHERE s.post=p.id) AS n, "
+              "(SELECT COUNT(*) FROM comments c WHERE c.post=p.id AND c.hidden=0) FROM posts p")
 
     # 동작
 
@@ -957,7 +988,7 @@ class Board:
         with self.lock:
             self.limit("post", self.ip(ip), now)
             week = self.week(now)
-            data = json.dumps({k: post[k] for k in ("card", "orchard", "title", "badges", "showcase") if k in post}, ensure_ascii=False)
+            data = json.dumps({k: post[k] for k in ("card", "orchard", "title", "badges", "showcase", "intro") if k in post}, ensure_ascii=False)
             row = self.db.execute("SELECT id FROM posts WHERE owner=? AND week=?", (owner, week)).fetchone()
             t = now.timestamp()
             if row:
@@ -1057,6 +1088,68 @@ class Board:
                 self.db.execute("UPDATE posts SET hidden=1 WHERE id=?", (pid,))
             self.db.commit()
 
+    # 1.18.1 댓글
+
+    def _ticket_owner(self, b, now):
+        me = self._brag_ticket(b.get("ticket") if isinstance(b, dict) else None, now)
+        if not me:
+            raise BadRequest("no_ticket")
+        return me
+
+    @locked
+    def comments(self, pid, ticket, now):
+        """{comments: [{id, name, text, created, mine, canDelete}]} 숨김 빼고 오래된 것부터"""
+        owner, me = self._post_owner(pid), self._brag_ticket(ticket, now)
+        rows = self.db.execute("SELECT id, owner, name, text, created FROM comments WHERE post=? AND hidden=0 ORDER BY created, rowid",
+                               (pid,)).fetchall()
+        return {"comments": [{"id": i, "name": n, "text": tx, "created": int(c), "mine": bool(me) and o == me,
+                              "canDelete": bool(me) and me in (o, owner)} for i, o, n, tx, c in rows]}
+
+    @locked
+    def comment(self, pid, body, now):
+        me = self._ticket_owner(body, now)
+        self._post_owner(pid)
+        text = clean_text(body.get("text"), 120, "bad_comment")
+        if self.db.execute("SELECT COUNT(*) FROM comments WHERE post=? AND hidden=0", (pid,)).fetchone()[0] >= 100:
+            raise BadRequest("full")
+        self.limit("comment_post", me + pid, now)
+        self.limit("comment", me, now)
+        r = (self.db.execute("SELECT nickname FROM posts WHERE owner=? AND hidden=0 ORDER BY created DESC LIMIT 1", (me,)).fetchone()
+             or self.db.execute("SELECT name FROM farms WHERE owner=? AND name<>''", (me,)).fetchone())
+        c = {"id": secrets.token_hex(6), "name": r[0] if r else "", "text": text, "created": int(now.timestamp())}
+        self.db.execute("INSERT INTO comments(id, post, owner, name, text, created) VALUES(?,?,?,?,?,?)",
+                        (c["id"], pid, me, c["name"], text, now.timestamp()))
+        self.db.commit()
+        return {"comment": dict(c, mine=True, canDelete=True)}
+
+    @locked
+    def delete_comment(self, cid, body, now):
+        """쓴 사람 또는 게시물 주인"""
+        me = self._ticket_owner(body, now)
+        r = self.db.execute("SELECT c.owner, p.owner FROM comments c LEFT JOIN posts p ON p.id=c.post WHERE c.id=?", (cid,)).fetchone()
+        if not r:
+            raise KeyError(cid)
+        if me not in r:
+            raise BadRequest("forbidden")
+        self._drop_comments("id=?", (cid,))
+        self.db.commit()
+
+    @locked
+    def report_comment(self, cid, ip, now):
+        if not self.db.execute("SELECT 1 FROM comments WHERE id=?", (cid,)).fetchone():
+            raise KeyError(cid)
+        h = self.ip(ip)
+        self.limit("report", h, now)
+        self.db.execute("INSERT OR IGNORE INTO comment_reports VALUES(?,?,?)", (cid, h, now.timestamp()))
+        if self.db.execute("SELECT COUNT(*) FROM comment_reports WHERE comment=?", (cid,)).fetchone()[0] >= 3:
+            self.db.execute("UPDATE comments SET hidden=1 WHERE id=?", (cid,))
+        self.db.commit()
+
+    def _drop_comments(self, where, args):
+        """조건에 맞는 댓글과 그 신고(잠금 안에서 부른다)"""
+        self.db.execute("DELETE FROM comment_reports WHERE comment IN (SELECT id FROM comments WHERE %s)" % where, args)
+        self.db.execute("DELETE FROM comments WHERE %s" % where, args)
+
     @locked
     def me(self, owner_key, now):
         owner = self.owner(owner_key)
@@ -1073,6 +1166,7 @@ class Board:
             self.db.execute("DELETE FROM stars WHERE post=?", (pid,))
             self.db.execute("DELETE FROM stamps WHERE post=?", (pid,))
             self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
+            self._drop_comments("post=?", (pid,))
         self.db.execute("DELETE FROM posts WHERE owner=?", (owner,))
         self.db.execute("DELETE FROM highlights WHERE owner=?", (owner,))
         return len(ids)
@@ -1104,6 +1198,7 @@ class Board:
             self.db.execute("DELETE FROM relay_link WHERE owner=?", (owner,))
             self._drop_sync(owner)  # 1.15.1 기기 연동
             self._drop_bugs(owner)  # 1.15.2 버그 신고
+            self._drop_comments("owner=?", (owner,))  # 1.18.1 내가 쓴 댓글
             for table in ("visits", "brag_tickets", "brag_kept"):  # 1.17 구경꾼 날·게시판 표·지운 게시물의 보상 집계
                 self.db.execute("DELETE FROM %s WHERE owner=?" % table, (owner,))
             self.db.commit()
@@ -1295,7 +1390,7 @@ class Board:
         # 횟수 제한 기록: 한 시간 넘게 안 쓴 키는 지운다(IP·기기가 많아져도 메모리가 늘기만 하지 않게)
         t = now.timestamp()
         for k, q in list(self.hits.items()):
-            if not q or q[-1] < t - 3600:
+            if not q or q[-1] < t - max(3600, LIMITS[k[0]][1]):  # 하루 창(comment)은 하루 동안 남긴다
                 self.hits.pop(k, None)
         current = self.week(now)
         with self.lock:
@@ -1322,6 +1417,7 @@ class Board:
                 self.db.execute("DELETE FROM stars WHERE post=?", (pid,))
                 self.db.execute("DELETE FROM stamps WHERE post=?", (pid,))
                 self.db.execute("DELETE FROM reports WHERE post=?", (pid,))
+                self._drop_comments("post=?", (pid,))
                 self.db.execute("DELETE FROM posts WHERE id=?", (pid,))
             # 사용 통계 원본은 90일 뒤 지우고 날짜별 합계만 남긴다
             stats_cut = day_key(now - timedelta(days=STATS_KEEP_DAYS))
@@ -2774,6 +2870,17 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 if method == "POST" and len(parts) == 3 and parts[0] == "posts" and parts[2] == "report":
                     board.report(parts[1], self.client_ip(), now)
                     return self.send(200, {"ok": True})
+                if len(parts) == 3 and parts[0] == "posts" and parts[2] == "comments":  # 1.18.1
+                    if method == "GET":
+                        return self.send(200, board.comments(parts[1], q.get("ticket"), now))
+                    if method == "POST":
+                        return self.send(200, board.comment(parts[1], self.body(), now))
+                if method == "POST" and len(parts) == 3 and parts[0] == "comments" and parts[2] == "delete":
+                    board.delete_comment(parts[1], self.body(), now)
+                    return self.send(200, {"ok": True})
+                if method == "POST" and len(parts) == 3 and parts[0] == "comments" and parts[2] == "report":
+                    board.report_comment(parts[1], self.client_ip(), now)
+                    return self.send(200, {"ok": True})
                 if method == "POST" and parts == ["stats", "install"]:
                     board.install(self.body(), self.client_ip(), now)
                     return self.send(200, {"ok": True})
@@ -2818,6 +2925,7 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                                   "not_holder": 409, "stale": 409, "old_schema": 409, "revoked": 409, "self": 409, "off": 404,
                                   # 버그 신고(1.15.2, bad_text·bad_image 는 422)
                                   "inactive": 403, "bad_ticket": 409, "forbidden": 403,
+                                  "no_ticket": 403,  # 1.18.1 댓글(bad_comment·bad_intro 는 422)
                                   }.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
@@ -3005,7 +3113,18 @@ def main(argv):
         elif cmd in ("hide", "unhide"):
             board.db.execute("UPDATE posts SET hidden=? WHERE id=?", (1 if cmd == "hide" else 0, pid))
             board.db.commit()
+        elif cmd == "comments":
+            for r in board.db.execute("SELECT id, post, name, hidden, (SELECT COUNT(*) FROM comment_reports WHERE comment=comments.id), text "
+                                      "FROM comments ORDER BY created DESC LIMIT 50"):
+                print("%s %s %-12s hidden=%d reports=%d %s" % r)
+        elif cmd in ("hide-comment", "unhide-comment"):
+            board.db.execute("UPDATE comments SET hidden=? WHERE id=?", (1 if cmd == "hide-comment" else 0, pid))
+            board.db.commit()
+        elif cmd == "delete-comment":
+            board._drop_comments("id=?", (pid,))
+            board.db.commit()
         elif cmd == "delete":
+            board._drop_comments("post=?", (pid,))
             board.db.execute("DELETE FROM stars WHERE post=?", (pid,))
             board.db.execute("DELETE FROM stamps WHERE post=?", (pid,))
             board.db.execute("DELETE FROM reports WHERE post=?", (pid,))

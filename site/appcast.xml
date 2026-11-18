@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>1.17.3</title>
-      <pubDate>Wed, 18 Nov 2026 03:05:30 GMT</pubDate>
-      <sparkle:version>36</sparkle:version>
-      <sparkle:shortVersionString>1.17.3</sparkle:shortVersionString>
+      <title>1.17.4</title>
+      <pubDate>Wed, 18 Nov 2026 08:30:45 GMT</pubDate>
+      <sparkle:version>37</sparkle:version>
+      <sparkle:shortVersionString>1.17.4</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>창고의 과일을 종류별로 골라 팔 수 있어요. 손님 주문에 쓸 과일은 남겨 두세요</li><li>자랑 게시판에 넓힌 밭이 모두 보여요</li><li>이웃 찾기 목록이 짧아졌어요. 더 보기로 이어서 볼 수 있어요</li><li>후배 과수원에 출장 간 일꾼이 서리 탭에 출장 중으로 보여요</li><li>버그 신고에서 건의도 보낼 수 있어요</li></ul><ul><li>Sell just one kind of fruit from the crate, so you can keep what a customer ordered</li><li>The brag board now shows your whole expanded field</li><li>The neighbor search list is shorter; use Show More to see the rest</li><li>Workers lent to a junior&#x27;s orchard now show as lent in the Scrumping tab</li><li>Send suggestions as well as bug reports</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.3/LemonDesk-1.17.3.dmg" type="application/octet-stream" sparkle:edSignature="lE0rxjhoDE2+suioUYNBXMsf5TRMJ3T/fbPQgTcoz/ccSGzCFBFctBIT6f5/D4H2RkBCxtiXQsiySwbIEzsyBQ==" length="19462166"/>
+      <description><![CDATA[<ul><li>&#x27;모두 팔기&#x27;와 도담이 손님 주문에 쓸 병은 남겨 둬요</li><li>손님 주문 칸에서 주문에 쓸 병까지 모두 팔도록 바꿀 수 있어요</li></ul><ul><li>Sell All and Dodam now keep the bottles your customer orders need</li><li>Turn on selling order bottles too in the Customer Orders section</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.4/LemonDesk-1.17.4.dmg" type="application/octet-stream" sparkle:edSignature="2AyryTtcnxPNUAagT+LQQ2i+i+U5z463JurBbMm8QPxEVx2pGtxFEXA19o2oiJqGPCi26VmrKKmCvUj/YqjKAA==" length="19474016"/>
     </item>
   </channel>
 </rss>

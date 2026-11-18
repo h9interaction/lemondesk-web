@@ -1,5 +1,20 @@
 [
   {
+    "version": "1.17.4",
+    "date": "2026-11-18",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.4/LemonDesk-1.17.4.dmg",
+    "notes": {
+      "ko": [
+        "'모두 팔기'와 도담이 손님 주문에 쓸 병은 남겨 둬요",
+        "손님 주문 칸에서 주문에 쓸 병까지 모두 팔도록 바꿀 수 있어요"
+      ],
+      "en": [
+        "Sell All and Dodam now keep the bottles your customer orders need",
+        "Turn on selling order bottles too in the Customer Orders section"
+      ]
+    }
+  },
+  {
     "version": "1.17.3",
     "date": "2026-11-18",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.17.3/LemonDesk-1.17.3.dmg",

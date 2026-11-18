@@ -1,5 +1,40 @@
 [
   {
+    "version": "1.18.1",
+    "date": "2026-11-18",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.18.1/LemonDesk-1.18.1.dmg",
+    "notes": {
+      "ko": [
+        "자랑 게시판에 댓글을 남길 수 있어요. 앱에서 게시판을 열면 쓸 수 있고, 내 게시물에 달린 댓글은 지울 수 있어요",
+        "자랑할 때 과수원을 한 줄로 소개할 수 있어요",
+        "이웃 과수원 일꾼에 마우스를 올리면 친구가 지은 이름이 보여요",
+        "업데이트 소식에 새 기능의 화면과 움직이는 모습이 함께 나와요"
+      ],
+      "en": [
+        "Leave comments on Brag Board posts. Open the board from the app to write, and you can remove comments on your own posts",
+        "Introduce your orchard in one line when you brag",
+        "Hover over a neighbor's workers to see the names your friend gave them",
+        "Updates now show new features with screenshots and short clips"
+      ]
+    },
+    "shots": [
+      {
+        "src": "updates/1.18.1/comments.webp",
+        "dark": "updates/1.18.1/comments-dark.webp",
+        "w": 1016,
+        "h": 1462,
+        "title": {
+          "ko": "자랑에 댓글을 남겨요",
+          "en": "Leave a comment on a brag"
+        },
+        "text": {
+          "ko": "앱에서 게시판을 열면 마음에 드는 과수원에 댓글을 남길 수 있어요. 자랑할 때 쓴 소개 한 줄은 닉네임 아래에 보여요.",
+          "en": "Open the board from the app to comment on orchards you like. The one-line intro you write when bragging shows under your nickname."
+        }
+      }
+    ]
+  },
+  {
     "version": "1.18.0",
     "date": "2026-11-18",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.18.0/LemonDesk-1.18.0.dmg",

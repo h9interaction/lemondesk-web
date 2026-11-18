@@ -127,7 +127,8 @@ PROXY_MESSAGES = {
 # 자랑 게시판 조작 방지(1.7.1): 올린 숫자가 게임에서 나올 수 있는 범위인지 본다. 앱 Balance.swift 와 같은 값(test_brag 가 대조한다).
 # 게임 저장은 서버로 옮기지 않는다. 가능한 최대치 바로 아래로 꾸민 숫자는 못 막고, 신고·관리 명령이 나머지를 맡는다.
 WEEK = 7 * 86400
-MAX_TREES = 10               # 앞 10칸: 이웃 모습(look)·자랑 게시물의 나무 줄 상한(1.12 부터 땅은 끝이 없고 앱은 앞 10칸만 보낸다)
+MAX_TREES = 10               # 앞 10칸: 이웃 모습(look)의 나무 줄 상한(1.12 부터 땅은 끝이 없고 앱은 앞 10칸만 보낸다)
+MAX_BRAG_TREES = 60          # 자랑 게시물의 나무 줄 상한(1.17.3, 앱 Balance.Land.bragMax)
 MIN_FRUIT_INTERVAL = 20      # 가장 빨리 열리는 나무(핑거라임)의 열매 간격(초)
 MAX_FRUIT_PRICE = 900        # 가장 비싼 열매(포멜로)
 GROW_PER_LEVEL = 0.15        # 돌보기 레벨당 성장 배율
@@ -660,11 +661,11 @@ def _num(v, lo, hi):
 
 
 def clean_scene(v):
-    """1.17 살아 있는 과수원(앞 10칸): 나무 종류·단계, 일꾼 역할·variant·염색·장비 단계, 개 수, 테마, 놓은 소품과 자리(0~1)"""
+    """1.17 살아 있는 과수원(앞 60칸): 나무 종류·단계, 일꾼 역할·variant·염색·장비 단계, 개 수, 테마, 놓은 소품과 자리(0~1)"""
     if not isinstance(v, dict) or not all(isinstance(v.get(k, []), list) for k in ("trees", "workers", "decor")):
         raise BadRequest()
     trees, workers, decor = v.get("trees", []), v.get("workers", []), v.get("decor", [])
-    if len(trees) > MAX_TREES or len(workers) > 2 * len(ROLES) or len(decor) > 64 or v.get("theme") not in THEMES:
+    if len(trees) > MAX_BRAG_TREES or len(workers) > 2 * len(ROLES) or len(decor) > 64 or v.get("theme") not in THEMES:
         raise BadRequest()
     d = lambda x: x if isinstance(x, dict) else {}  # noqa: E731
     return {"trees": [{"k": _one(d(t).get("k"), KINDS), "s": _int(d(t).get("s"), 0, 7)} for t in trees],
@@ -707,7 +708,7 @@ def clean_post(body, baskets=0, dispatches=0, farm=(0, 0)):
         raise BadRequest()
     trees = orch.get("trees")
     workers = orch.get("workers")
-    if not isinstance(trees, list) or len(trees) > MAX_TREES or any(t not in KINDS for t in trees):
+    if not isinstance(trees, list) or len(trees) > MAX_BRAG_TREES or any(t not in KINDS for t in trees):
         raise BadRequest()
     if not isinstance(workers, dict) or any(r not in ROLES for r in workers):
         raise BadRequest()

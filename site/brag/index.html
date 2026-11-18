@@ -162,7 +162,7 @@
   <div class="tabs views" role="tablist" aria-label="게시판">
     <button type="button" role="tab" id="t-board" aria-controls="v-board" aria-selected="true" data-t="boardTab">자랑</button>
     <button type="button" role="tab" id="t-updates" aria-controls="v-updates" aria-selected="false" tabindex="-1" data-t="updatesTab">업데이트 소식</button>
-    <button type="button" role="tab" id="t-bug" aria-controls="v-bug" aria-selected="false" tabindex="-1" data-t="bugTab">버그 신고</button>
+    <button type="button" role="tab" id="t-bug" aria-controls="v-bug" aria-selected="false" tabindex="-1" data-t="bugTab">버그 신고·건의</button>
   </div>
 </header>
 
@@ -204,11 +204,11 @@
  </section>
 
  <section id="v-bug" role="tabpanel" aria-labelledby="t-bug" hidden>
-  <h2 data-t="bugTitle">버그 신고</h2>
-  <p class="muted" data-t="bugLead">게임을 하다 이상한 점을 찾았다면 알려 주세요. 운영자만 읽고, 게시판에는 보이지 않아요.</p>
-  <p class="empty" id="bug-closed" data-t="bugClosed">버그 신고는 Lemon Desk 앱에서 열어야 쓸 수 있어요. 앱의 관리 창 › 설정 › '버그 신고…'를 눌러 주세요(최근에 게임을 켠 과수원만 쓸 수 있어요).</p>
+  <h2 data-t="bugTitle">버그 신고·건의</h2>
+  <p class="muted" data-t="bugLead">게임을 하다 이상한 점을 찾았거나 바라는 점이 있다면 알려 주세요. 운영자만 읽고, 게시판에는 보이지 않아요.</p>
+  <p class="empty" id="bug-closed" data-t="bugClosed">버그 신고·건의는 Lemon Desk 앱에서 열어야 쓸 수 있어요. 앱의 관리 창 › 설정 › '버그 신고·건의…'를 눌러 주세요(최근에 게임을 켠 과수원만 쓸 수 있어요).</p>
   <form class="bug-form" id="bug-form" hidden>
-    <label for="bug-text" data-t="bugText">어떤 일이 있었나요?</label>
+    <label for="bug-text" data-t="bugText">어떤 일이 있었나요? 바라는 점도 좋아요</label>
     <textarea id="bug-text" maxlength="2000" required aria-describedby="bug-count" placeholder="무엇을 하다가, 무엇이 어떻게 됐는지 적어 주세요."></textarea>
     <p class="count muted" id="bug-count">0 / 2000</p>
     <label for="bug-files" data-t="bugImages">스크린샷(선택, 3장까지 · 붙여넣기도 돼요)</label>
@@ -249,13 +249,13 @@
     boardTab: 'Orchards', updatesTab: 'Updates', updatesTitle: 'Updates',
     updatesLead: 'Every new version shows up here. Mac and Windows get the same features (read "Mac" as "PC" on Windows).',
     latest: 'Latest', download: 'Download for Mac', notesFail: "Couldn't load the updates. Please refresh in a moment.",
-    bugTab: 'Report a bug', bugTitle: 'Report a bug', bugLead: 'Found something odd in the game? Let us know. Only the team reads these; they never appear on the board.',
-    bugClosed: "Bug reports have to be opened from the Lemon Desk app. In the app, go to the window › Settings › 'Report a Bug…' (only orchards played recently can report).",
-    bugText: 'What happened?', bugImages: 'Screenshots (optional, up to 3 · you can paste them)', bugSend: 'Send',
+    bugTab: 'Bugs & ideas', bugTitle: 'Report a bug or suggest an idea', bugLead: 'Found something odd in the game, or have an idea? Let us know. Only the team reads these; they never appear on the board.',
+    bugClosed: "Bug reports have to be opened from the Lemon Desk app. In the app, go to the window › Settings › 'Report a Bug or Suggest…' (only orchards played recently can report).",
+    bugText: 'What happened? Ideas are welcome too', bugImages: 'Screenshots (optional, up to 3 · you can paste them)', bugSend: 'Send',
     bugPrivacy: "Check that your screenshots don't show your name or other windows. Reports are kept for 180 days along with the app version and OS.",
     bugPlaceholder: 'What were you doing, and what went wrong?', bugExpired: 'This page has expired. Open it again from the app.',
     bugShort: 'Please write a little more (5 characters or more).', bugTooMany: 'Up to 3 screenshots.', bugBadImage: "Couldn't read that image. Try a PNG or JPEG.",
-    bugSending: 'Sending…', bugThanks: 'Thanks! We got your report.', bugFail: "Couldn't send it. Please try again in a moment.", bugLimit: "You've sent a lot today. Please try again tomorrow.",
+    bugSending: 'Sending…', bugThanks: 'Thanks! We got your message.', bugFail: "Couldn't send it. Please try again in a moment.", bugLimit: "You've sent a lot today. Please try again tomorrow.",
     bugRemove: 'Remove',
     shared: 'Shared orchard', weekOf: d => `Week of ${d.toLocaleDateString('en', {month: 'short', day: 'numeric'})}`,
     random: 'Visit a random orchard',
@@ -296,7 +296,7 @@
     latest: '최신', download: 'Mac 용 내려받기', notesFail: '업데이트 소식을 불러오지 못했어요. 잠시 뒤에 새로고침해 주세요.',
     bugExpired: '이 페이지는 시간이 지나 쓸 수 없어요. 앱에서 다시 열어 주세요.', bugShort: '조금만 더 적어 주세요(5자 이상).',
     bugTooMany: '스크린샷은 3장까지예요.', bugBadImage: '이 이미지를 읽지 못했어요. PNG 나 JPEG 로 올려 주세요.',
-    bugSending: '보내는 중…', bugThanks: '고마워요! 신고를 받았어요.', bugFail: '보내지 못했어요. 잠시 뒤에 다시 해 주세요.', bugLimit: '오늘은 많이 보냈어요. 내일 다시 해 주세요.',
+    bugSending: '보내는 중…', bugThanks: '고마워요! 잘 받았어요.', bugFail: '보내지 못했어요. 잠시 뒤에 다시 해 주세요.', bugLimit: '오늘은 많이 보냈어요. 내일 다시 해 주세요.',
     bugRemove: '빼기',
     shared: '공유된 자랑', weekOf: d => `${d.getMonth() + 1}월 ${d.getDate()}일 주`,
     stampNames: {lemon: '탐나요', flower: '예뻐요', laugh: '웃겨요', clap: '대단해요'}, stampsLabel: '스탬프', stampAria: (s, n) => `${s}, 지금 ${n}개`,
@@ -351,7 +351,7 @@
   function strip(o) {
     const s = el('div', 'strip'); s.setAttribute('aria-hidden', 'true');
     s.append(el('div', 'ground'));
-    o.trees.forEach((t, i) => s.append(sprite(`tree-${t}`, 'tree', `calc(${i} * 9.2% - 4px)`)));
+    o.trees.slice(0, 10).forEach((t, i) => s.append(sprite(`tree-${t}`, 'tree', `calc(${i} * 9.2% - 4px)`)));
     let k = 0;
     for (const role of ['planter', 'caretaker', 'harvester']) {
       const w = o.workers[role]; if (!w) continue;
@@ -521,7 +521,7 @@
   }));
   /** orchard.scene {trees: [{k, s}], workers: [{r, v, d, t}], dogs, theme, decor: [{id, x(0~1)}]} → 움직이는 띠 */
   function liveStrip(sc, theme) {
-    const trees = (Array.isArray(sc.trees) ? sc.trees : []).slice(0, 10), W = treeX(Math.max(trees.length, 4) - 1) + 80;
+    const trees = (Array.isArray(sc.trees) ? sc.trees : []).slice(0, 60), W = treeX(Math.max(trees.length, 4) - 1) + 80;
     const s = el('div', 'strip live ' + (THEME[theme] ? theme : '')), size = el('div', 'size'), world = el('div', 'world');
     s.setAttribute('aria-hidden', 'true'); size.style.width = W / 2 + 'px'; world.style.width = W + 'px';
     size.append(world); s.append(size);

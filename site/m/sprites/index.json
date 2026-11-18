@@ -14,6 +14,11 @@
 28,
 1
 ],
+"badge-custom": [
+32,
+28,
+1
+],
 "badge-dex": [
 32,
 28,
@@ -539,6 +544,11 @@
 56,
 1
 ],
+"prop-taskboard-0": [
+48,
+46,
+1
+],
 "prop-trophy-gold-0": [
 42,
 44,
@@ -627,6 +637,31 @@
 "special-twin": [
 24,
 22,
+1
+],
+"task-help": [
+32,
+28,
+1
+],
+"task-land": [
+32,
+28,
+1
+],
+"task-raid": [
+32,
+28,
+1
+],
+"task-unlock": [
+32,
+28,
+1
+],
+"task-worker": [
+32,
+28,
 1
 ],
 "tree-bergamot-0": [

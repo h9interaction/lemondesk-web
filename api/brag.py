@@ -287,13 +287,13 @@ SYNC_PLATFORMS = {"mac", "windows"}
 SYNC_LABELS = {"laptop", "desktop"}
 SYNC_TARGET = re.compile(r"[0-9a-f]{8}")  # 기기 목록 id = sha256(device) 앞 8자
 SYNC_STATES = re.compile(r"(off|on|holder)?")  # 통계 ping 의 sync(옛 앱은 안 보낸다)
-MANAGER_PLANS = {"cheap", "dex", "crew", "rich", "garden", "barista", "land"}  # 1.16 도담 모드
+MANAGER_PLANS = {"cheap", "dex", "crew", "rich", "garden", "barista", "land", "custom"}  # 1.16 도담 모드, 1.18 custom
 
 # 1.17 게시판(docs/research/collection-1.17.md 확정): 도전 id(앱 Achievements, 기본은 Goals id), 스탬프, 이주의 주제
 _GOALS = {"plant": (1, 10, 30), "dex": (6, 12, 20), "rainbow": (1,), "crate": (6, 12, 18), "worker": (10, 20), "second": (1,),
           "gear": (3,), "sold": (100, 1_000, 10_000), "earned": (10_000, 1_000_000), "dogs": (3,), "secrets": (5, 10, 20),
           "scrump": (5, 10, 20), "neighbors": (1, 5), "acts": (10, 50), "gifted": (5, 10, 20), "thanks": (5, 15, 40),
-          "land": (15, 20, 30, 50), "finds": (4, 8), "mentor": (1, 3, 5)}
+          "land": (15, 20, 30, 50), "finds": (4, 8), "mentor": (1, 3, 5), "tasks": (1, 10, 50)}
 ACHIEVEMENTS = ({"%s-%d" % (k, n) for k, ns in _GOALS.items() for n in ns}
                 | {"exact999", "monoculture", "rainseller", "underrainbow", "lastone", "snowkumquat", "sevenfaces", "recipes",
                    "rainbowcloset", "names", "caughtthrice", "ironfarm", "giftbottle", "sunset", "moonpair", "firstharvest",
@@ -522,6 +522,9 @@ MINE = {  # '내 과수원' 명령: Mac 이 잠들었으면 예약(1.14). hire2�
     "mgr_hire": {}, "mgr_set": {"sell": _v_opt(_BOOL), "plant": _v_opt(_BOOL), "buy": _v_opt(_BOOL),
                                 "plan": _v_opt(_v_in(MANAGER_PLANS | {"fruit"})),
                                 "keep": _v_opt(lambda v: isinstance(v, int) and not isinstance(v, bool) and v in (0, 30, 50))},
+    "mgr_task": {"op": _v_in({"add", "remove", "up"}), "i": _v_opt(_v_int(0, 9)), "task": _v_opt(lambda v: isinstance(v, dict) and set(v) <= {"kind", "target", "role", "tree"}
+                 and v.get("kind") in ("land", "worker", "unlock", "raid", "help") and _v_opt(_v_int(1, MAX_PLOTS))(v.get("target"))
+                 and _v_opt(_ROLE)(v.get("role")) and _v_opt(_KIND)(v.get("tree")))},  # 1.18 커스텀 도담 할 일
     "stand_up": {}, "make": {"recipe": _v_in({"lemonade", "syrup", "jam"})}, "fill": {"order": _v_re(re.compile(r"[a-z0-9]{1,16}"))}}
 SERVER = {  # '서버' 명령: Mac 이 깨어 있으면 Mac 이 서버에 보내고, 잠들었으면 nb_* 만 서버가 대리로(서리는 mac_asleep)
     "nb_help": {"target": _NID, "stamp": _STAMP}, "nb_gift": {"target": _NID, "fruit": _FRUIT, "stamp": _STAMP},

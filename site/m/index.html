@@ -18,9 +18,9 @@
 <meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="../icon.png?v=1">
 <link rel="icon" href="sprites/icon-64.png">
-<link rel="preload" href="fonts/galmuri11-bold.woff2?v=1170" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/galmuri11-bold.woff2?v=1181" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=1170) format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=1181) format("woff2"); font-display: swap; }
   :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
   @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
@@ -410,14 +410,15 @@
       worker: n => `Worker level ${n}`, second: () => 'Hire a second worker', gear: () => 'Master gear for all three workers', sold: n => `Sell ${fmt(n)} lemons`, earned: n => `Earn ${fmt(n)} coins`,
       dogs: () => 'Three guard dogs', secrets: n => `Find ${n} secrets`, scrump: n => `${n} kinds in the scrumping book`, neighbors: n => n === 1 ? 'Make your first neighbor' : `${n} neighbors`,
       acts: n => `Help or gift ${n} times`, gifted: n => `${n} kinds in the gift book`, thanks: n => `Receive ${n} thanks`, land: n => `Expand to ${n} plots`, finds: n => `Dig up ${n} finds`,
-      mentor: n => n === 1 ? 'First student graduates' : `${n} students graduate`},
+      mentor: n => n === 1 ? 'First student graduates' : `${n} students graduate`,
+      tasks: n => n === 1 ? "Finish Dodam's first to-do" : `Finish ${n} Dodam to-dos`},
     asleepQ: ago => `Your Mac is asleep${ago ? ` (last seen ${ago})` : ''}. What you tap is scheduled and applied at that time when your Mac wakes up.`, queuedN: n => ` Scheduled: ${n}.`,
     queued: 'Scheduled · applied as of this time when your Mac wakes up', queuedSell: v => `Scheduled · about ${v} coins (estimate) when your Mac wakes up`, late: m => `Scheduled: ${m}`,
     poorThen: "You didn't have enough coins at that time", expired: 'Dropped after 72 hours',
     done: {care: 'Field tidied', clear: 'Started clearing', seedling: 'Planted the sapling', theme: 'Theme changed', dye: 'Outfit color changed', decor: 'Prop moved',
       nb_help: 'Watered', nb_gift: 'Gift sent', nb_add: 'You are neighbors now', nb_name: 'Name changed', nb_dispatch: 'Worker sent', nb_basket: 'Basket sent', nb_sapling: 'Sapling sent',
       nb_request: 'Request sent', nb_accept: 'You are neighbors now', nb_decline: 'Request declined', nb_block: 'Blocked', raid_send: 'Scrumper sent', raid_revenge: 'Off to pay back', raid_recover: 'Off to get it back',
-      mgr_set: "Changed Dodam's settings"},
+      mgr_set: "Changed Dodam's settings", mgr_task: 'Tasks updated'},
     why: {full: 'Neighbor list is full (20 max)', already: 'Already neighbors', pending: 'Already requested', cooldown: 'You can ask again in a few days', closed: "This orchard isn't taking requests",
       rate_limited: 'Try again in a moment', too_new: 'New orchards can scrump from the next day.', busy: 'That worker is already out.', no_raids_left: 'No scrumps left today. Try tomorrow.',
       guarded: 'A dog is barking. Pick another orchard.', empty: 'Nothing to take.', not_found: "That orchard isn't available anymore. Refresh the list.", bad_code: "That code doesn't work",
@@ -426,7 +427,7 @@
     mgrH: 'Manager', mgrName: 'Dodam', mgrJob: r => `Sells for you when the crate is full (${r}% of the price)`, mgrLockedBtn: 'Crate level 6',
     mgrLocked: 'You can hire Dodam at crate level 6.', mgrLevel: (l, m, r) => `Level ${l} / ${m} · sells at ${r}%`,
     modesH: "Dodam's mode", modeAt: l => `Opens at level ${l}`, since: d => `+${d} since picked`, sincePct: d => `+${d}% since picked`,
-    modes: {cheap: ['Thrifty Dodam', 'Buys the cheapest things first, step by step'],
+    modes: {custom: ['Custom Dodam', 'Does the tasks in your slots first'], cheap: ['Thrifty Dodam', 'Buys the cheapest things first, step by step'],
       dex: ['Collector Dodam', 'Plants kinds you have never grown first to fill the Book'],
       crew: ['Foreman Dodam', 'Levels up workers, second workers and the crate first'],
       rich: ['Boss Dodam', 'Buys what raises income the most for its price. Skips anything that adds no income'],
@@ -434,9 +435,17 @@
       barista: ['Barista Dodam', 'Makes bottles from crate fruit and grows the stand first'],
       land: ['Pioneer Dodam', 'Helps clear land so it grows faster, and plants the priciest tree on new plots']},
     modeLine: {cheap: n => `Dodam bought ${n}`, dex: (n, t) => `Book ${n} / ${t}`, crew: (n, t) => `Worker levels ${n} / ${t}`,
-      rich: n => `${n} coins an hour (full price)`, garden: n => `Mix ${n}%`, barista: n => `Dodam made ${n} bottles`, land: n => `${n} plots`},
+      rich: n => `${n} coins an hour (full price)`, garden: n => `Mix ${n}%`, barista: n => `Dodam made ${n} bottles`, land: n => `${n} plots`,
+      custom: n => n === '1' ? '1 task done' : `${n} tasks done`},
+    tasksH: (n, m) => `Task slots ${n} / ${m}`, slotMore: l => `One more slot at level ${l}`, taskAdd: '+ Add a task', taskUp: 'Move up', taskDel: 'Remove',
+    taskKinds: {land: 'Expand land', worker: 'Level up a worker', unlock: 'Open a new tree', raid: 'Go scrumping', help: 'Help neighbors'},
+    task: {land: n => `Expand to ${n} plots`, worker: (r, n) => `${r} to level ${n}`, unlock: k => `Open ${k}`, raid: n => `Go scrumping · ${n} a day`, help: () => 'Help neighbors'},
+    taskWhich: 'Which task?', landWhich: 'Expand to how many plots?', plotsN: n => `${n} plots`, lvWhich: 'Up to which level?', treeWhich: 'Which tree?',
+    raidWhich: 'How many times a day?', timesN: n => `${n} a day`, workerWhich: 'Which worker?',
+    taskEta: t => `About ${t} at this pace`, buyOff: 'Buying is off', daily: 'Every day while the app is on', taskRest: 'Resting · not enough slots',
+    about: s => s < 3600 ? `${Math.max(1, Math.round(s / 60))} min` : s < 172800 ? `${Math.round(s / 3600)} h` : `${Math.round(s / 86400)} days`,
     mgrSold: n => `Sold ${n} times so far`, mgrJobs: 'Jobs', mgrDo: {sell: 'Sell', plant: 'Plant', buy: 'Buy'}, lv: l => `Lv ${l}`,
-    buyAt: 'At level 10 Dodam can also buy things for you.', planH: 'What to buy first', mgrPlans: {cheap: 'Cheapest', fruit: 'Trees first', crew: 'Workers first'},
+    buyAt: 'At level 10 Dodam can also buy things for you.', buyAtCustom: 'Dodam buys what is in the slots now. From level 10, other things too.', planH: 'What to buy first', mgrPlans: {cheap: 'Cheapest', fruit: 'Trees first', crew: 'Workers first'},
     keepH: 'Coins to keep', keepV: n => n ? `Keep ${n}%` : 'Spend all',
     update15: 'Update Lemon Desk on your Mac to 1.15 to hire Dodam the manager and open the lemonade stand.',
     suggestH: 'Good to buy next', sug: {tree: k => `Plant a ${k}`, unlock: k => `Unlock ${k}`, replant: (k, n) => `Replant plot ${n} with ${k}`,
@@ -529,14 +538,15 @@
       worker: n => `일꾼 레벨 ${n}`, second: () => '두 번째 일꾼 고용', gear: () => '세 일꾼 모두 명인 장비', sold: n => `레몬 ${fmt(n)}개 팔기`, earned: n => `코인 ${fmt(n)} 벌기`,
       dogs: () => '집 지키는 개 세 마리', secrets: n => `비밀 ${n}개 찾기`, scrump: n => `서리 수첩 ${n}종`, neighbors: n => n === 1 ? '첫 이웃 맺기' : `이웃 ${n}명`,
       acts: n => `돕기·선물 ${n}번`, gifted: n => `선물 수첩 ${n}종`, thanks: n => `고마움 ${n}개 받기`, land: n => `땅 ${n}칸까지 넓히기`, finds: n => `발견물 ${n}개 찾기`,
-      mentor: n => n === 1 ? '첫 제자 졸업' : `제자 ${n}명 졸업`},
+      mentor: n => n === 1 ? '첫 제자 졸업' : `제자 ${n}명 졸업`,
+      tasks: n => n === 1 ? '도담 할 일 첫 끝내기' : `도담 할 일 ${n}개 끝내기`},
     asleepQ: ago => `Mac이 잠자는 중이에요${ago ? `(마지막 연결 ${ago})` : ''}. 누르면 예약되고, Mac이 켜지면 누른 시각 기준으로 반영돼요.`, queuedN: n => ` 예약 ${n}개.`,
     queued: '예약했어요 · Mac이 켜지면 이 시각 기준으로 반영돼요', queuedSell: v => `예약했어요 · Mac이 켜지면 약 ${v}코인(예상)`, late: m => `예약한 일: ${m}`,
     poorThen: '그때는 코인이 모자랐어요', expired: '72시간이 지나 버려졌어요',
     done: {care: '밭을 치웠어요', clear: '개간을 시작했어요', seedling: '묘목을 심었어요', theme: '테마를 바꿨어요', dye: '옷 색을 바꿨어요', decor: '소품을 옮겼어요',
       nb_help: '물을 줬어요', nb_gift: '선물을 보냈어요', nb_add: '이웃이 됐어요', nb_name: '이름을 바꿨어요', nb_dispatch: '출장 보냈어요', nb_basket: '바구니 보냈어요', nb_sapling: '묘목 보냈어요',
       nb_request: '이웃 요청을 보냈어요', nb_accept: '이웃이 됐어요', nb_decline: '요청을 거절했어요', nb_block: '차단했어요', raid_send: '서리를 보냈어요', raid_revenge: '되갚으러 갔어요', raid_recover: '되찾으러 갔어요',
-      mgr_set: '도담 설정을 바꿨어요'},
+      mgr_set: '도담 설정을 바꿨어요', mgr_task: '할 일을 바꿨어요'},
     why: {full: '이웃은 20명까지예요', already: '이미 이웃이에요', pending: '이미 요청했어요', cooldown: '며칠 뒤에 다시 요청할 수 있어요', closed: '요청을 받지 않는 과수원이에요',
       rate_limited: '잠시 뒤에 다시 해 보세요.', too_new: '새로 시작한 과수원은 하루 뒤부터 서리할 수 있어요.', busy: '그 일꾼은 이미 나가 있어요.', no_raids_left: '오늘 서리는 다 했어요. 내일 다시 해요.',
       guarded: '개가 짖고 있어요. 다른 과수원을 골라요.', empty: '가져올 게 없어요.', not_found: '그 과수원은 이제 없어요. 목록을 새로 고쳐요.', bad_code: '쓸 수 없는 코드예요',
@@ -545,7 +555,7 @@
     mgrH: '매니저', mgrName: '도담', mgrJob: r => `창고가 가득 차면 대신 팔아요(제값의 ${r}%)`, mgrLockedBtn: '창고 레벨 6',
     mgrLocked: '창고 레벨 6이 되면 도담을 고용할 수 있어요.', mgrLevel: (l, m, r) => `레벨 ${l} / ${m} · 판매율 ${r}%`,
     modesH: '도담 모드', modeAt: l => `레벨 ${l}에 열려요`, since: d => `고른 뒤 +${d}`, sincePct: d => `고른 뒤 +${d}%`,
-    modes: {cheap: ['알뜰 도담', '가장 싼 것부터 차근차근 사요'],
+    modes: {custom: ['커스텀 도담', '슬롯에 넣은 할 일부터'], cheap: ['알뜰 도담', '가장 싼 것부터 차근차근 사요'],
       dex: ['수집가 도담', '안 심어 본 나무부터 심어 도감을 채워요'],
       crew: ['반장 도담', '일꾼·두 번째 일꾼·창고를 먼저 키워요'],
       rich: ['사장님 도담', '산 값에 비해 수입이 가장 많이 느는 것부터 사요. 수입이 늘지 않는 건 사지 않아요'],
@@ -553,9 +563,17 @@
       barista: ['바리스타 도담', '창고 과일로 병을 알아서 만들고 가판대를 먼저 키워요'],
       land: ['개척자 도담', '개간을 도와 땅이 더 빨리 넓어지고, 넓힌 칸에 가장 비싼 나무를 심어요']},
     modeLine: {cheap: n => `도담이 산 것 ${n}개`, dex: (n, t) => `도감 ${n} / ${t}`, crew: (n, t) => `일꾼 레벨 합 ${n} / ${t}`,
-      rich: n => `시간당 ${n}코인(제값)`, garden: n => `고루 지수 ${n}%`, barista: n => `도담이 만든 병 ${n}개`, land: n => `땅 ${n}칸`},
+      rich: n => `시간당 ${n}코인(제값)`, garden: n => `고루 지수 ${n}%`, barista: n => `도담이 만든 병 ${n}개`, land: n => `땅 ${n}칸`,
+      custom: n => `끝낸 할 일 ${n}개`},
+    tasksH: (n, m) => `할 일 슬롯 ${n} / ${m}칸`, slotMore: l => `레벨 ${l}에 칸이 하나 늘어요`, taskAdd: '+ 할 일 넣기', taskUp: '위로', taskDel: '지우기',
+    taskKinds: {land: '땅 넓히기', worker: '일꾼 키우기', unlock: '새 나무 열기', raid: '서리 다녀오기', help: '이웃 돕기'},
+    task: {land: n => `땅 ${n}칸까지 넓히기`, worker: (r, n) => `${r} 레벨 ${n}까지 키우기`, unlock: k => `${k} 열기`, raid: n => `서리 다녀오기 · 하루 ${n}번`, help: () => '이웃 돕기'},
+    taskWhich: '어떤 할 일을 넣을까요?', landWhich: '몇 칸까지 넓힐까요?', plotsN: n => `${n}칸`, lvWhich: '몇 레벨까지 키울까요?', treeWhich: '어떤 나무를 열까요?',
+    raidWhich: '하루 몇 번 다녀올까요?', timesN: n => `하루 ${n}번`, workerWhich: '어느 일꾼을 키울까요?',
+    taskEta: t => `지금 속도면 약 ${t}`, buyOff: '사기가 꺼져 있어요', daily: '앱이 켜져 있을 때 매일 해요', taskRest: '칸이 모자라 쉬는 중',
+    about: s => s < 3600 ? `${Math.max(1, Math.round(s / 60))}분` : s < 172800 ? `${Math.round(s / 3600)}시간` : `${Math.round(s / 86400)}일`,
     mgrSold: n => `지금까지 ${n}번 팔았어요`, mgrJobs: '할 일', mgrDo: {sell: '팔기', plant: '심기', buy: '사기'}, lv: l => `레벨 ${l}`,
-    buyAt: '레벨 10이 되면 도담이 대신 사 주기도 해요.', planH: '먼저 살 것', mgrPlans: {cheap: '가장 싼 것', fruit: '나무 먼저', crew: '일꾼 먼저'},
+    buyAt: '레벨 10이 되면 도담이 대신 사 주기도 해요.', buyAtCustom: '슬롯에 넣은 것은 지금도 사요. 레벨 10부터는 다른 것도 사요.', planH: '먼저 살 것', mgrPlans: {cheap: '가장 싼 것', fruit: '나무 먼저', crew: '일꾼 먼저'},
     keepH: '남겨 둘 코인', keepV: n => n ? `${n}% 남기기` : '다 쓰기',
     update15: 'Mac의 Lemon Desk를 1.15로 올리면 매니저 도담과 가판대를 쓸 수 있어요.',
     suggestH: '다음에 사면 좋은 것', sug: {tree: k => `${obj(k)} 심기`, unlock: k => `${k} 해금`, replant: (k, n) => `${n}번 밭을 ${ro(k)} 바꿔 심기`,
@@ -645,7 +663,7 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=1170'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=1181'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
@@ -1632,8 +1650,47 @@
       return [head, op];
     });
   }
-  // 1.16 도담 모드(맥 Orchard.Manager.Plan 순서)
-  const MODES = ['cheap', 'dex', 'crew', 'rich', 'garden', 'barista', 'land'];
+  // 1.16 도담 모드(맥 Orchard.Manager.Plan 순서, 1.18 custom 은 화면 맨 앞)
+  const MODES = ['custom', 'cheap', 'dex', 'crew', 'rich', 'garden', 'barista', 'land'];
+  // 1.18 커스텀 도담 할 일 슬롯(docs/research/manager-tasks-1.18.md 확정). 그림(task-*)이 아직 없으면 문구만
+  const TASKS = ['land', 'worker', 'unlock', 'raid', 'help'], BUYS = new Set(['land', 'worker', 'unlock']);
+  const taskImg = k => index && index['task-' + k] ? `${S}task-${k}.png` : null;
+  const taskText = t => t.kind === 'land' ? T.task.land(fmt(t.target)) : t.kind === 'worker' ? T.task.worker(T.roles[t.role] || t.role, t.target)
+    : t.kind === 'unlock' ? T.task.unlock(kindName(t.tree)) : t.kind === 'raid' ? T.task.raid(t.target) : T.task.help();
+  function addTask() { // 종류 → (목표) → mgr_task add. 같은 종류는 한 칸
+    const s = state(), have = new Set((s.manager.tasks || []).map(t => t.kind)), plots = landOf(s);
+    const ws = s.workers.filter(w => w.level < (w.max || 20)), open = new Set(s.kinds.map(k => k.kind)), closed = ORDER.filter(k => !open.has(k) && k !== 'golden'); // 황금 레몬은 할 일로 받지 않는다(밸런스)
+    const add = task => send({action: 'mgr_task', op: 'add', task});
+    const next = (title, items, pick) => setTimeout(() => choose(title, items, pick), 0);
+    choose(T.taskWhich, TASKS.map(k => ({label: T.taskKinds[k], img: taskImg(k), value: k,
+      off: have.has(k) || (k === 'worker' && !ws.length) || (k === 'unlock' && !closed.length)})), k => {
+      if (k === 'land') next(T.landWhich, [1, 2, 3, 4, 5].map(d => ({label: T.plotsN(fmt(plots + d)), value: plots + d})), n => add({kind: k, target: n}));
+      else if (k === 'worker') next(T.workerWhich, ws.map(w => ({label: `${T.roles[w.role]} · ${T.lv(w.level)}`, value: w})),
+        w => next(T.lvWhich, Array.from({length: (w.max || 20) - w.level}, (_, j) => ({label: T.lv(w.level + 1 + j), value: w.level + 1 + j})), n => add({kind: k, role: w.role, target: n})));
+      else if (k === 'unlock') next(T.treeWhich, closed.map(t => ({label: kindName(t), img: `${S}fruit-${t}.png`, value: t})), t => add({kind: k, tree: t}));
+      else if (k === 'raid') next(T.raidWhich, [1, 2, 3].map(n => ({label: T.timesN(n), value: n})), n => add({kind: k, target: n}));
+      else add({kind: k});
+    });
+  }
+  function taskPanel(M) {
+    const tasks = M.tasks, n = M.slots || 0, h = el('b', 'px num', T.tasksH(Math.min(tasks.length, n), n));
+    if (index && index['badge-custom']) { const i = pic(`${S}badge-custom.png`, 'good'); h.prepend(i); }
+    const p = panel(h); // 끝낸 할 일 수는 모드 줄에만
+    tasks.forEach((t, i) => {
+      const d = el('div', 'prop'), head = el('b', 'px num'), img = taskImg(t.kind);
+      if (img) head.append(pic(img, 'good'));
+      head.append(taskText(t));
+      const sub = i >= n ? T.taskRest : !BUYS.has(t.kind) ? T.daily : M.buy === false ? T.buyOff : t.eta != null ? T.taskEta(T.about(t.eta)) : '';
+      d.append(head);
+      if (sub) d.append(el('div', 'note num', sub));
+      d.append(row(i > 0 && act(T.taskUp, {action: 'mgr_task', op: 'up', i}), act(T.taskDel, {action: 'mgr_task', op: 'remove', i})));
+      p.append(d);
+    });
+    for (let j = tasks.length; j < n; j++) p.append(row(act(T.taskAdd, () => addTask(), {cls: 'y'})));
+    const more = [5, 10, 15].find(l => l > M.level);
+    if (more) p.append(el('p', 'note', T.slotMore(more)));
+    return p;
+  }
   function modeLine(p, now, base) { // 맥 Orchard.modeLine 과 같은 문구
     base = base ?? now;
     const d = Math.round(now - base), plus = d > 0 ? ' · ' + T.since(d) : '', L = T.modeLine;
@@ -1648,7 +1705,7 @@
   function renderMgr() {
     const s = state(); if (!s) return;
     const M = s.manager;
-    keep('mgr', [M || null, s.coins, en], () => {
+    keep('mgr', [M || null, s.coins, en, !!index], () => { // index: 할 일 그림이 늦게 불러와져도 다시 그린다
       if (!M) return [panel(el('p', 'note', T.update15))];
       const c = el('div', 'panel card'), who = el('div', 'who'), e = el('div', 'spr'); who.append(e);
       ready.then(() => index && index['manager-idle'] && show(e, 'manager-idle', {clip: Motion.clip('idle', frames('manager-idle')), offset: rnd(0, 3), lit: true, center: false}));
@@ -1670,7 +1727,7 @@
       const set = panel(el('b', 'px', T.mgrJobs), jobs);
       if (M.levels) { // 1.16 도담 모드(맥 ManagerModes). 1.15.x Mac 은 levels 가 없어 아래 옛 고르기
         const modes = el('div', 'seg list'); modes.setAttribute('role', 'group'); modes.setAttribute('aria-label', T.modesH);
-        for (const p of MODES) {
+        for (const p of MODES.filter(p => p in M.levels)) { // 1.17 이하 Mac 은 custom 이 없다
           const at = M.levels[p] ?? 1, open = M.level >= at, on = M.plan === p, [name, goal] = T.modes[p];
           const b = toggle(name, on, {action: 'mgr_set', plan: p});
           b.append(el('span', '', open ? goal : T.modeAt(at)));
@@ -1679,13 +1736,13 @@
           modes.append(b);
         }
         set.append(el('p', 'note', T.modesH), modes);
-        if (M.level < 10) set.append(el('p', 'note', T.buyAt));
+        if (M.level < 10) set.append(el('p', 'note', M.plan === 'custom' ? T.buyAtCustom : T.buyAt));
         else {
           const keeps = el('div', 'seg'); keeps.setAttribute('role', 'group'); keeps.setAttribute('aria-label', T.keepH);
           keeps.append(...[0, 30, 50].map(n => toggle(T.keepV(n), M.keep === n, {action: 'mgr_set', keep: n})));
           set.append(el('p', 'note', T.keepH), keeps);
         }
-      } else if (M.level < 10) set.append(el('p', 'note', T.buyAt));
+      } else if (M.level < 10) set.append(el('p', 'note', M.plan === 'custom' ? T.buyAtCustom : T.buyAt));
       else {
         const plans = el('div', 'seg'), keeps = el('div', 'seg');
         plans.setAttribute('role', 'group'); plans.setAttribute('aria-label', T.planH); keeps.setAttribute('role', 'group'); keeps.setAttribute('aria-label', T.keepH);
@@ -1693,7 +1750,7 @@
         keeps.append(...[0, 30, 50].map(n => toggle(T.keepV(n), M.keep === n, {action: 'mgr_set', keep: n})));
         set.append(el('p', 'note', T.planH), plans, el('p', 'note', T.keepH), keeps);
       }
-      return [c, set];
+      return [c, set, M.plan === 'custom' && Array.isArray(M.tasks) && taskPanel(M)];
     });
   }
 

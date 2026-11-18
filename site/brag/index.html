@@ -270,7 +270,8 @@
       worker: n => `Worker level ${n}`, second: () => 'Hire a second worker', gear: () => 'Master gear for all three workers', sold: n => `Sell ${fmt(n)} lemons`, earned: n => `Earn ${fmt(n)} coins`,
       dogs: () => 'Three guard dogs', secrets: n => `Find ${n} secrets`, scrump: n => n === 1 ? '1 kind in the scrump notebook' : `${n} kinds in the scrump notebook`, neighbors: n => n === 1 ? 'Make your first neighbor' : `${n} neighbors`,
       acts: n => `Help or gift ${n} times`, gifted: n => n === 1 ? '1 kind in the gift notebook' : `${n} kinds in the gift notebook`, thanks: n => `Receive ${n} thanks`, land: n => `Expand to ${n} plots`, finds: n => `Dig up ${n} finds`,
-      mentor: n => n === 1 ? 'First student graduates' : `${n} students graduated`},
+      mentor: n => n === 1 ? 'First student graduates' : `${n} students graduated`,
+      tasks: n => n === 1 ? "Finish Dodam's first to-do" : `Finish ${n} Dodam to-dos`},
     ach: {exact999: ['Exactly 999', 'Sell exactly 999 lemons at once'], monoculture: ['One Kind Only', 'Fill the first 10 plots with one kind'],
       rainseller: ['Rainy-Day Seller', 'Sell 1,000 lemons while it rains'], underrainbow: ['Under the Rainbow', 'Pick a rainbow lemon while a rainbow is out'],
       lastone: ['The Last One', 'Fill a customer order and leave exactly 1 in the crate'], snowkumquat: ['Winter Kumquats', 'Pick 100 kumquats while it snows'],
@@ -310,7 +311,8 @@
       worker: n => `일꾼 레벨 ${n}`, second: () => '두 번째 일꾼 고용', gear: () => '세 일꾼 모두 명인 장비', sold: n => `레몬 ${n.toLocaleString('ko')}개 팔기`, earned: n => `코인 ${n.toLocaleString('ko')} 벌기`,
       dogs: () => '집 지키는 개 세 마리', secrets: n => `비밀 ${n}개 찾기`, scrump: n => `서리 수첩 ${n}종`, neighbors: n => n === 1 ? '첫 이웃 맺기' : `이웃 ${n}명`,
       acts: n => `돕기·선물 ${n}번`, gifted: n => `선물 수첩 ${n}종`, thanks: n => `고마움 ${n}개 받기`, land: n => `땅 ${n}칸까지 넓히기`, finds: n => `발견물 ${n}개 찾기`,
-      mentor: n => n === 1 ? '첫 제자 졸업' : `제자 ${n}명 졸업`},
+      mentor: n => n === 1 ? '첫 제자 졸업' : `제자 ${n}명 졸업`,
+      tasks: n => n === 1 ? '도담 할 일 첫 끝내기' : `도담 할 일 ${n}개 끝내기`},
     ach: {exact999: ['딱 999', '한 번에 레몬을 정확히 999개 팔기'], monoculture: ['레몬 외길', '밭 앞 10칸을 한 종류로만 심기'], rainseller: ['빗속의 장사꾼', '비 오는 동안 레몬 1,000개 팔기'],
       underrainbow: ['무지개 아래서', '무지개가 뜬 동안 무지개 레몬 따기'], lastone: ['마지막 한 알', '손님 주문을 채우고 창고에 딱 1개 남기기'], snowkumquat: ['겨울 금귤', '눈 오는 동안 금귤 100개 따기'],
       sevenfaces: ['도담의 일곱 얼굴', '도담 모드 일곱 가지로 하루씩 보내기'], recipes: ['바리스타 수업', '병 레시피 21가지 모두 만들기'], rainbowcloset: ['무지갯빛 옷장', '일꾼 여섯 명에게 서로 다른 옷 색 입히기'],
@@ -366,7 +368,7 @@
   // ── 1.17 살아 있는 과수원: 폰 장면(site/m)의 그림·움직임 규칙(motion.js)을 그대로 쓰는 작은 띠 ─────────────
   // ponytail: 폰 장면의 일부만(나무 단계·일꾼 일/쉼/걷기·개·소품·테마 색). 창고·하늘·날씨·감정 표시는 뺐다 — 게시물은 '그 과수원의 모습'만.
   // 그림 주소 꼬리표는 site/m/index.html 의 V 와 같이 올린다.
-  const MS = '../m/sprites/', MV = '?v=1170';
+  const MS = '../m/sprites/', MV = '?v=1180';
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let idx = null;
   const idxReady = fetch(MS + 'index.json' + MV).then(r => r.json()).then(d => { idx = d; }).catch(() => {});
@@ -566,7 +568,7 @@
     rainbowcloset: 'prop-crown-0', ironfarm: 'prop-doghouse-0', friendship: 'prop-friendbench-0', fullnight: 'prop-plaque-0', weekend: 'prop-frame-0',
     plant: 'tree-eureka-6', dex: 'badge-dex', rainbow: 'fruit-rainbow', crate: 'crate-2', worker: 'badge-crew', second: 'badge-crew', gear: 'badge-crew', sold: 'badge-rich',
     earned: 'badge-rich', dogs: 'dog-a-sit', secrets: 'emote-star', neighbors: 'emote-heart', acts: 'emote-heart', thanks: 'emote-heart', land: 'badge-land',
-    finds: 'prop-chest-0', mentor: 'prop-mentorflag-0'};
+    finds: 'prop-chest-0', mentor: 'prop-mentorflag-0', tasks: 'prop-taskboard-0'};
   function achInfo(id) {
     const m = /^([a-z]+)-(\d+)$/.exec(id);
     if (m && T.goals[m[1]]) return {name: T.goals[m[1]](+m[2]), kind: T.basic, icon: ACH_ICON[m[1]]};

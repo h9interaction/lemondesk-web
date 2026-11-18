@@ -56,6 +56,25 @@
   .release .latest { background: var(--lemon); color: #23511F; border-radius: 999px; padding: 0 10px; font-size: 13px; font-weight: 700; }
   .release ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
   .release a.dl { font-size: 14px; }
+  .post.release header { justify-content: flex-start; }
+  .release .latest { margin-left: auto; }
+  /* 기능 장면(releases.json 의 shots): 세로 그림은 글과 나란히, 가로로 긴 띠 영상은 폭을 채우고 글은 아래 */
+  .feats { display: flex; flex-direction: column; gap: 32px; margin: 8px 0 6px; }
+  .feat { margin: 0; display: grid; gap: 14px 32px; align-items: center; }
+  .feat.side { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .feat .stage { border-radius: 12px; overflow: hidden; }
+  .feat.side .stage { background: var(--lemon-soft); padding: 28px 24px 32px; display: flex; justify-content: center; }
+  .feat.side img { display: block; width: 100%; max-width: 480px; height: auto; filter: drop-shadow(0 12px 20px rgba(35, 81, 31, .18)); }
+  .feat.wide .stage { background: var(--sky); border: 1px solid var(--line); }
+  .feat.wide video, .feat.wide img { display: block; width: 100%; height: auto; }
+  .feat h4 { margin: 0; color: var(--ink); font-size: 18px; line-height: 1.4; letter-spacing: -0.01em; }
+  .feat p { margin-top: 6px; max-width: 34em; }
+  .feat .stage a { display: block; }
+  .release ul.all { border-top: 1px solid var(--line); padding-top: 16px; }
+  @media (max-width: 720px) {
+    .feat.side { grid-template-columns: 1fr; } .feat.side img { max-width: 320px; }
+    .feat.wide video, .feat.wide img { aspect-ratio: 16 / 9; object-fit: cover; object-position: 6% 100%; } /* 좁으면 창고·도담 쪽만 크게 */
+  }
 
   /* 버그 신고(1.15.2): 앱의 '버그 신고…'가 일회용 표를 붙여 연다 */
   .bug-form { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; max-width: 720px; }
@@ -745,6 +764,30 @@
     loadList(true).catch(() => { $('note').textContent = T.loadFail; });
   });
   // 업데이트 소식 탭(주소 #updates 로 바로 열린다)
+  // 기능 장면 하나: 그림(다크 모드 그림이 있으면 바꿔 끼움) 또는 소리 없는 반복 영상(보일 때만 재생, 동작 줄이기면 멈춘 채 재생 단추)
+  const playing = 'IntersectionObserver' in window && new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) e.target.play().catch(() => {}); else e.target.pause();
+  }), {threshold: 0.4});
+  function feat(s) {
+    const pick = o => (o && (o[en ? 'en' : 'ko'] || o.ko)) || '', f = el('figure', 'feat ' + (s.w / s.h > 2 ? 'wide' : 'side'));
+    const stage = el('div', 'stage'), cap = el('figcaption');
+    if (s.video) {
+      const v = el('video'); v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'metadata';
+      v.setAttribute('muted', ''); v.setAttribute('aria-label', pick(s.title));
+      v.poster = '../' + s.src; v.src = '../' + s.video; v.width = s.w; v.height = s.h;
+      if (calm || !playing) v.controls = true; else playing.observe(v);
+      stage.append(v);
+    } else {
+      const pic = el('picture'), img = el('img'), link = el('a');
+      if (s.dark) { const d = el('source'); d.media = '(prefers-color-scheme: dark)'; d.srcset = '../' + s.dark; pic.append(d); }
+      img.src = '../' + s.src; img.alt = pick(s.title); img.width = s.w; img.height = s.h; img.loading = 'lazy'; img.decoding = 'async';
+      link.href = s.dark && matchMedia('(prefers-color-scheme: dark)').matches ? '../' + s.dark : img.src; link.target = '_blank'; link.rel = 'noopener'; // 크게 보기
+      pic.append(img); link.append(pic); stage.append(link);
+    }
+    cap.append(el('h4', null, pick(s.title)), el('p', null, pick(s.text)));
+    f.append(stage, cap);
+    return f;
+  }
   let notesLoaded = false;
   async function loadNotes() {
     if (notesLoaded) return; notesLoaded = true;
@@ -758,9 +801,11 @@
         const h = el('header'); h.append(el('h3', null, rel.version));
         if (rel.date) { const t = el('time', null, new Date(rel.date + 'T00:00:00').toLocaleDateString(en ? 'en' : 'ko', {year: 'numeric', month: 'long', day: 'numeric'})); t.dateTime = rel.date; h.append(t); }
         if (i === 0) h.append(el('span', 'latest', T.latest));
-        const ul = el('ul');
+        const ul = el('ul', rel.shots ? 'all' : null);
         ((rel.notes || {})[en ? 'en' : 'ko'] || (rel.notes || {}).ko || []).forEach(n => ul.append(el('li', null, n)));
-        a.append(h, ul);
+        a.append(h);
+        if (rel.shots) { const f = el('div', 'feats'); rel.shots.forEach(s => f.append(feat(s))); a.append(f); }
+        a.append(ul);
         if (i === 0 && rel.url) { const d = el('a', 'dl', T.download); d.href = rel.url; a.append(d); }
         box.append(a);
       });

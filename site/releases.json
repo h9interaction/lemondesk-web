@@ -16,7 +16,37 @@
         "Each to-do shows how long it should take, and Dodam celebrates on the strip when one is done",
         "New achievements for finished to-dos and a new prop, the To-Do Board"
       ]
-    }
+    },
+    "shots": [
+      {
+        "src": "updates/1.18.0/manage.webp",
+        "dark": "updates/1.18.0/manage-dark.webp",
+        "w": 1200,
+        "h": 2171,
+        "title": {
+          "ko": "할 일을 슬롯에 넣어 두세요",
+          "en": "Line up to-dos in the slots"
+        },
+        "text": {
+          "ko": "관리 창 일꾼 탭에서 커스텀 도담을 고르고 할 일을 넣으면, 도담이 맨 위부터 해결해요. 할 일마다 지금 속도로 얼마나 걸릴지도 보여요.",
+          "en": "Pick Custom Dodam in the Workers tab and add to-dos. Dodam works from the top, and each one shows how long it should take at your current pace."
+        }
+      },
+      {
+        "video": "updates/1.18.0/strip.mp4",
+        "src": "updates/1.18.0/strip.webp",
+        "w": 1240,
+        "h": 288,
+        "title": {
+          "ko": "끝나면 띠에서 바로 보여요",
+          "en": "Watch it happen on the strip"
+        },
+        "text": {
+          "ko": "도담 머리 위에 지금 하는 할 일이 떠 있어요. 다 하면 깡충 뛰며 축하하고 다음 할 일로 넘어가요.",
+          "en": "The to-do Dodam is on floats above their head. When it's done, Dodam hops to celebrate and moves on to the next one."
+        }
+      }
+    ]
   },
   {
     "version": "1.17.4",

@@ -1,5 +1,24 @@
 [
   {
+    "version": "1.18.2",
+    "date": "2026-11-19",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.18.2/LemonDesk-1.18.2.dmg",
+    "notes": {
+      "ko": [
+        "커스텀 도담이 창고가 가득 차기를 기다리지 않고, 코인이 모이면 맨 위 할 일을 바로 해요",
+        "새 나무 할 일은 이름을 '열고 심기'로 바꿨어요. 그 나무를 한 그루 심으면 끝낸 할 일로 세요",
+        "서리·이웃 돕기처럼 매일 하는 할 일에 '매일' 표시가 붙어요",
+        "할 일 막대가 다음 한 단계가 아니라 할 일 전체를 기준으로 차요"
+      ],
+      "en": [
+        "Custom Dodam no longer waits for a full crate: it works on the top task as soon as there are enough coins",
+        "New tree tasks are now called 'Open and plant'. They count as done once that tree is planted",
+        "Daily tasks such as scrumping and helping neighbors now show a 'Daily' tag",
+        "Task bars now fill toward the whole task, not just the next step"
+      ]
+    }
+  },
+  {
     "version": "1.18.1",
     "date": "2026-11-18",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.18.1/LemonDesk-1.18.1.dmg",

@@ -1,5 +1,40 @@
 [
   {
+    "version": "1.18.3",
+    "date": "2026-11-19",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.18.3/LemonDesk-1.18.3.dmg",
+    "notes": {
+      "ko": [
+        "손님 주문에 쓸 과일은 '모두 팔기'와 도담이 팔지 않고 창고에 남겨 둬요. 과일 주문에 낼 과일과 아직 못 만든 병의 재료가 남아요",
+        "남겨 둔 재료는 가판대에서 볼 수 있어요. 다 팔고 싶으면 가판대의 '주문에 쓸 재료도 모두 팔기'를 켜세요",
+        "과일별로 팔기도 주문에 쓸 과일은 빼고 팔아요",
+        "도감 비밀 기록의 그림 크기를 고르게 맞췄어요"
+      ],
+      "en": [
+        "Fruit your customers ordered now stays in the crate when you Sell All or Dodam sells: fruit for fruit orders and ingredients for bottles you haven't made yet",
+        "See what's set aside in the Stand section. To sell everything, turn on 'Sell Order Ingredients Too' there",
+        "Selling by fruit also leaves the fruit your orders need",
+        "Secret thumbnails in the Collection are now the same size"
+      ]
+    },
+    "shots": [
+      {
+        "src": "updates/1.18.3/stand.webp",
+        "dark": "updates/1.18.3/stand-dark.webp",
+        "w": 1200,
+        "h": 1500,
+        "title": {
+          "ko": "주문에 쓸 재료는 남겨 둬요",
+          "en": "Ingredients for orders stay put"
+        },
+        "text": {
+          "ko": "손님이 주문한 과일과 아직 못 만든 병의 재료는 '모두 팔기'와 도담이 팔지 않아요. 남겨 둔 재료는 가판대 아래에 보이고, 스위치를 켜면 예전처럼 다 팔아요.",
+          "en": "Fruit for customer orders and ingredients for bottles you still need to make are left out of Sell All and Dodam's sales. You'll see them at the bottom of the Stand, and the switch sells everything like before."
+        }
+      }
+    ]
+  },
+  {
     "version": "1.18.2",
     "date": "2026-11-19",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v1.18.2/LemonDesk-1.18.2.dmg",

@@ -18,9 +18,9 @@
 <meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="../icon.png?v=1">
 <link rel="icon" href="sprites/icon-64.png">
-<link rel="preload" href="fonts/galmuri11-bold.woff2?v=1181" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/galmuri11-bold.woff2?v=2001" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=1181) format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=2001) format("woff2"); font-display: swap; }
   :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
   @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
@@ -82,7 +82,7 @@
   .bar { height: 12px; border: 2px solid #5B3A1A; background: var(--track); margin: 6px 0 4px; }
   .bar i { display: block; height: 100%; background: var(--leaf); }
   .hud .full { font-size: 15px; color: var(--soft); }
-  .hud .top2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .top2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .coins { display: inline-flex; align-items: center; gap: 5px; font-size: 16.5px; }
   .hud .btn { grid-column: 1 / -1; min-height: 56px; font-size: 22px; margin-top: 6px; flex-direction: row; }
   /* 결과 안내: 어느 탭에서나 보이게 아래 탭 위에 띄운다 */
@@ -144,7 +144,7 @@
   .field { min-width: 0; min-height: 48px; font: inherit; font-size: 16px; padding: 6px 10px; border: 2px solid #C9A56B; border-radius: 0; background: #FFFDF3; color: #4A2E14; }
   .seg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .seg button { flex: 1 1 0; min-width: 56px; min-height: 44px; padding: 4px 6px; border: 2px solid #C9A56B; background: #FFFDF3; color: #4A2E14; font: inherit; font-size: 14px; cursor: pointer; }
-  .seg button[aria-pressed="true"] { background: #FFD84A; border-color: #5B3A1A; font-weight: 700; }
+  .seg button[aria-pressed="true"], .seg button[aria-selected="true"] { background: #FFD84A; border-color: #5B3A1A; font-weight: 700; }
   .seg button:disabled { opacity: .45; cursor: default; }
   .seg button img { height: 22px; width: auto; vertical-align: middle; }
   .seg.list button { flex-basis: 100%; text-align: left; padding: 8px 10px; }
@@ -192,6 +192,12 @@
   .gate { margin-top: 12px; text-align: center; }
   .gate h1 { font-size: 22px; margin: 6px 0; }
   .gate ol { text-align: left; margin: 10px 0 0; padding-left: 1.3em; }
+  /* 2.0 일터: 띠 탭(열린 띠만, Mac 띠에 걸린 것은 초록 점)·띠 카드·직군 줄. 다른 띠를 고르면 레몬 과수원 칸(.lemon)은 숨는다 */
+  .away .lemon { display: none !important; }
+  .strips { margin: 0 0 8px; }
+  .ico { height: 22px; width: auto; vertical-align: -5px; margin-right: 6px; }
+  .seg button.shown::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: 5px; background: #58B02C; vertical-align: 1px; }
+  #strip > .panel, #career > .panel, #market > .panel { margin-top: 10px; }
   footer { margin-top: 20px; font-size: 14px; color: var(--page-soft); text-align: center; }
   footer a { color: inherit; }
   @media (prefers-reduced-motion: reduce) {
@@ -209,11 +215,12 @@
 
   <main id="app" hidden>
     <section id="tab-orchard" role="tabpanel" aria-labelledby="t-orchard">
-      <div class="scene" id="scene"><div class="sky" id="sky"></div><div class="pan" id="pan" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div><div class="yard" id="yard"></div></div></div><div class="sky front" id="sky2"></div></div>
-      <p class="hint num" id="clear" hidden></p>
-      <p class="hint" id="seedling" hidden></p>
-      <p class="hint" id="hint" hidden></p>
-      <div class="panel hud">
+      <div class="seg strips" id="strips" role="tablist" hidden></div>
+      <div class="scene lemon" id="scene"><div class="sky" id="sky"></div><div class="pan" id="pan" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div><div class="yard" id="yard"></div></div></div><div class="sky front" id="sky2"></div></div>
+      <p class="hint num lemon" id="clear" hidden></p>
+      <p class="hint lemon" id="seedling" hidden></p>
+      <p class="hint lemon" id="hint" hidden></p>
+      <div class="panel hud lemon">
         <img class="crate" id="crate-pic" src="sprites/crate-0.png" alt="" width="104" height="100">
         <div>
           <div class="top2"><span class="label px" data-t="crate">창고</span>
@@ -224,12 +231,14 @@
         </div>
         <button class="btn px" id="sell" type="button" data-t="sell">모두 팔기</button>
       </div>
-      <div id="suggest"></div>
-      <div id="farm"></div>
-      <div id="stand"></div>
+      <div id="strip"></div>
+      <div id="suggest" class="lemon"></div>
+      <div id="farm" class="lemon"></div>
+      <div id="stand" class="lemon"></div>
+      <div id="career"></div>
       <p class="raid-note" id="raid-note" role="status" hidden></p>
       <div class="panel banner" id="banner" hidden><p id="banner-text"></p><button class="btn y px" id="retry" type="button" hidden></button></div>
-      <div class="panel week" id="week" hidden>
+      <div class="panel week lemon" id="week" hidden>
         <h2 class="px" data-t="week">이번 주</h2>
         <div class="stats">
           <div><b class="px num" id="w-h">0</b><span data-t="picked">딴 레몬</span></div>
@@ -238,7 +247,7 @@
         </div>
         <p class="more num" id="w-more"></p>
       </div>
-      <div id="deco-sec" hidden><h2 class="sec px" data-t="decoH">꾸미기</h2><div id="deco"></div></div>
+      <div id="deco-sec" class="lemon" hidden><h2 class="sec px" data-t="decoH">꾸미기</h2><div id="deco"></div></div>
     </section>
 
     <section id="tab-plant" role="tabpanel" aria-labelledby="t-plant" hidden>
@@ -270,6 +279,7 @@
           <p class="note" data-t="stampH">보낼 때 붙일 스탬프</p>
           <div class="seg" id="stamps"></div>
         </div>
+        <div id="market"></div>
         <h2 class="sec px num" id="nb-h"></h2>
         <div id="nb-list"></div>
         <h2 class="sec px" data-t="findH">이웃 찾기</h2>
@@ -418,12 +428,13 @@
     done: {care: 'Field tidied', clear: 'Started clearing', seedling: 'Planted the sapling', theme: 'Theme changed', dye: 'Outfit color changed', decor: 'Prop moved',
       nb_help: 'Watered', nb_gift: 'Gift sent', nb_add: 'You are neighbors now', nb_name: 'Name changed', nb_dispatch: 'Worker sent', nb_basket: 'Basket sent', nb_sapling: 'Sapling sent',
       nb_request: 'Request sent', nb_accept: 'You are neighbors now', nb_decline: 'Request declined', nb_block: 'Blocked', raid_send: 'Scrumper sent', raid_revenge: 'Off to pay back', raid_recover: 'Off to get it back',
-      mgr_set: "Changed Dodam's settings", mgr_task: 'Tasks updated'},
+      mgr_set: "Changed Dodam's settings", mgr_task: 'Tasks updated', strip_show: 'Strip changed', farm_share: 'Sent', coop_insure: 'Insurance updated'},
     why: {full: 'Neighbor list is full (20 max)', already: 'Already neighbors', pending: 'Already requested', cooldown: 'You can ask again in a few days', closed: "This orchard isn't taking requests",
       rate_limited: 'Try again in a moment', too_new: 'New orchards can scrump from the next day.', busy: 'That worker is already out.', no_raids_left: 'No scrumps left today. Try tomorrow.',
       guarded: 'A dog is barking. Pick another orchard.', empty: 'Nothing to take.', not_found: "That orchard isn't available anymore. Refresh the list.", bad_code: "That code doesn't work",
       done_today: 'Already done today. Try again later.', not_junior: 'Only juniors can get that', taken_today: 'They already got one today', taken_week: 'They already got a sapling this week',
-      holding: 'They still have a sapling to plant', bad_fruit: "That fruit can't be sent", no_fruit: 'Not enough of that fruit in your crate', bad_kind: "That sapling can't be sent"},
+      holding: 'They still have a sapling to plant', bad_fruit: "That fruit can't be sent", no_fruit: 'Not enough of that fruit in your crate', bad_kind: "That sapling can't be sent",
+      cannot_receive: "That neighbor can't take it yet", not_neighbor: 'Not your neighbor'},
     mgrH: 'Manager', mgrName: 'Dodam', mgrJob: r => `Sells for you when the crate is full (${r}% of the price)`, mgrLockedBtn: 'Crate level 6',
     mgrLocked: 'You can hire Dodam at crate level 6.', mgrLevel: (l, m, r) => `Level ${l} / ${m} · sells at ${r}%`,
     modesH: "Dodam's mode", modeAt: l => `Opens at level ${l}`, since: d => `+${d} since picked`, sincePct: d => `+${d}% since picked`,
@@ -463,6 +474,22 @@
     needFruit: (k, x) => `Need ${fmt(x)} more ${k}`, needBottle: (r, x) => `Need ${fmt(x)} more ${r}`,
     mgrHired: 'Dodam joined your orchard', mgrUp: 'Dodam leveled up', standOpen: 'The stand is open', standUp: 'Stand leveled up', started: r => `Started making ${r}`,
     filled: e => `Order filled · +${fmt(e)} coins`,
+    // 2.0 일터·직군·조합·장터(이름은 계획서 확정 A-1 raw 값)
+    tWork: 'Work', strip: {orchard: 'Orchard', field: 'Field', ranch: 'Ranch', sea: 'Seaside'}, workshop: 'Orchard Workshop', stage: n => `Stage ${n}`, resting: 'Resting',
+    crateOf: (n, m) => `Crate ${n} / ${m}`, keepN: n => `${n} in storage`, priceLine: (a, b) => `Price today ${a}% · tomorrow ${b}%`,
+    showBtn: 'Show on the Mac strip', shownNow: 'On the Mac strip now', insureH: 'Insurance', insure: {disaster: 'Disaster insurance', price: 'Price insurance'},
+    share: {field: 'Send ginseng seeds', ranch: 'Send a young one', sea: 'Send fry'}, shareWho: 'Send to which neighbor?', shareWeek: 'You already sent one this week',
+    careerH: 'Career', gateLine: (d, n) => `Next: choose a career · ${d} of ${n} done`, mainLine: (k, n) => `Main ${k} ${n} ${n === 1 ? 'pt' : 'pts'}`, subLine: (k, n) => `Side ${k} ${n} ${n === 1 ? 'pt' : 'pts'}`,
+    wallet: n => `${n} co-op coins`, days: ['Today', 'Tomorrow', 'In 2 days'], fcLine: (d, k, w) => `${d}: ${k} · ${w}`,
+    disasters: {typhoon: 'Typhoon', drought: 'Drought', cold: 'Cold snap', redtide: 'Red tide', poor: 'Poor harvest'},
+    titles: {wish: k => `${k} Apprentice`, stage: (k, n) => `${k} Stage ${n}`, master: k => `${k} Master`, solo: k => `${k} Pure Master`},
+    marketH: 'Market', stallH: 'My stall', stallRow: (k, n, v) => `${k} ×${n} · ${v} each`, stallEmpty: 'Nothing on your stall.', stallMac: 'List and buy on your Mac.',
+    notesLine: n => `Notes from ${n} ${n === '1' ? 'neighbor' : 'neighbors'} · read and send them on your Mac`, farmSold: e => e > 0 ? `Sold! +${fmt(e)} co-op coins` : 'Sold',
+    crops: {driedLemon: 'Dried Lemon', lemonCandy: 'Lemon Candy', lemonVinegar: 'Lemon Vinegar', lemonCurd: 'Lemon Curd', honeyCake: 'Lemon Honey Cake',
+      lettuce: 'Lettuce', potato: 'Potato', radish: 'Radish', cabbage: 'Napa Cabbage', tomato: 'Tomato', cucumber: 'Cucumber', pepper: 'Chili Pepper', watermelon: 'Watermelon',
+      strawberry: 'Strawberry', ginseng: 'Ginseng', kimchi: 'Kimchi Crock', egg: 'Egg', duckEgg: 'Duck Egg', milk: 'Milk', wool: 'Wool', compost: 'Compost', honey: 'Honey',
+      down: 'Down', calf: 'Calf', lamb: 'Lamb', ricotta: 'Ricotta', laver: 'Laver', seaweed: 'Seaweed', kelp: 'Kelp', oyster: 'Oyster', abalone: 'Abalone',
+      flatfish: 'Flatfish', seabream: 'Sea Bream', shrimp: 'Shrimp', pearl: 'Pearl', fry: 'Fry', giftSet: 'Abalone Ginseng Gift Set'},
     adjs: ['Sleepy', 'Busy', 'Shy', 'Lazy', 'Tangy', 'Sparkly', 'Plucky', 'Quiet', 'Hungry', 'Humming', 'Sunny', 'Breezy'], farm: (a, f) => `${a} ${f} orchard`,
   } : {
     crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
@@ -546,12 +573,13 @@
     done: {care: '밭을 치웠어요', clear: '개간을 시작했어요', seedling: '묘목을 심었어요', theme: '테마를 바꿨어요', dye: '옷 색을 바꿨어요', decor: '소품을 옮겼어요',
       nb_help: '물을 줬어요', nb_gift: '선물을 보냈어요', nb_add: '이웃이 됐어요', nb_name: '이름을 바꿨어요', nb_dispatch: '출장 보냈어요', nb_basket: '바구니 보냈어요', nb_sapling: '묘목 보냈어요',
       nb_request: '이웃 요청을 보냈어요', nb_accept: '이웃이 됐어요', nb_decline: '요청을 거절했어요', nb_block: '차단했어요', raid_send: '서리를 보냈어요', raid_revenge: '되갚으러 갔어요', raid_recover: '되찾으러 갔어요',
-      mgr_set: '도담 설정을 바꿨어요', mgr_task: '할 일을 바꿨어요'},
+      mgr_set: '도담 설정을 바꿨어요', mgr_task: '할 일을 바꿨어요', strip_show: '띠를 바꿨어요', farm_share: '보냈어요', coop_insure: '보험을 바꿨어요'},
     why: {full: '이웃은 20명까지예요', already: '이미 이웃이에요', pending: '이미 요청했어요', cooldown: '며칠 뒤에 다시 요청할 수 있어요', closed: '요청을 받지 않는 과수원이에요',
       rate_limited: '잠시 뒤에 다시 해 보세요.', too_new: '새로 시작한 과수원은 하루 뒤부터 서리할 수 있어요.', busy: '그 일꾼은 이미 나가 있어요.', no_raids_left: '오늘 서리는 다 했어요. 내일 다시 해요.',
       guarded: '개가 짖고 있어요. 다른 과수원을 골라요.', empty: '가져올 게 없어요.', not_found: '그 과수원은 이제 없어요. 목록을 새로 고쳐요.', bad_code: '쓸 수 없는 코드예요',
       done_today: '오늘은 이미 했어요. 다음에 또 해요.', not_junior: '후배에게만 보낼 수 있어요', taken_today: '이 이웃은 오늘 이미 받았어요', taken_week: '이 이웃은 이번 주에 묘목을 이미 받았어요',
-      holding: '이 이웃은 아직 심지 않은 묘목을 갖고 있어요', bad_fruit: '그 과일은 보낼 수 없어요', no_fruit: '창고에 그 과일이 모자라요', bad_kind: '그 묘목은 보낼 수 없어요'},
+      holding: '이 이웃은 아직 심지 않은 묘목을 갖고 있어요', bad_fruit: '그 과일은 보낼 수 없어요', no_fruit: '창고에 그 과일이 모자라요', bad_kind: '그 묘목은 보낼 수 없어요',
+      cannot_receive: '그 이웃은 아직 받을 수 없어요', not_neighbor: '이웃이 아니에요'},
     mgrH: '매니저', mgrName: '도담', mgrJob: r => `창고가 가득 차면 대신 팔아요(제값의 ${r}%)`, mgrLockedBtn: '창고 레벨 6',
     mgrLocked: '창고 레벨 6이 되면 도담을 고용할 수 있어요.', mgrLevel: (l, m, r) => `레벨 ${l} / ${m} · 판매율 ${r}%`,
     modesH: '도담 모드', modeAt: l => `레벨 ${l}에 열려요`, since: d => `고른 뒤 +${d}`, sincePct: d => `고른 뒤 +${d}%`,
@@ -591,12 +619,27 @@
     needFruit: (k, x) => `${k} ${fmt(x)}개가 더 있어야 해요`, needBottle: (r, x) => `${r} ${fmt(x)}병이 더 있어야 해요`,
     mgrHired: '도담이 과수원에 왔어요', mgrUp: '도담 레벨이 올랐어요', standOpen: '가판대를 열었어요', standUp: '가판대 레벨이 올랐어요', started: r => `${r} 만들기를 시작했어요`,
     filled: e => `주문을 채웠어요 · +${fmt(e)} 코인`,
+    tOrchard: '과수원', tWork: '일터', strip: {orchard: '과수원', field: '텃밭', ranch: '목장', sea: '바닷가'}, workshop: '과수원 공방', stage: n => `${n}단계`, resting: '쉬는 중',
+    crateOf: (n, m) => `창고 ${n} / ${m}`, keepN: n => `보관함 ${n}개`, priceLine: (a, b) => `시세 오늘 ${a}% · 내일 ${b}%`,
+    showBtn: 'Mac 띠에 걸기', shownNow: 'Mac 띠에 걸려 있어요', insureH: '보험', insure: {disaster: '재해 보험', price: '판매 보험'},
+    share: {field: '인삼 씨앗 보내기', ranch: '새끼 보내기', sea: '치어 보내기'}, shareWho: '어느 이웃에게 보낼까요?', shareWeek: '이번 주에는 이미 보냈어요',
+    careerH: '직군', gateLine: (d, n) => `다음: 직군 고르기 · 조건 ${n}개 중 ${d}개`, mainLine: (k, n) => `주 직군 ${k} ${n}점`, subLine: (k, n) => `부 직군 ${k} ${n}점`,
+    wallet: n => `조합 코인 ${n}`, days: ['오늘', '내일', '모레'], fcLine: (d, k, w) => `${d} ${k} 예보 · ${w}`,
+    disasters: {typhoon: '태풍', drought: '가뭄', cold: '한파', redtide: '적조', poor: '흉작'},
+    titles: {wish: k => `견습 · ${k}`, stage: (k, n) => `${k} ${n}단계`, master: k => `${k} 명인`, solo: k => `외길 명인 · ${k}`},
+    marketH: '장터', stallH: '내 가판대', stallRow: (k, n, v) => `${k} ${n}개 · 개당 ${v}`, stallEmpty: '올린 물건이 없어요.', stallMac: '올리기·사기는 Mac에서 해요.',
+    notesLine: n => `쪽지가 온 이웃 ${n}명 · 읽기와 보내기는 Mac에서 해요`, farmSold: e => e > 0 ? `팔았어요 · 조합 코인 +${fmt(e)}` : '팔았어요',
+    crops: {driedLemon: '레몬 말랭이', lemonCandy: '레몬 사탕', lemonVinegar: '레몬 식초', lemonCurd: '레몬 커드', honeyCake: '레몬 꿀 케이크',
+      lettuce: '상추', potato: '감자', radish: '무', cabbage: '배추', tomato: '토마토', cucumber: '오이', pepper: '고추', watermelon: '수박',
+      strawberry: '딸기', ginseng: '인삼', kimchi: '김장 김치 독', egg: '달걀', duckEgg: '오리알', milk: '우유', wool: '양털', compost: '퇴비', honey: '꿀',
+      down: '거위털', calf: '송아지', lamb: '새끼 양', ricotta: '리코타 치즈', laver: '김', seaweed: '미역', kelp: '다시마', oyster: '굴', abalone: '전복',
+      flatfish: '넙치', seabream: '참돔', shrimp: '새우', pearl: '진주', fry: '치어', giftSet: '전복 인삼 선물 세트'},
     adjs: ['졸린', '부지런한', '수줍은', '느긋한', '새콤한', '반짝이는', '씩씩한', '조용한', '배고픈', '콧노래 부르는', '햇살 가득한', '바람 부는'], farm: (a, f) => `${a} ${f} 과수원`,
   };
   // 윈도우판(상태의 platform 이 win)이면 연결 뒤 문구의 'Mac' 을 'PC' 로. 맥 앱은 platform 을 보내지 않는다.
   let pc = false;
   const toPC = t => t.replace(/Mac이/g, 'PC가').replace(/Mac을/g, 'PC를').replace(/Mac/g, 'PC');
-  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN', 'update15']) {
+  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN', 'update15', 'showBtn', 'shownNow', 'stallMac', 'notesLine']) {
     const v = T[k];
     if (typeof v === 'function') T[k] = (...a) => pc ? toPC(v(...a)) : v(...a);
     else Object.defineProperty(T, k, { get: () => pc ? toPC(v) : v });
@@ -663,7 +706,7 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=1181'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=2001'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
@@ -766,7 +809,7 @@
   }
   const discrete = (values, prop, fmt) => values.map((v, i) => ({[prop]: fmt(v), offset: i / values.length, easing: 'steps(1, end)'})).concat({[prop]: fmt(values[values.length - 1]), offset: 1});
   const later = (s, f) => setTimeout(f, s * 1000);
-  const resting = () => scene.hidden || $('tab-orchard').hidden || document.visibilityState !== 'visible'; // 안 보이면 장면도 쉰다
+  const resting = () => scene.hidden || $('tab-orchard').hidden || $('tab-orchard').classList.contains('away') || document.visibilityState !== 'visible'; // 안 보이면 장면도 쉰다
 
   // ── 효과·세상의 반응 ─────────────────────────────
   function puff(name, x, y, perFrame = 0.1, lit = false) { // 한 번 재생하고 사라진다
@@ -1153,7 +1196,7 @@
     if (!has || !index) { $('hint').hidden = !(s && !has); return; }
     quiet = !data.online;
     period = quiet ? 'night' : periodOf(s.hour ?? new Date().getHours());
-    scene.className = 'scene ' + period;
+    scene.className = 'scene lemon ' + period;
     const g = then(THEME[s.theme] || null, PERIOD[period] || null), gk = g ? g.join() : '';
     if (gk !== tintKey || !built) { clearScene(); tint = g; tintKey = gk; built = 'yes'; }
     // 땅: 심은 칸 + 다음 빈 칸(다 차면 마지막 칸까지). 1.12 앱은 다 찬 밭 끝에 풀숲 한 칸(개간 중이면 일구는 칸)을 더 그린다
@@ -1908,13 +1951,84 @@
     });
   }
 
+  // ── 2.0 일터(계획서 9-7·확정 A-6): 열린 띠 탭·띠 카드(창고·보관함·시세·보험·팔기·보내기)·직군 줄·장터 진열·쪽지 수.
+  // 상태에 strips(배열)가 있을 때만(옛 앱은 그대로). 폰 장면은 2.0.0 에서도 레몬 과수원만 그린다.
+  const STRIPS = ['orchard', 'field', 'ranch', 'sea'], SHARES = new Set(['field', 'ranch', 'sea']);
+  const v20 = () => Array.isArray(state()?.strips);
+  const stripOf = (s, k) => s.strips.find(x => x && x.kind === k);
+  const jobName = k => k === 'orchard' ? T.workshop : T.strip[k] || k;
+  const cropName = k => T.crops[k] || k;
+  const line = (img, text, cls = 'num') => { const p = el(cls === 'px' ? 'b' : 'p', cls); p.append(pic(`${S}${img}.png${V}`, 'ico'), text); return p; };
+  const FX = {typhoon: 'storm', drought: 'heat', cold: 'icicle', poor: 'wilt'}; // 예보 줄 재해 기호(띠 장면 효과 그림, 적조는 예보 구름)
+  const openStrips = s => STRIPS.filter(k => k === 'orchard' || stripOf(s, k)?.open);
+  let pick = null; // 폰에서 보고 있는 띠(처음엔 Mac 띠에 걸린 것)
+  function titleText(t) { // 맥 Career.title 키: wish-<직군> / <직군>-<단계> / <직군>-master / <직군>-solo
+    const m = /^(wish-)?(orchard|field|ranch|sea)(?:-(\d|master|solo))?$/.exec(t || ''); if (!m) return t || '';
+    const k = jobName(m[2]); return m[1] ? T.titles.wish(k) : m[3] === 'master' ? T.titles.master(k) : m[3] === 'solo' ? T.titles.solo(k) : T.titles.stage(k, m[3]);
+  }
+  function renderWork() {
+    const s = state(), on = !!s && v20(), open = on ? openStrips(s) : ['orchard'], shown = on ? s.shown : null;
+    if (!open.includes(pick)) pick = open.includes(shown) ? shown : 'orchard';
+    $('tab-orchard').classList.toggle('away', pick !== 'orchard');
+    $('t-orchard').querySelector('span').textContent = on ? T.tWork : T.tOrchard;
+    $('strips').hidden = open.length < 2; $('strips').ariaLabel = T.tWork;
+    keep('strips', [open, pick, shown, en], () => open.map(k => {
+      const b = el('button', k === shown ? 'shown' : ''); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', k === pick);
+      b.append(pic(`${S}menu-${k}.png${V}`), document.createTextNode(T.strip[k]));
+      if (k === shown) b.ariaLabel = `${T.strip[k]}, ${T.shownNow}`;
+      b.onclick = () => { pick = k; renderWork(); if (k === 'orchard' && index) renderScene(); };
+      return b;
+    }));
+    const st = on && stripOf(s, pick);
+    // 열린 띠면 카드(과수원 open = 공방이 열림). 다시 고르기로 점수가 없어진 띠는 stage 0 = 쉬는 중
+    keep('strip', [st, shown, on && (s.prices || {})[pick], on && (s.neighbors || []).map(n => [n.id, n.look?.career]), en], () => st && st.open ? [stripCard(s, st)] : []);
+    keep('career', [on && s.career, on && s.wallet, on && s.forecast, on && s.strips.map(x => x?.lock), open, en], () => on ? [careerPanel(s, open)] : []);
+    keep('market', [on && s.stall, on && s.notes, en], () => on ? marketPanels(s) : []);
+  }
+  function stripCard(s, st) {
+    const k = st.kind, ins = st.insured || [], P = (s.prices || {})[k], cap = Math.max(1, st.cap || 0);
+    const head = el('div', 'top2'); head.append(el('b', 'px num', `${jobName(k)} · ${st.stage > 0 ? T.stage(st.stage) : T.resting}`));
+    if (k === s.shown) head.append(el('span', 'note', T.shownNow));
+    const bar = el('div', 'bar'), fill = el('i'); fill.style.width = `${Math.min(100, 100 * (st.crate || 0) / cap)}%`; bar.append(fill); bar.ariaHidden = 'true';
+    const p = panel(head, el('p', 'num', T.crateOf(fmt(st.crate || 0), fmt(st.cap || 0))), bar);
+    if (st.keep > 0) p.append(el('p', 'note num', T.keepN(fmt(st.keep))));
+    if (Array.isArray(P)) p.append(el('p', 'note num', T.priceLine(...P.map(x => Math.round(x * 100)))));
+    p.append(row(act(T.sell, {action: 'farm_sell', strip: k}, {off: !(st.crate > 0)}), k !== s.shown && act(T.showBtn, {action: 'strip_show', strip: k}, {cls: 'y'})));
+    const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.ariaLabel = T.insureH;
+    seg.append(...['disaster', 'price'].map(kind => toggle(T.insure[kind], ins.includes(kind), {action: 'coop_insure', strip: k, kind, on: !ins.includes(kind)})));
+    p.append(line('coop-policy', T.insureH, 'note'), seg); // insured 는 기다리는 3일도 포함(Mac 과 같이 켜짐으로 보인다)
+    if (SHARES.has(k) && st.stage >= 4) { // 받을 수 있는 이웃 = 그 직군이 주 직군이고 4단계 이상(이웃 모습에 career 가 있을 때만 거른다. 최종 판단은 서버)
+      const can = n => !n.look?.career || (n.look.career.main === k && n.look.career.stage >= 4), nbs = (s.neighbors || []).filter(can);
+      p.append(row(act(T.share[k], () => choose(T.shareWho, nbs.map(n => ({label: nameOf(n), value: n.id})), target => send({action: 'farm_share', strip: k, target})), {off: !nbs.length || !(st.keep > 0)}))); // 보관함이 비면 보낼 것이 없다
+    }
+    return p;
+  }
+  function careerPanel(s, open) {
+    const c = s.career || {}, pts = c.points || {}, job = c.main || c.wish, master = /-(master|solo)$/.test(c.title || '');
+    const p = panel(job ? line(master ? 'career-rosette' : `career-emblem-${job}`, titleText(c.title) || T.careerH, 'px') : el('b', 'px', titleText(c.title) || T.careerH));
+    if (c.main) p.append(el('p', 'note num', [T.mainLine(jobName(c.main), pts[c.main] || 0), c.sub && T.subLine(jobName(c.sub), pts[c.sub] || 0)].filter(Boolean).join(' · ')));
+    else { const g = s.strips.find(x => x && !x.open && Array.isArray(x.lock))?.lock; if (g) p.append(el('p', 'note num', T.gateLine(g.filter(x => x.have >= x.need).length, g.length))); }
+    if (c.main || s.wallet > 0) p.append(line('coop-coin', T.wallet(fmt(s.wallet || 0))));
+    for (const f of s.forecast || []) { // 열린 띠에 닿는 예보만
+      const w = (f.strips || []).filter(k => open.includes(k)); if (!w.length) continue;
+      p.append(line(`farm-fx-${FX[f.kind] || 'forecast'}-0`, T.fcLine(T.days[f.day] || T.days[2], T.disasters[f.kind] || f.kind, w.map(jobName).join('·')), 'why'));
+    }
+    return p;
+  }
+  function marketPanels(s) {
+    const out = [el('h2', 'sec px', T.marketH)], stall = s.stall || [];
+    if (s.notes > 0) out.push(panel(line('note-mailbox-flag', T.notesLine(fmt(s.notes))))); // notes = 안 본 쪽지가 있는 이웃 수
+    out.push(panel(line('market-sign', T.stallH, 'px'), ...(stall.length ? stall.map(x => line('item-' + x.item, T.stallRow(cropName(x.item), fmt(x.n), fmt(x.price)))) : [el('p', 'note', T.stallEmpty)]), el('p', 'note', T.stallMac)));
+    return out;
+  }
+
   // 결과: 누른 명령(pending)이나 예약해 둔 명령(localStorage, Mac 이 깨어 반영하면 결과가 온다)
   const queuedMap = () => { try { return JSON.parse(localStorage.getItem('ld-queued') || '{}'); } catch (e) { return {}; } };
   const saveQueued = q => { const t = Date.now() - 72 * 3600e3; for (const k in q) if (q[k].at < t) delete q[k]; try { localStorage.setItem('ld-queued', JSON.stringify(q)); } catch (e) {} };
   const doneText = (p, r) => p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
     : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : p.action === 'crate' ? T.grown
     : p.action === 'mgr_hire' ? (state()?.manager?.level === 1 ? T.mgrHired : T.mgrUp) : p.action === 'stand_up' ? (state()?.stand?.level === 1 ? T.standOpen : T.standUp)
-    : p.action === 'make' ? T.started(T.recipes[p.recipe] || p.recipe) : p.action === 'fill' ? T.filled(r.earned || 0) : T.done[p.action] || '';
+    : p.action === 'make' ? T.started(T.recipes[p.recipe] || p.recipe) : p.action === 'fill' ? T.filled(r.earned || 0) : p.action === 'farm_sell' ? T.farmSold(r.earned || 0) : T.done[p.action] || '';
   function settle(r) {
     let p = pending.get(r.id), late = false;
     if (p) pending.delete(r.id);
@@ -1925,7 +2039,8 @@
     if (r.ok && p.action === 'sell' && !late) sold();
     // 실패는 Mac 이 쓴 문장(message, Mac 언어)을 그대로. 옛 앱은 reason 만 보낸다
     // 서버 대리 결과의 message 는 한국어뿐이라 영어 화면은 code 로 고른다
-    const own = (en && T.why[r.code]) || (late && r.reason === 'poor' ? T.poorThen : T.why[r.code] || T.why[r.reason] || (typeof T[r.reason] === 'string' && T[r.reason]));
+    const W = p.action === 'farm_share' ? {...T.why, taken_week: T.shareWeek} : T.why; // 2.0 보내기의 taken_week 는 보낸 사람 쪽 주 1번
+    const own = (en && W[r.code]) || (late && r.reason === 'poor' ? T.poorThen : W[r.code] || W[r.reason] || (typeof T[r.reason] === 'string' && T[r.reason]));
     const msg = r.ok ? (p.action === 'nb_request' && r.added ? T.done.nb_accept : doneText(p, r)) : (en && /[가-힣]/.test(r.message || '') ? own : r.message || own) || T.unavailable;
     if (msg) toast(late ? T.late(msg) : msg);
   }
@@ -1948,7 +2063,7 @@
       $('w-h').textContent = short(s.week.harvested); $('w-s').textContent = short(s.week.sold); $('w-e').textContent = short(s.week.earned);
       $('w-more').textContent = [T.seasons[s.season], s.dex != null && s.secrets != null ? T.dex(s.dex, s.secrets) : ''].filter(Boolean).join(' · ');
     }
-    renderScene(); renderPlant(); renderCrew(); renderMgr(); renderSuggest(); renderFarm(); renderStand(); renderDeco(); renderMap(); renderNb(); renderRaid(); renderCol(); tick();
+    renderWork(); renderScene(); renderPlant(); renderCrew(); renderMgr(); renderSuggest(); renderFarm(); renderStand(); renderDeco(); renderMap(); renderNb(); renderRaid(); renderCol(); tick();
   }
 
   let timer;

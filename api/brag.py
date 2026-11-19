@@ -27,6 +27,8 @@
   구경꾼 날(소유 키 해시·날짜), 배지 수(badges/<id>), 이주의 주제·스탬프 부문, raid/status 의 brag 보상 요약, 게시물로 이웃 요청.
 - 1.18.1(docs/research/comments-1.18.1.md): 게시물 댓글(posts/<id>/comments, comments/<id>/delete|report, 게시판 표 필요),
   게시물 소개 한 줄(intro), 이웃 모습 look.names·장면 scene.workers[].n 의 일꾼 이름.
+- 2.0(docs/research/strip-slots-2.0.md): 이웃 모습·게시물의 career, 보내기(neighbors/share), 정해진 말 쪽지(neighbors/note|notes|mute),
+  장터(market/stall|find|buy)·구해요(market/wants|demand), 정산은 raid/status 의 inbox. 사용자가 쓰는 글은 없다.
 
 실행: python3 brag.py [--data DIR] [--port 8891] [--host 127.0.0.1] [--prefix /lemondesk/api/] [--board URL] [--cors 출처] [--static SITE_DIR]
   --static 은 로컬 확인용: /lemondesk/<경로> 를 SITE_DIR 에서 준다
@@ -35,6 +37,7 @@
               (PORT, IX_DATA_DIR 은 인프라가 넣어 준다)
 관리: python3 brag.py admin list|hide ID|unhide ID|delete ID|clear-name 과수원 이름
       python3 brag.py admin comments|hide-comment ID|unhide-comment ID|delete-comment ID
+      python3 brag.py admin market list|hide ID
 """
 import base64
 import hashlib
@@ -84,7 +87,9 @@ LIMITS = {"post": (30, 3600), "star": (300, 3600), "report": (60, 3600), "ping":
           # 1.17 스탬프는 IP 당, 게시판 표는 소유 키당
           "stamp": (300, 3600), "brag_ticket": (30, 3600),
           # 1.18.1 댓글: 소유 키당, comment_post 는 소유 키+게시물
-          "comment": (30, 86400), "comment_post": (1, 60)}
+          "comment": (30, 86400), "comment_post": (1, 60),
+          # 2.0 쪽지·장터(소유 키당. 하루 개수는 NOTE_DAY_*·MARKET_* 로 따로 센다)
+          "note": (120, 3600), "market": (600, 3600)}
 STATS_KEEP_DAYS = 90       # 사용 통계 원본 보관(그 뒤로는 날짜별 합계만)
 STATS_TOKEN = ""           # 통계 조회 토큰(환경 변수 STATS_TOKEN). 비어 있으면 조회를 막는다.
 ARCHES = {"arm64", "x86_64"}
@@ -268,7 +273,7 @@ GRADUATE_LEVEL = 12          # 이웃이 아직 졸업(창고 레벨 12) 전이�
 BASKET_SHARE, BASKET_FLOOR = 0.25, 3_000.0  # 큰 바구니 값 상한 = max(3,000, 다음 해금 값 × 0.25)
 DISPATCH_SECONDS = 14_400    # 일꾼 출장 4시간
 DISPATCH_LEVEL_CAP = 20      # 출장 일꾼 레벨 상한
-CARRY_THANKS = {"dispatch": 2, "basket": 1, "sapling": 1, "step": 3}  # 받은 쪽이 반영(ack)하면 선배 고마움
+CARRY_THANKS = {"dispatch": 2, "basket": 1, "sapling": 1, "step": 3, "share_seed": 1, "share_young": 1, "share_fry": 1}  # 받은 쪽이 반영(ack)하면 선배 고마움
 # 앱 Balance.spec 의 unlockCost(test_brag 가 Balance.swift 와 대조한다). 무지개 레몬은 황금 레몬과 한 묶음
 UNLOCK = {"eureka": 0, "kumquat": 60, "meyer": 150, "calamansi": 450, "lime": 1_200, "fingerlime": 2_000, "blood": 3_200,
           "trifoliate": 5_000, "yuja": 8_000, "snowyuja": 12_000, "grapefruit": 30_000, "redhyang": 60_000, "moonlemon": 90_000,
@@ -313,6 +318,65 @@ BURST = (600, 2)             # 보상 집계: 게시 뒤 10분 안에 같은 IP 
 DECOR_ID = re.compile(r"[a-z0-9-]{1,32}")
 POST_ID = re.compile(r"[A-Za-z0-9_-]{1,32}")
 CATEGORIES = ("harvest", "secrets", "dex", "theme") + tuple("stamp-" + k for k in BOARD_STAMPS)  # 하이라이트 부문(1위 하나씩)
+
+# 2.0(docs/research/strip-slots-2.0.md 확정 절). 숫자는 Balance.swift `Balance.Farm` 과 같다(서버 테스트가 대조).
+STRIPS = ("orchard", "field", "ranch", "sea")
+FARM_ITEMS = {  # 물건 → (띠, 단계)
+    "driedLemon": ("orchard", 1), "lemonCandy": ("orchard", 2), "lemonVinegar": ("orchard", 3), "lemonCurd": ("orchard", 4),
+    "honeyCake": ("orchard", 5),
+    "lettuce": ("field", 1), "potato": ("field", 1), "radish": ("field", 1), "cabbage": ("field", 1), "tomato": ("field", 2),
+    "cucumber": ("field", 2), "pepper": ("field", 2), "watermelon": ("field", 2), "strawberry": ("field", 3), "ginseng": ("field", 4),
+    "kimchi": ("field", 5),
+    "egg": ("ranch", 1), "duckEgg": ("ranch", 1), "milk": ("ranch", 2), "wool": ("ranch", 2), "compost": ("ranch", 2),
+    "honey": ("ranch", 3), "down": ("ranch", 3), "calf": ("ranch", 4), "lamb": ("ranch", 4), "ricotta": ("ranch", 5),
+    "laver": ("sea", 1), "seaweed": ("sea", 1), "kelp": ("sea", 1), "oyster": ("sea", 2), "abalone": ("sea", 2),
+    "flatfish": ("sea", 3), "seabream": ("sea", 3), "shrimp": ("sea", 3), "pearl": ("sea", 4), "fry": ("sea", 4), "giftSet": ("sea", 5)}
+FARM_PRICE = {  # 물건 → 기준가(조합 코인)
+    "driedLemon": 3, "lemonCandy": 12, "lemonVinegar": 7000, "lemonCurd": 90, "honeyCake": 30000,
+    "lettuce": 3, "potato": 3, "radish": 3, "cabbage": 4, "tomato": 12, "cucumber": 12, "pepper": 13, "watermelon": 80,
+    "strawberry": 40, "ginseng": 15000, "kimchi": 30000,
+    "egg": 3, "duckEgg": 4, "milk": 12, "wool": 14, "compost": 13, "honey": 46, "down": 50, "calf": 22000, "lamb": 22000, "ricotta": 30000,
+    "laver": 4, "seaweed": 4, "kelp": 5, "oyster": 16, "abalone": 26, "flatfish": 82, "seabream": 104, "shrimp": 60, "pearl": 29000,
+    "fry": 0, "giftSet": 40000}
+LIVE = {"calf", "lamb", "fry"}           # 보내기로만 오간다(장터·구해요에 못 올림)
+MARKET_ITEMS = set(FARM_PRICE) - LIVE
+SHARE = {"seed": ("field", {"ginseng"}), "young": ("ranch", {"calf", "lamb"}), "fry": ("sea", {"fry"})}
+SHARE_WEEK = 1
+MARKET_PRICE = (1.0, 1.5)
+MARKET_FEE = 0.05
+MARKET_DAYS = 7
+MARKET_CAP = {s: (168000, 717000, 3483000, 7557000, 18658000) for s in STRIPS}  # 주 직군 단계 1~5 → 하루 진열 값(기준가 × 개수) 상한
+MARKET_BUY_DAY = 20
+MARKET_N = 999
+MARKET_FIND = 30
+MARKET_KEEP_DAYS = 180
+WANTS_MAX = 3
+NOTE_DAY_ONE = 10
+NOTE_DAY_ALL = 50
+NOTE_KEEP_DAYS = 30
+NOTE_PHRASES = 24
+NOTE_ITEM = {6, 7, 8, 9}
+NOTES_SHOWN = 20
+INSURE = {"disaster", "price"}
+
+
+def clean_career(v):
+    """{main, stage, wish?}: 직군 raw 값 또는 null, 단계 0~5(주 직군이 없으면 0)"""
+    if not isinstance(v, dict):
+        raise BadRequest()
+    main, wish = v.get("main"), v.get("wish")
+    if main is not None and main not in STRIPS or wish is not None and wish not in STRIPS:
+        raise BadRequest()
+    out = {"main": main, "stage": _int(v.get("stage", 0), 0, 5) if main else 0}
+    return dict(out, wish=wish) if wish else out
+
+
+def market_price_ok(item, price):
+    return MARKET_PRICE[0] * FARM_PRICE[item] <= price <= MARKET_PRICE[1] * FARM_PRICE[item]
+
+
+def market_fee(total):
+    return int(total * MARKET_FEE + 0.5)  # 반올림(AwayFromZero)
 
 
 def week_theme(week):
@@ -491,6 +555,11 @@ def clean_look(v):
     names = v.get("names")  # 1.18.1 일꾼 이름(workers 와 같은 길이, 칸마다 문자열 또는 null)
     if isinstance(names, list) and len(names) == len(out.get("workers", ())):
         out["names"] = [_name(n) for n in names]
+    if "career" in v:  # 2.0 직군·단계(받을 수 있는 보내기·엽서 칭호)
+        try:
+            out["career"] = clean_career(v["career"])
+        except BadRequest:
+            pass
     return out
 
 
@@ -533,7 +602,11 @@ MINE = {  # '내 과수원' 명령: Mac 이 잠들었으면 예약(1.14). hire2�
     "mgr_task": {"op": _v_in({"add", "remove", "up"}), "i": _v_opt(_v_int(0, 9)), "task": _v_opt(lambda v: isinstance(v, dict) and set(v) <= {"kind", "target", "role", "tree"}
                  and v.get("kind") in ("land", "worker", "unlock", "raid", "help") and _v_opt(_v_int(1, MAX_PLOTS))(v.get("target"))
                  and _v_opt(_ROLE)(v.get("role")) and _v_opt(_KIND)(v.get("tree")))},  # 1.18 커스텀 도담 할 일
-    "stand_up": {}, "make": {"recipe": _v_in({"lemonade", "syrup", "jam"})}, "fill": {"order": _v_re(re.compile(r"[a-z0-9]{1,16}"))}}
+    "stand_up": {}, "make": {"recipe": _v_in({"lemonade", "syrup", "jam"})}, "fill": {"order": _v_re(re.compile(r"[a-z0-9]{1,16}"))},
+    # 2.0 띠 보이기·띠 모두 팔기·보내기(target 은 이웃 id)·보험
+    "strip_show": {"strip": _v_in(STRIPS)}, "farm_sell": {"strip": _v_in(STRIPS)},
+    "farm_share": {"strip": _v_in({s for s, _ in SHARE.values()}), "target": _NID},
+    "coop_insure": {"strip": _v_in(STRIPS), "kind": _v_in(INSURE), "on": _BOOL}}
 SERVER = {  # '서버' 명령: Mac 이 깨어 있으면 Mac 이 서버에 보내고, 잠들었으면 nb_* 만 서버가 대리로(서리는 mac_asleep)
     "nb_help": {"target": _NID, "stamp": _STAMP}, "nb_gift": {"target": _NID, "fruit": _FRUIT, "stamp": _STAMP},
     "nb_add": {"code": _v_re(re.compile(r"[A-Za-z0-9 -]{1,20}"))}, "nb_name": {"name": _TEXT},
@@ -599,7 +672,14 @@ def clean_ping(b, now):
             # 1.15.1: 기기 연동 끔·켬(멈춤)·홀더. 옛 앱은 안 보내므로 ''
             "sync": _match(b.get("sync", ""), SYNC_STATES),
             # 1.16: 도담 모드(모르는 값·옛 앱은 '')
-            "mm": b.get("mm") if b.get("mm") in MANAGER_PLANS else ""}
+            "mm": b.get("mm") if b.get("mm") in MANAGER_PLANS else "",
+            # 2.0: 뜻·주·부 직군, 걸린 띠(모르는 값·옛 앱은 ''), 든 보험·대출·장터 사고판 횟수·납품·쪽지·구해요(옛 앱은 0)
+            **{k: b.get(k) if b.get(k) in STRIPS else "" for k in PING_STRIPS},
+            **{k: _int(b.get(k, 0), 0, hi) for k, hi in PING_COUNTS.items()}}
+
+
+PING_STRIPS = ("cw", "cm", "cs", "sh")
+PING_COUNTS = {"ins": 2 * len(STRIPS), "ln": 1, "mk": 10000, "dl": 100, "nt": 10000, "wt": 100}
 
 
 def clean_sync(b, now, *fields):
@@ -782,6 +862,8 @@ def clean_post(body, baskets=0, dispatches=0, farm=(0, 0)):
         post["showcase"] = clean_showcase(body["showcase"])
     if body.get("intro") not in (None, ""):  # 1.18.1 소개 한 줄
         post["intro"] = clean_text(body["intro"], 40, "bad_intro")
+    if body.get("career") is not None:  # 2.0 칭호 표시용(plausible 은 레몬만 본다)
+        post["career"] = clean_career(body["career"])
     return post
 
 
@@ -886,6 +968,25 @@ class Board:
                 text TEXT NOT NULL, created REAL NOT NULL, hidden INTEGER NOT NULL DEFAULT 0);
             CREATE INDEX IF NOT EXISTS comments_post ON comments(post, created);
             CREATE TABLE IF NOT EXISTS comment_reports(comment TEXT NOT NULL, ip TEXT NOT NULL, at REAL NOT NULL, UNIQUE(comment, ip));
+            -- 2.0 장터: 진열(물건마다 한 줄), 거래, 정산 대기(받는 쪽이 ack 하면 지운다), 하루 진열 값, 구해요
+            CREATE TABLE IF NOT EXISTS stalls(id TEXT PRIMARY KEY, owner TEXT NOT NULL, item TEXT NOT NULL, n INTEGER NOT NULL,
+                price INTEGER NOT NULL, at REAL NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, UNIQUE(owner, item));
+            CREATE INDEX IF NOT EXISTS stalls_item ON stalls(item, price);
+            CREATE TABLE IF NOT EXISTS trades(id TEXT PRIMARY KEY, seller TEXT NOT NULL, buyer TEXT NOT NULL, item TEXT NOT NULL,
+                n INTEGER NOT NULL, price INTEGER NOT NULL, day TEXT NOT NULL, at REAL NOT NULL);
+            CREATE INDEX IF NOT EXISTS trades_buyer ON trades(buyer, day);
+            CREATE INDEX IF NOT EXISTS trades_seller ON trades(seller, at);
+            CREATE TABLE IF NOT EXISTS mail(id TEXT PRIMARY KEY, owner TEXT NOT NULL, kind TEXT NOT NULL, body TEXT NOT NULL, at REAL NOT NULL);
+            CREATE INDEX IF NOT EXISTS mail_owner ON mail(owner, at);
+            CREATE TABLE IF NOT EXISTS listed(owner TEXT NOT NULL, day TEXT NOT NULL, value INTEGER NOT NULL, PRIMARY KEY(owner, day));
+            CREATE TABLE IF NOT EXISTS wants(owner TEXT NOT NULL, item TEXT NOT NULL, n INTEGER NOT NULL, at REAL NOT NULL,
+                PRIMARY KEY(owner, item));
+            -- 2.0 쪽지(말 번호·물건·스탬프만)와 이웃별 받지 않기
+            CREATE TABLE IF NOT EXISTS notes(id TEXT PRIMARY KEY, sender TEXT NOT NULL, receiver TEXT NOT NULL, phrase INTEGER NOT NULL,
+                item TEXT, stamp TEXT, day TEXT NOT NULL, at REAL NOT NULL, done INTEGER NOT NULL DEFAULT 0);
+            CREATE INDEX IF NOT EXISTS notes_receiver ON notes(receiver, done);
+            CREATE INDEX IF NOT EXISTS notes_sender ON notes(sender, day);
+            CREATE TABLE IF NOT EXISTS mutes(owner TEXT NOT NULL, other TEXT NOT NULL, PRIMARY KEY(owner, other));
         """)
         # 옛 데이터에 열을 더한다. 윈도우판: 통계에 플랫폼 열(옛 행은 mac). 맥 os("26")와 윈도우 os("10"/"11")는 겹치지 않아 기본 키는 그대로 둔다.
         # 1.11 이웃: 통계 nb·rb, 과수원 모습·고마움, 되찾아 주기(beneficiary)·이웃이 쫓아냄(caught_by). 1.12: 내 과수원 이름
@@ -906,7 +1007,10 @@ class Board:
                                  # 1.15.1 통계: 기기 연동(off·on·holder, 옛 앱은 '')
                                  ("pings", "sync", "TEXT NOT NULL DEFAULT ''"),
                                  ("pings", "mm", "TEXT NOT NULL DEFAULT ''"),  # 1.16 도담 모드
-                                 ("stars", "own", "INTEGER NOT NULL DEFAULT 0")):  # 1.17 주인이 자기 표로 준 별
+                                 ("stars", "own", "INTEGER NOT NULL DEFAULT 0"),  # 1.17 주인이 자기 표로 준 별
+                                 # 2.0 통계: 직군·걸린 띠(''), 보험·대출·장터·납품·쪽지·구해요(0)
+                                 *[("pings", k, "TEXT NOT NULL DEFAULT ''") for k in PING_STRIPS],
+                                 *[("pings", k, "INTEGER NOT NULL DEFAULT 0") for k in PING_COUNTS]):
             if col not in [r[1] for r in self.db.execute("PRAGMA table_info(%s)" % table)]:
                 self.db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
         self.db.execute("CREATE INDEX IF NOT EXISTS raids_beneficiary ON raids(beneficiary, end)")
@@ -946,7 +1050,7 @@ class Board:
         d = json.loads(data)
         out = {"id": pid, "week": week, "nickname": nick, "card": d["card"], "orchard": d["orchard"],
                "stars": stars, "created": int(created), "stamps": self._stamps(pid), "comments": comments}
-        out.update({k: d[k] for k in ("title", "badges", "showcase", "intro") if k in d})  # 1.17 진열장, 1.18.1 소개
+        out.update({k: d[k] for k in ("title", "badges", "showcase", "intro", "career") if k in d})  # 1.17 진열장, 1.18.1 소개
         if voter is not None:
             out["starred"] = self.db.execute("SELECT 1 FROM stars WHERE post=? AND voter=?", (pid, sha(voter))).fetchone() is not None
             m = self.db.execute("SELECT kind FROM stamps WHERE post=? AND voter=?", (pid, sha(voter))).fetchone()
@@ -988,7 +1092,7 @@ class Board:
         with self.lock:
             self.limit("post", self.ip(ip), now)
             week = self.week(now)
-            data = json.dumps({k: post[k] for k in ("card", "orchard", "title", "badges", "showcase", "intro") if k in post}, ensure_ascii=False)
+            data = json.dumps({k: post[k] for k in ("card", "orchard", "title", "badges", "showcase", "intro", "career") if k in post}, ensure_ascii=False)
             row = self.db.execute("SELECT id FROM posts WHERE owner=? AND week=?", (owner, week)).fetchone()
             t = now.timestamp()
             if row:
@@ -1201,6 +1305,12 @@ class Board:
             self._drop_comments("owner=?", (owner,))  # 1.18.1 내가 쓴 댓글
             for table in ("visits", "brag_tickets", "brag_kept"):  # 1.17 구경꾼 날·게시판 표·지운 게시물의 보상 집계
                 self.db.execute("DELETE FROM %s WHERE owner=?" % table, (owner,))
+            # 2.0 장터(진열 중인 물건은 사라진다)·구해요·정산 대기·쪽지·받지 않기
+            for table in ("stalls", "mail", "listed", "wants"):
+                self.db.execute("DELETE FROM %s WHERE owner=?" % table, (owner,))
+            self.db.execute("DELETE FROM trades WHERE seller=? OR buyer=?", (owner, owner))
+            self.db.execute("DELETE FROM notes WHERE sender=? OR receiver=?", (owner, owner))
+            self.db.execute("DELETE FROM mutes WHERE owner=? OR other=?", (owner, owner))
             self.db.commit()
         return n
 
@@ -1231,6 +1341,10 @@ class Board:
                         "nb=max(nb, excluded.nb), rb=max(rb, excluded.rb), mg=max(mg, excluded.mg), pv=max(pv, excluded.pv), ms=max(ms, excluded.ms)",
                         (inst, p["day"], p["version"], p["os"], p["lang"], p["arch"], p["minutes"], p["opens"],
                          p["sales"], p["kinds"], now.timestamp(), p["platform"], p["nb"], p["rb"], p["mg"], p["pv"], p["ms"], p["sync"], p["mm"]))
+        # 2.0: 직군·걸린 띠는 마지막 값, 횟수는 그날의 큰 값
+        self.db.execute("UPDATE pings SET %s WHERE install=? AND day=?" % ", ".join(
+            ["%s=?" % k for k in PING_STRIPS] + ["%s=max(%s, ?)" % (k, k) for k in PING_COUNTS]),
+            [p[k] for k in PING_STRIPS] + [p[k] for k in PING_COUNTS] + [inst, p["day"]])
         self.db.commit()
 
     @locked
@@ -1292,6 +1406,7 @@ class Board:
             "SELECT p.mm, COUNT(*) FROM pings p JOIN (SELECT install, MAX(day) AS d FROM pings WHERE day >= ? GROUP BY install) m "
             "ON p.install = m.install AND p.day = m.d WHERE p.mm <> '' GROUP BY p.mm ORDER BY 2 DESC", (ago(6),)).fetchall())
         usage["manager"] = {"with": mg_with, "avg_level": round(mg_avg or 0, 1), "sold": ms_sum, "modes": modes}
+        usage["world"] = self._world_stats(ago(6))
         usage["phone"] = {"with": pv_with}
         start = ago(days - 1)
         rows = {d: {"day": d, "installs": 0, "active": a, "new": nw, "avg_minutes": round(m / a) if a else 0, "opens": o, "sales": sl}
@@ -1311,6 +1426,23 @@ class Board:
                  "stars_this_week": one("SELECT COUNT(*) FROM stars s JOIN posts p ON p.id = s.post WHERE p.week = ?", week)}
         return {"today": today, "installs": installs, "usage": usage, "daily": [rows[d] for d in sorted(rows)], "board": board,
                 "raid": self._raid_health(now)}
+
+    def _world_stats(self, since):
+        """2.0: 7일 안에 쓴 설치마다 가장 최근 날의 직군·걸린 띠 분포, 보험 가입(주 직군이 있는 설치 중), 대출, 7일 합계, 서버 장터 거래 수"""
+        last = ("FROM pings p JOIN (SELECT install, MAX(day) AS d FROM pings WHERE day >= ? GROUP BY install) m "
+                "ON p.install = m.install AND p.day = m.d")
+        dist = {k: dict(self.db.execute("SELECT p.%s, COUNT(*) %s WHERE p.%s <> '' GROUP BY 1 ORDER BY 2 DESC" % (k, last, k),
+                                        (since,)).fetchall()) for k in PING_STRIPS}
+        careers, insured, loans = self.db.execute("SELECT COUNT(*), COALESCE(SUM(p.ins >= 1), 0), COALESCE(SUM(p.ln), 0) %s "
+                                                  "WHERE p.cm <> ''" % last, (since,)).fetchone()
+        sums = self.db.execute("SELECT %s FROM pings WHERE day >= ?" % ", ".join("COALESCE(SUM(%s), 0)" % k for k in ("mk", "dl", "nt", "wt")),
+                               (since,)).fetchone()
+        t = self.db.execute("SELECT COUNT(*), COALESCE(SUM(n * price), 0) FROM trades WHERE day >= ?", (since,)).fetchone()
+        return {"wish": dist["cw"], "main": dist["cm"], "sub": dist["cs"], "shown": dist["sh"],
+                "insurance": {"careers": careers, "insured": insured}, "loans": loans,
+                "pinged": dict(zip(("market", "deliveries", "notes", "wants"), sums)),
+                "market": {"trades": t[0], "coins": t[1], "stalls": self.db.execute("SELECT COUNT(*) FROM stalls").fetchone()[0],
+                           "wants": self.db.execute("SELECT COUNT(*) FROM wants").fetchone()[0]}}
 
     def _raid_health(self, now):
         """서리 진단(1.15, 이미 있는 farms·raids 에서 계산). targetable: _candidates 조건 중 서리꾼과 무관한 것(14일 소식·초보·
@@ -1446,6 +1578,14 @@ class Board:
                             "OR receiver NOT IN (SELECT owner FROM farms)", (t - 2 * REQUEST_DAYS,))
             self.db.execute("DELETE FROM blocks WHERE owner NOT IN (SELECT owner FROM farms) OR other NOT IN (SELECT owner FROM farms)")
             self.db.execute("DELETE FROM sync_codes WHERE expires <= ?", (t,))  # 1.15.1: 소유 키 원문이 든 코드는 10분만
+            # 2.0: 7일 지난 진열은 돌려주고, 구해요 7일·쪽지 30일·거래와 정산 대기 180일, 지난 진열 값
+            self._expire_stalls(t)
+            self.db.execute("DELETE FROM wants WHERE at <= ?", (t - MARKET_DAYS * 86400,))
+            self.db.execute("DELETE FROM notes WHERE at <= ?", (t - NOTE_KEEP_DAYS * 86400,))
+            self.db.execute("DELETE FROM trades WHERE at <= ?", (t - MARKET_KEEP_DAYS * 86400,))
+            self.db.execute("DELETE FROM mail WHERE at <= ?", (t - MARKET_KEEP_DAYS * 86400,))
+            self.db.execute("DELETE FROM listed WHERE day < ?", (day_key(now),))
+            self.db.execute("DELETE FROM mutes WHERE owner NOT IN (SELECT owner FROM farms) OR other NOT IN (SELECT owner FROM farms)")
             self.db.commit()
 
     # 서리 (1.8). 한 사람(raider)은 당한 쪽 응답 어디에도 넣지 않는다.
@@ -1540,7 +1680,7 @@ class Board:
             # 1.13 쩔: 지금 와 있는 출장 일꾼(없으면 null). 끝나면 carries 로 와서 ack 하면 선배 고마움 +2
             "dispatch": dict(carry(live), left=int(live[9] - t + 0.999)) if live else None,
             # 받은 바구니·묘목과 끝난 출장(오래된 것부터). 반영하고 ack 하면 선배 고마움(바구니·묘목 +1, 출장 +2)
-            "carries": [carry(r) for r in q("SELECT " + cols + " FROM carries WHERE receiver=? AND done=0 AND kind<>'step' AND end<=? "
+            "carries": [carry(r) for r in q("SELECT " + cols + " FROM carries WHERE receiver=? AND done=0 AND kind IN ('dispatch', 'basket', 'sapling') AND end<=? "
                                             "ORDER BY start LIMIT ?", (me, t, INBOX))],
             # 사제 단계(crate6·crate12(졸업)·yuja·pink). as=junior: 내가 넘었다(축하 카드, ack 하면 그 선배 고마움 +3, name 은 선배),
             # as=teacher: 내 후배가 넘었다(name 은 후배, ack 하면 사라진다)
@@ -1564,6 +1704,23 @@ class Board:
             "ready": int(max(0, f["first"] + NEW_KEY - t)) if f else NEW_KEY,
             "guard": int(max(0, f["guard"] - t)) if f else 0,
         }
+
+    def _inbox2(self, me):
+        """2.0 inbox(look.career 를 보낸 앱에만. 옛 앱은 모르는 kind 를 돕기로 읽는다): 보내기·쪽지·장터 정산·구해요 알림"""
+        q = self.db.execute
+
+        def frm(o):
+            return {"from": self._target_id(me, o), "name": self._nick(o), "seed": self._seed(o)}
+        out = [{"id": i, "kind": "share", "share": k[len("share_"):], "item": item, **frm(o)} for i, k, item, o in
+               q("SELECT id, kind, fruit, sender FROM carries WHERE receiver=? AND done=0 AND kind LIKE 'share_%' ORDER BY start LIMIT ?",
+                 (me, INBOX))]
+        for i, o, phrase, item, stamp, at in q("SELECT id, sender, phrase, item, stamp, at FROM notes WHERE receiver=? AND done=0 "
+                                               "ORDER BY at LIMIT ?", (me, INBOX)):
+            n = {"id": i, "kind": "note", "phrase": phrase, "at": int(at), **frm(o)}
+            n.update({k: v for k, v in (("item", item), ("stamp", stamp)) if v})
+            out.append(n)
+        return out + [dict(json.loads(b), id=i, kind=k) for i, k, b in
+                      q("SELECT id, kind, body FROM mail WHERE owner=? ORDER BY at LIMIT ?", (me, INBOX))]
 
     @locked
     def raid_status(self, owner_key, body, ip, now, device=None):
@@ -1616,8 +1773,13 @@ class Board:
                 self.db.execute("UPDATE carries SET done=1 WHERE id=?", (rid,))
                 self.db.execute("UPDATE farms SET thanks=thanks+? WHERE owner=?", (CARRY_THANKS[c[0]], c[1]))
             self.db.execute("UPDATE carries SET seen=1 WHERE id=? AND sender=? AND kind='step'", (rid, me))
+            self.db.execute("UPDATE notes SET done=1 WHERE id=? AND receiver=?", (rid, me))  # 2.0 쪽지·장터 정산
+            self.db.execute("DELETE FROM mail WHERE id=? AND owner=?", (rid, me))
         self.db.commit()
-        return dict(self._raid_view(me, now), brag=self._brag(me))
+        view = self._raid_view(me, now)
+        if farm["look"] is not None and "career" in farm["look"]:
+            view["inbox"] += self._inbox2(me)
+        return dict(view, brag=self._brag(me))
 
     def _fair(self, pid, created):
         """보상용 반응 수(1.17): IP 해시마다 하나, 주인이 자기 표로 준 것과 게시 뒤 10분 안에 같은 IP 해시에서 몰린 것(2개 넘음)은 뺀다."""
@@ -1814,6 +1976,7 @@ class Board:
         done = set(self.db.execute("SELECT receiver, kind, day FROM gifts WHERE sender=? AND day IN (?, ?, ?)",
                                    (me, day, day + "am", slot_key(now))).fetchall())
         out = []
+        muted = {o for (o,) in self.db.execute("SELECT other FROM mutes WHERE owner=?", (me,))}  # 2.0 쪽지 받지 않기
         for other, seen, dogs, look, level, best in self.db.execute(
                 "SELECT n.other, f.seen, f.dogs, f.look, f.level, f.best FROM neighbors n JOIN farms f ON f.owner = n.other "
                 "WHERE n.owner=? ORDER BY n.created, n.rowid", (me,)).fetchall():
@@ -1836,7 +1999,7 @@ class Board:
                         "weeds": look.get("weeds", 0),
                         "canDispatch": room.get("dispatch") is True, "canBasket": room.get("basket") is True,
                         "canSapling": room.get("sapling") is True and bool(saplings),
-                        "basketValue": basket_value(best) if junior else 0, "saplings": saplings})
+                        "basketValue": basket_value(best) if junior else 0, "saplings": saplings, "muted": other in muted})
         return {"code": self._code(me, now), "max": MAX_NEIGHBORS, "thanks": mine["thanks"], "neighbors": out,
                 "teacher": self._grads(me),  # 1.13 내가 졸업시킨 제자 수
                 # 1.12 내가 정한 과수원 이름(없으면 null)과 앱이 이름을 지을 seed
@@ -2146,6 +2309,276 @@ class Board:
         if kind == "dispatch":
             return {"ok": True, "end": int(end), "left": DISPATCH_SECONDS}
         return {"ok": True, "count": count} if kind == "basket" else {"ok": True}
+
+    # 2.0 보내기·쪽지·장터·구해요 (docs/research/strip-slots-2.0.md 확정 절). 사용자가 쓰는 글은 받지 않는다.
+
+    def _nb(self, me, nid):
+        try:
+            return self._neighbor(me, nid)
+        except KeyError:
+            raise BadRequest("not_neighbor")
+
+    def _career_of(self, owner):
+        r = self.db.execute("SELECT look FROM farms WHERE owner=?", (owner,)).fetchone()
+        return (json.loads(r[0]).get("career") if r else None) or {}
+
+    def _who(self, me, o):
+        return {"id": self._target_id(me, o), "name": self._nick(o), "seed": self._seed(o)}
+
+    @locked
+    def neighbor_share(self, owner_key, body, now):
+        """{id, kind: seed|young|fry, item} → 받는 쪽 inbox 의 share. 받을 수 있는 이웃(그 직군이 주 직군이고 단계가 닿음)에게만, 종류마다 주 1번"""
+        me, _ = self._member(owner_key, "neighbor_send", now)
+        if not isinstance(body, dict):
+            raise BadRequest()
+        kind, item = _one(body.get("kind"), SHARE), body.get("item")
+        strip, items = SHARE[kind]
+        if not isinstance(item, str) or item not in items:
+            raise BadRequest("bad_item")
+        other = self._nb(me, body.get("id"))
+        c = self._career_of(other)
+        if c.get("main") != strip or c.get("stage", 0) < FARM_ITEMS[item][1]:
+            raise BadRequest("cannot_receive")
+        kind, week = "share_" + kind, week_key(now)
+        if self.db.execute("SELECT COUNT(*) FROM carries WHERE sender=? AND kind=? AND week=?", (me, kind, week)).fetchone()[0] >= SHARE_WEEK:
+            raise BadRequest("taken_week")
+        t = now.timestamp()
+        self.db.execute("INSERT INTO carries(id, sender, receiver, day, week, kind, fruit, start, end) VALUES(?,?,?,?,?,?,?,?,?)",
+                        (secrets.token_urlsafe(9), me, other, day_key(now), week, kind, item, t, t))
+        self.db.commit()
+        return {"ok": True}
+
+    @locked
+    def neighbor_note(self, owner_key, body, now):
+        """{id, phrase, item?, stamp?}: 정해진 말 번호 하나(+ 물건·스탬프). 받는 쪽 inbox 의 note"""
+        me, _ = self._member(owner_key, "note", now)
+        if not isinstance(body, dict):
+            raise BadRequest()
+        other = self._nb(me, body.get("id"))
+        phrase, item, stamp = body.get("phrase"), body.get("item"), body.get("stamp")
+        if (isinstance(phrase, bool) or not isinstance(phrase, int) or not 0 <= phrase < NOTE_PHRASES
+                or (item is None and phrase in NOTE_ITEM) or item is not None and (not isinstance(item, str) or item not in FARM_PRICE)
+                or stamp is not None and (not isinstance(stamp, str) or stamp not in STAMPS)):
+            raise BadRequest("bad_phrase")
+        if self.db.execute("SELECT 1 FROM mutes WHERE owner=? AND other=?", (other, me)).fetchone():
+            raise BadRequest("muted")
+        day = day_key(now)
+        one, every = self.db.execute("SELECT COALESCE(SUM(receiver=?), 0), COUNT(*) FROM notes WHERE sender=? AND day=?",
+                                     (other, me, day)).fetchone()
+        if one >= NOTE_DAY_ONE or every >= NOTE_DAY_ALL:
+            raise BadRequest("over_limit")
+        self.db.execute("INSERT INTO notes(id, sender, receiver, phrase, item, stamp, day, at) VALUES(?,?,?,?,?,?,?,?)",
+                        (secrets.token_urlsafe(9), me, other, phrase, item, stamp, day, now.timestamp()))
+        self.db.commit()
+        return {"ok": True}
+
+    @locked
+    def neighbor_notes(self, owner_key, nid, now):
+        """그 이웃과 주고받은 최근 20개(오래된 것부터, mine: 내가 보낸 것)와 내가 그 이웃의 쪽지를 받지 않는지"""
+        me = self.owner(owner_key)
+        self.limit("neighbors", me, now)
+        other = self._nb(me, nid)
+        rows = self.db.execute("SELECT id, sender, phrase, item, stamp, at FROM notes WHERE ((sender=? AND receiver=?) OR (sender=? AND receiver=?)) "
+                               "AND at>? ORDER BY at DESC LIMIT ?", (me, other, other, me, now.timestamp() - NOTE_KEEP_DAYS * 86400,
+                                                                     NOTES_SHOWN)).fetchall()
+        notes = []
+        for i, sender, phrase, item, stamp, at in reversed(rows):
+            n = {"id": i, "mine": sender == me, "phrase": phrase, "at": int(at)}
+            n.update({k: v for k, v in (("item", item), ("stamp", stamp)) if v})
+            notes.append(n)
+        return {"notes": notes, "muted": self.db.execute("SELECT 1 FROM mutes WHERE owner=? AND other=?", (me, other)).fetchone() is not None}
+
+    @locked
+    def neighbor_mute(self, owner_key, body, now):
+        """{id, on}: 이 이웃의 쪽지 받지 않기"""
+        me, _ = self._member(owner_key, "neighbors", now)
+        if not isinstance(body, dict) or not isinstance(body.get("on"), bool):
+            raise BadRequest()
+        other = self._nb(me, body.get("id"))
+        if body["on"]:
+            self.db.execute("INSERT OR IGNORE INTO mutes VALUES(?,?)", (me, other))
+        else:
+            self.db.execute("DELETE FROM mutes WHERE owner=? AND other=?", (me, other))
+        self.db.commit()
+        return {"ok": True}
+
+    def _mail(self, owner, kind, body, t):
+        self.db.execute("INSERT INTO mail VALUES(?,?,?,?,?)", (secrets.token_urlsafe(9), owner, kind, json.dumps(body), t))
+
+    def _return(self, sid, owner, item, n, t):
+        self.db.execute("DELETE FROM stalls WHERE id=?", (sid,))
+        self._mail(owner, "returned", {"trade": secrets.token_urlsafe(9), "item": item, "n": n, "coins": 0}, t)
+
+    def _expire_stalls(self, t):
+        for sid, owner, item, n in self.db.execute("SELECT id, owner, item, n FROM stalls WHERE at <= ?", (t - MARKET_DAYS * 86400,)).fetchall():
+            self._return(sid, owner, item, n, t)
+
+    def _market_key(self, owner_key, now):
+        me = self.owner(owner_key)
+        self.limit("market", me, now)
+        return me
+
+    @locked
+    def market_put(self, owner_key, body, now):
+        """{items: [{kind: "sell", item, n, price}]}: 진열에 더한다(같은 물건이면 개수를 더하고 값을 바꾼다).
+        진열 자격은 14일 안에 서리 맞추기가 있고 주 직군이 있는 과수원. 칸 수 = 주 직군 단계 + 1, 하루 진열 값 ≤ MARKET_CAP"""
+        me = self._market_key(owner_key, now)
+        items = body.get("items") if isinstance(body, dict) else None
+        if not isinstance(items, list) or not items:
+            raise BadRequest()
+        f, c = self._farm(me), self._career_of(me)
+        if not f or f["seen"] < now.timestamp() - BUG_ACTIVE_DAYS * 86400 or not c.get("main") or c.get("stage", 0) < 1:
+            raise BadRequest("not_eligible")
+        rows = {}
+        for it in items:
+            d = it if isinstance(it, dict) else {}
+            if d.get("kind") != "sell" or not isinstance(d.get("item"), str) or d["item"] not in MARKET_ITEMS:  # craft 는 첫 업데이트에서
+                raise BadRequest("bad_item")
+            n, price = _int(d.get("n"), 1, MARKET_N), _int(d.get("price"), 1, 10**9)
+            if not market_price_ok(d["item"], price):
+                raise BadRequest("bad_price")
+            if d["item"] in rows:
+                raise BadRequest()
+            rows[d["item"]] = (n, price)
+        t, day = now.timestamp(), day_key(now)
+        self._expire_stalls(t)
+        mine = dict(self.db.execute("SELECT item, id FROM stalls WHERE owner=?", (me,)).fetchall())
+        used = (self.db.execute("SELECT value FROM listed WHERE owner=? AND day=?", (me, day)).fetchone() or (0,))[0]
+        value = sum(n * FARM_PRICE[item] for item, (n, _) in rows.items())
+        if len(set(mine) | set(rows)) > c["stage"] + 1 or used + value > MARKET_CAP[c["main"]][c["stage"] - 1]:
+            self.db.commit()
+            raise BadRequest("over_limit")
+        for item, (n, price) in rows.items():
+            if item in mine:
+                self.db.execute("UPDATE stalls SET n=n+?, price=?, at=? WHERE id=?", (n, price, t, mine[item]))
+                continue
+            sid = secrets.token_urlsafe(9)
+            self.db.execute("INSERT INTO stalls(id, owner, item, n, price, at) VALUES(?,?,?,?,?,?)", (sid, me, item, n, price, t))
+            for (w,) in self.db.execute("SELECT owner FROM wants WHERE item=? AND owner<>? AND at>?",
+                                        (item, me, t - MARKET_DAYS * 86400)).fetchall():
+                self._mail(w, "wanted", {"item": item, "stall": sid}, t)
+        self.db.execute("INSERT INTO listed VALUES(?,?,?) ON CONFLICT(owner, day) DO UPDATE SET value=value+excluded.value", (me, day, value))
+        self.db.commit()
+        return {"ok": True}
+
+    @locked
+    def market_mine(self, owner_key, now):
+        """내 진열(남은 초 left)과 최근 7일 팔린 것(받은 코인)"""
+        me = self._market_key(owner_key, now)
+        t = now.timestamp()
+        self._expire_stalls(t)
+        self.db.commit()
+        items = [{"stall": i, "item": item, "n": n, "price": price, "at": int(at), "left": int(at + MARKET_DAYS * 86400 - t)}
+                 for i, item, n, price, at in self.db.execute("SELECT id, item, n, price, at FROM stalls WHERE owner=? ORDER BY at, rowid", (me,))]
+        sold = [{"trade": i, "item": item, "n": n, "coins": n * price - market_fee(n * price), "at": int(at)}
+                for i, item, n, price, at in self.db.execute("SELECT id, item, n, price, at FROM trades WHERE seller=? AND at>? "
+                                                             "ORDER BY at DESC LIMIT 20", (me, t - MARKET_DAYS * 86400))]
+        return {"items": items, "sold": sold}
+
+    @locked
+    def market_take(self, owner_key, item, now):
+        """진열 내리기: 남은 물건은 inbox 의 returned"""
+        me = self._market_key(owner_key, now)
+        r = self.db.execute("SELECT id, n FROM stalls WHERE owner=? AND item=?", (me, item)).fetchone()
+        if not r:
+            raise KeyError(item)
+        self._return(r[0], me, item, r[1], now.timestamp())
+        self.db.commit()
+        return {"ok": True}
+
+    @locked
+    def market_find(self, owner_key, item, now):
+        """그 물건을 진열한 가판대: 이웃 먼저, 값 싼 순(내 것·숨긴 것·7일 지난 것은 뺀다). title 은 판 사람의 {main, stage}"""
+        me = self._market_key(owner_key, now)
+        if item not in MARKET_ITEMS:
+            raise BadRequest("bad_item")
+        nbs = {o for (o,) in self.db.execute("SELECT other FROM neighbors WHERE owner=?", (me,))}
+        rows = sorted(self.db.execute("SELECT id, owner, n, price, at FROM stalls WHERE item=? AND hidden=0 AND at>? AND owner<>?",
+                                      (item, now.timestamp() - MARKET_DAYS * 86400, me)).fetchall(),
+                      key=lambda r: (r[1] not in nbs, r[3], r[4]))[:MARKET_FIND]
+        out = []
+        for sid, o, n, price, _ in rows:
+            c = self._career_of(o)
+            out.append({"stall": sid, "name": self._nick(o), "seed": self._seed(o), "title": {"main": c["main"], "stage": c["stage"]} if c.get("main") else None,
+                        "neighbor": o in nbs, "item": item, "n": n, "price": price})
+        return {"stalls": out}
+
+    @locked
+    def market_buy(self, owner_key, body, now):
+        """{stall, item, n, price} → {ok, trade}. 산 사람은 bought(낸 코인), 판 사람은 sold(수수료를 뺀 코인)를 inbox 로, 같은 거래 번호"""
+        me, _ = self._member(owner_key, "market", now)
+        if not isinstance(body, dict):
+            raise BadRequest()
+        sid, item = _match(body.get("stall"), RAID_ID), body.get("item")
+        n, price = _int(body.get("n"), 1, MARKET_N), _int(body.get("price"), 1, 10**9)
+        t, day = now.timestamp(), day_key(now)
+        r = self.db.execute("SELECT owner, item, n, price FROM stalls WHERE id=? AND hidden=0 AND at>?", (sid, t - MARKET_DAYS * 86400)).fetchone()
+        if not r or r[1] != item:
+            raise BadRequest("sold_out")
+        seller, _, left, now_price = r
+        if seller == me:
+            raise BadRequest("same_owner")
+        if now_price != price:
+            raise BadRequest("price_changed")
+        if left < n:
+            raise BadRequest("sold_out")
+        if self.db.execute("SELECT COUNT(*) FROM trades WHERE buyer=? AND day=?", (me, day)).fetchone()[0] >= MARKET_BUY_DAY:
+            raise BadRequest("over_limit")
+        if left == n:
+            self.db.execute("DELETE FROM stalls WHERE id=?", (sid,))
+        else:
+            self.db.execute("UPDATE stalls SET n=n-? WHERE id=?", (n, sid))
+        trade, total = secrets.token_urlsafe(9), n * price
+        self.db.execute("INSERT INTO trades VALUES(?,?,?,?,?,?,?,?)", (trade, seller, me, item, n, price, day, t))
+        self._mail(me, "bought", {"trade": trade, "item": item, "n": n, "coins": total}, t)
+        self._mail(seller, "sold", {"trade": trade, "item": item, "n": n, "coins": total - market_fee(total)}, t)
+        self.db.commit()
+        return {"ok": True, "trade": trade}
+
+    @locked
+    def market_wants(self, owner_key, body, now):
+        """{items: [{item, n}]}: 내 구해요를 이 목록으로 바꾼다(3개까지, 7일. 그대로 둔 물건은 건 때가 남는다)"""
+        me, _ = self._member(owner_key, "market", now)
+        items = body.get("items") if isinstance(body, dict) else None
+        if not isinstance(items, list):
+            raise BadRequest()
+        if len(items) > WANTS_MAX:
+            raise BadRequest("over_limit")
+        rows = {}
+        for it in items:
+            d = it if isinstance(it, dict) else {}
+            if not isinstance(d.get("item"), str) or d["item"] not in MARKET_ITEMS:
+                raise BadRequest("bad_item")
+            rows[d["item"]] = _int(d.get("n"), 1, MARKET_N)
+        if len(rows) < len(items):
+            raise BadRequest()
+        t = now.timestamp()
+        self.db.execute("DELETE FROM wants WHERE owner=? AND (at<=? OR item NOT IN (%s))" % ",".join("?" * len(rows)),
+                        (me, t - MARKET_DAYS * 86400, *rows))
+        for item, n in rows.items():
+            self.db.execute("INSERT INTO wants VALUES(?,?,?,?) ON CONFLICT(owner, item) DO UPDATE SET n=excluded.n", (me, item, n, t))
+        self.db.commit()
+        return {"ok": True}
+
+    @locked
+    def market_demand(self, owner_key, now):
+        """내가 만드는 물건(주 직군의 물건 + 내 진열)마다 구하는 이웃과 그 밖의 수"""
+        me = self._market_key(owner_key, now)
+        main = self._career_of(me).get("main")
+        mine = {i for i, (s, _) in FARM_ITEMS.items() if s == main and i in MARKET_ITEMS}
+        mine |= {i for (i,) in self.db.execute("SELECT item FROM stalls WHERE owner=?", (me,))}
+        nbs = {o for (o,) in self.db.execute("SELECT other FROM neighbors WHERE owner=?", (me,))}
+        out = {}
+        for o, item in self.db.execute("SELECT owner, item FROM wants WHERE at>? AND owner<>? ORDER BY at",
+                                       (now.timestamp() - MARKET_DAYS * 86400, me)).fetchall():
+            if item in mine:
+                d = out.setdefault(item, {"item": item, "neighbors": [], "others": 0})
+                if o in nbs:
+                    d["neighbors"].append(self._who(me, o))
+                else:
+                    d["others"] += 1
+        order = list(FARM_ITEMS)
+        return {"items": sorted(out.values(), key=lambda d: order.index(d["item"]))}
 
     # 기기 연동 (1.15.1, docs/research/sync-1.15.1.md 확정 절). owner·device 는 sha256 만 저장한다.
     # 예외: sync_codes.key 는 소유 키 원문이다. redeem 은 소유 키 없이 코드만으로 새 기기에 소유 키를 돌려줘야 해서,
@@ -2902,6 +3335,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                     return self.neighbors(method, parts[1:], q, owner, now)
                 if parts[:1] == ["sync"]:
                     return self.sync(method, parts[1:], q, owner, now)
+                if parts[:1] == ["market"]:
+                    return self.market(method, parts[1:], q, owner, now)
                 if parts[:1] == ["bugs"]:
                     return self.bugs(method, parts[1:], q, owner, now)
                 if method == "GET" and parts == ["me"]:
@@ -2926,6 +3361,9 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                                   # 버그 신고(1.15.2, bad_text·bad_image 는 422)
                                   "inactive": 403, "bad_ticket": 409, "forbidden": 403,
                                   "no_ticket": 403,  # 1.18.1 댓글(bad_comment·bad_intro 는 422)
+                                  # 2.0 보내기·쪽지·장터(bad_item·bad_price·bad_phrase 는 422)
+                                  "not_neighbor": 409, "cannot_receive": 409, "over_limit": 409, "muted": 409, "sold_out": 409,
+                                  "price_changed": 409, "same_owner": 409, "not_eligible": 403,
                                   }.get(e.code, 422), {"error": e.code})
             except RateLimited:
                 return self.send(429, {"error": "rate_limited"})
@@ -2989,6 +3427,29 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, board.neighbor_carry(owner, parts[0], self.body(), now))
             if method == "POST" and parts == ["name"]:
                 return self.send(200, board.neighbor_name(owner, self.body(), now))
+            if method == "POST" and parts == ["share"]:  # 2.0
+                return self.send(200, board.neighbor_share(owner, self.body(), now))
+            if method == "POST" and parts == ["note"]:
+                return self.send(200, board.neighbor_note(owner, self.body(), now))
+            if method == "GET" and parts == ["notes"]:
+                return self.send(200, board.neighbor_notes(owner, q.get("id"), now))
+            if method == "PUT" and parts == ["mute"]:
+                return self.send(200, board.neighbor_mute(owner, self.body(), now))
+            return self.send(404, {"error": "not_found"})
+
+        def market(self, method, parts, q, owner, now):  # 2.0 장터·구해요
+            if parts == ["stall"] and method in ("GET", "PUT"):
+                return self.send(200, board.market_mine(owner, now) if method == "GET" else board.market_put(owner, self.body(), now))
+            if method == "DELETE" and len(parts) == 2 and parts[0] == "stall":
+                return self.send(200, board.market_take(owner, parts[1], now))
+            if method == "GET" and parts == ["find"]:
+                return self.send(200, board.market_find(owner, q.get("item"), now))
+            if method == "POST" and parts == ["buy"]:
+                return self.send(200, board.market_buy(owner, self.body(), now))
+            if method == "PUT" and parts == ["wants"]:
+                return self.send(200, board.market_wants(owner, self.body(), now))
+            if method == "GET" and parts == ["demand"]:
+                return self.send(200, board.market_demand(owner, now))
             return self.send(404, {"error": "not_found"})
 
         def bugs(self, method, parts, q, owner, now):  # 1.15.2 버그 신고
@@ -3130,6 +3591,12 @@ def main(argv):
             board.db.execute("DELETE FROM reports WHERE post=?", (pid,))
             board.db.execute("DELETE FROM highlights WHERE post=?", (pid,))
             board.db.execute("DELETE FROM posts WHERE id=?", (pid,))
+            board.db.commit()
+        elif cmd == "market" and pid == "list":  # 2.0 장터 진열
+            for r in board.db.execute("SELECT id, item, n, price, hidden, datetime(at, 'unixepoch') FROM stalls ORDER BY at DESC LIMIT 100"):
+                print("%s %-12s n=%d price=%d hidden=%d %s" % r)
+        elif cmd == "market" and pid == "hide":
+            board.db.execute("UPDATE stalls SET hidden=1 WHERE id=?", ((argv[4:] or [""])[0],))
             board.db.commit()
         elif cmd == "clear-name":  # 이름에 띄어쓰기가 있어도 따옴표 없이 된다
             print(board.clear_name(" ".join(argv[3:])), "cleared")

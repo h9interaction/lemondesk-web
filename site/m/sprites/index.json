@@ -59,6 +59,31 @@
 "fdf399"
 ]
 ],
+"career-emblem-field": [
+90,
+88,
+1
+],
+"career-emblem-orchard": [
+90,
+88,
+1
+],
+"career-emblem-ranch": [
+90,
+88,
+1
+],
+"career-emblem-sea": [
+90,
+88,
+1
+],
+"career-rosette": [
+52,
+58,
+1
+],
 "cloud-0": [
 60,
 30,
@@ -72,6 +97,16 @@
 "cloud-2": [
 60,
 30,
+1
+],
+"coop-coin": [
+34,
+30,
+1
+],
+"coop-policy": [
+64,
+60,
 1
 ],
 "crate-0": [
@@ -177,6 +212,31 @@
 "emote-sweat": [
 28,
 26,
+1
+],
+"farm-fx-forecast-0": [
+22,
+20,
+1
+],
+"farm-fx-heat-0": [
+26,
+30,
+1
+],
+"farm-fx-icicle-0": [
+30,
+14,
+1
+],
+"farm-fx-storm-0": [
+52,
+38,
+1
+],
+"farm-fx-wilt-0": [
+26,
+22,
 1
 ],
 "fruit-bergamot": [
@@ -374,6 +434,191 @@
 24,
 1
 ],
+"item-abalone": [
+66,
+60,
+1
+],
+"item-cabbage": [
+58,
+62,
+1
+],
+"item-calf": [
+66,
+60,
+1
+],
+"item-compost": [
+66,
+60,
+1
+],
+"item-cucumber": [
+58,
+62,
+1
+],
+"item-down": [
+66,
+60,
+1
+],
+"item-driedLemon": [
+58,
+62,
+1
+],
+"item-duckEgg": [
+66,
+60,
+1
+],
+"item-egg": [
+66,
+60,
+1
+],
+"item-flatfish": [
+66,
+60,
+1
+],
+"item-fry": [
+66,
+60,
+1
+],
+"item-giftSet": [
+66,
+60,
+1
+],
+"item-ginseng": [
+58,
+62,
+1
+],
+"item-honey": [
+66,
+60,
+1
+],
+"item-honeyCake": [
+58,
+62,
+1
+],
+"item-kelp": [
+66,
+60,
+1
+],
+"item-kimchi": [
+58,
+62,
+1
+],
+"item-lamb": [
+66,
+60,
+1
+],
+"item-laver": [
+66,
+60,
+1
+],
+"item-lemonCandy": [
+58,
+62,
+1
+],
+"item-lemonCurd": [
+58,
+62,
+1
+],
+"item-lemonVinegar": [
+58,
+62,
+1
+],
+"item-lettuce": [
+58,
+62,
+1
+],
+"item-milk": [
+66,
+60,
+1
+],
+"item-oyster": [
+66,
+60,
+1
+],
+"item-pearl": [
+66,
+60,
+1
+],
+"item-pepper": [
+58,
+62,
+1
+],
+"item-potato": [
+58,
+62,
+1
+],
+"item-radish": [
+58,
+62,
+1
+],
+"item-ricotta": [
+66,
+60,
+1
+],
+"item-seabream": [
+66,
+60,
+1
+],
+"item-seaweed": [
+66,
+60,
+1
+],
+"item-shrimp": [
+66,
+60,
+1
+],
+"item-strawberry": [
+58,
+62,
+1
+],
+"item-tomato": [
+58,
+62,
+1
+],
+"item-watermelon": [
+58,
+62,
+1
+],
+"item-wool": [
+66,
+60,
+1
+],
 "land-clearing-0": [
 114,
 52,
@@ -433,6 +678,36 @@
 42,
 64,
 8
+],
+"market-sign": [
+64,
+60,
+1
+],
+"menu-field": [
+50,
+40,
+1
+],
+"menu-orchard": [
+50,
+40,
+1
+],
+"menu-ranch": [
+50,
+40,
+1
+],
+"menu-sea": [
+50,
+40,
+1
+],
+"note-mailbox-flag": [
+64,
+60,
+1
 ],
 "prop-arch-0": [
 54,
@@ -1539,7 +1814,8 @@
 64,
 6,
 [
-"3d5e62"
+"3d5e62",
+"7ba2a2"
 ]
 ],
 "w-caretaker-0-idle": [
@@ -1547,20 +1823,27 @@
 64,
 8,
 [
-"42646a"
+"42646a",
+"678280",
+"719894"
 ]
 ],
 "w-caretaker-0-walk": [
 52,
 68,
-8
+8,
+[
+"39504e",
+"597170"
+]
 ],
 "w-caretaker-0-water": [
 44,
 64,
 8,
 [
-"426875"
+"426875",
+"688487"
 ]
 ],
 "w-caretaker-0-yawn": [

@@ -1,5 +1,83 @@
 [
   {
+    "version": "2.1.0",
+    "date": "2026-11-20",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.1.0/LemonDesk-2.1.0.dmg",
+    "notes": {
+      "ko": [
+        "일꾼과 동물이 서로 반응해요. 젖을 짜면 소가 꼬리를 흔들며 음메 하고, 털을 깎은 양은 날씬해져 몸을 털고, 모이를 뿌리면 닭이 몰려와요",
+        "거둔 것이 톡 튀어 올라 일꾼 손에 들어가고, 일꾼이 상자까지 들고 가서 넣어요",
+        "일꾼끼리 하이파이브를 하고, 그늘 나무 밑이나 파라솔 아래에서 앉아 쉬기도 해요",
+        "가끔 깜짝 장면이 일어나요. 처음 본 장면은 도감의 '띠에서 본 장면'에 남아요",
+        "일꾼이 가까운 일과 할 때가 된 일을 먼저 골라서, 같은 장면이 덜 되풀이돼요"
+      ],
+      "en": [
+        "Workers and animals now react to each other: cows swish their tails and moo while being milked, freshly sheared sheep shake happily, and chickens flock over when you scatter feed",
+        "Harvests pop out into the worker's hands, and workers carry them over to the crate",
+        "Workers high-five each other and sit down to rest under a shady tree or a beach umbrella",
+        "Surprise moments happen now and then. The first time you see one, it's saved under Strip Moments in the Collection",
+        "Workers pick nearby jobs and the ones that need doing first, so scenes repeat less"
+      ]
+    },
+    "shots": [
+      {
+        "video": "updates/2.1.0/ranch.mp4",
+        "src": "updates/2.1.0/ranch.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "서로 반응하는 목장",
+          "en": "A ranch that reacts"
+        },
+        "text": {
+          "ko": "젖을 짜면 소가 꼬리를 흔들며 음메 하고, 털을 깎은 양은 몸을 털고, 송아지는 젖병을 쪽쪽 빨아요. 거둔 것은 톡 튀어 올라 일꾼 손에 들어가요.",
+          "en": "Cows swish and moo while being milked, sheared sheep shake it off, and calves drink from the bottle. Harvests pop right into the worker's hands."
+        }
+      },
+      {
+        "video": "updates/2.1.0/moment.mp4",
+        "src": "updates/2.1.0/moment.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "가끔 일어나는 깜짝 장면",
+          "en": "Surprise moments"
+        },
+        "text": {
+          "ko": "무를 뽑다 엉덩방아를 찧거나, 거위가 일꾼을 졸졸 쫓아가요. 어떤 장면이 숨어 있는지 지켜보세요.",
+          "en": "A worker might land on their bottom pulling a radish, or a goose might chase someone around. Keep an eye out for what's hidden."
+        }
+      },
+      {
+        "video": "updates/2.1.0/cheer.mp4",
+        "src": "updates/2.1.0/cheer.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "일꾼끼리 하이파이브",
+          "en": "High fives between workers"
+        },
+        "text": {
+          "ko": "일하다 만난 동료와 하이파이브를 하고, 가끔 그늘에서 앉아 쉬어요.",
+          "en": "Workers high-five when they meet and sometimes sit down to rest in the shade."
+        }
+      },
+      {
+        "src": "updates/2.1.0/dex.webp",
+        "w": 1498,
+        "h": 1504,
+        "title": {
+          "ko": "도감에 남는 장면",
+          "en": "Moments saved in the Collection"
+        },
+        "text": {
+          "ko": "처음 본 깜짝 장면은 도감의 '띠에서 본 장면'에 남아요. 아직 못 본 장면은 힌트로 보여요.",
+          "en": "The first time you see a surprise moment, it's saved under Strip Moments in the Collection. Ones you haven't seen yet show a hint."
+        }
+      }
+    ]
+  },
+  {
     "version": "2.0.8",
     "date": "2026-11-20",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.8/LemonDesk-2.0.8.dmg",

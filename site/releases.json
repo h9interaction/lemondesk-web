@@ -1,5 +1,38 @@
 [
   {
+    "version": "2.0.6",
+    "date": "2026-11-20",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.6/LemonDesk-2.0.6.dmg",
+    "notes": {
+      "ko": [
+        "바닷가가 새로워졌어요. 모래 육지와 바다 밑까지 이어진 물속에서, 말뚝 사이 줄에 매단 해산물이 물에 잠겨 자라요",
+        "일꾼이 배를 타고 칸으로 나가 일하고 돌아와요. 칸마다 말뚝에 무엇을 기르는지 그림 팻말이 붙어 있어요",
+        "모래 위에는 게·소라게·물떼새가, 바다 밑에는 아기 거북과 불가사리가 지내고, 기포가 보글보글 올라와요"
+      ],
+      "en": [
+        "The Seaside has a new look: a sandy shore and water all the way down to the seabed, with seafood growing underwater on lines strung between the piles",
+        "Workers now take a boat out to the plots and come back. A picture sign on each pile shows what grows there",
+        "Crabs, hermit crabs and sandpipers roam the sand, a baby turtle and starfish live on the seabed, and bubbles rise through the water"
+      ]
+    },
+    "shots": [
+      {
+        "video": "updates/2.0.6/sea.mp4",
+        "src": "updates/2.0.6/sea.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "물속에서 자라는 바닷가",
+          "en": "A seaside that grows underwater"
+        },
+        "text": {
+          "ko": "일꾼이 육지 끝에 매어 둔 배를 타고 칸으로 나가요. 해산물은 말뚝 사이 줄에 매달려 물속에서 자라고, 말뚝의 팻말로 칸마다 무엇을 기르는지 알 수 있어요.",
+          "en": "Workers take the boat moored at the shore out to the plots. Seafood grows underwater on lines between the piles, and the sign on each pile tells you what's growing there."
+        }
+      }
+    ]
+  },
+  {
     "version": "2.0.5",
     "date": "2026-11-20",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.5/LemonDesk-2.0.5.dmg",

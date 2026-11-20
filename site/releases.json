@@ -1,5 +1,18 @@
 [
   {
+    "version": "2.0.3",
+    "date": "2026-11-20",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.3/LemonDesk-2.0.3.dmg",
+    "notes": {
+      "ko": [
+        "행상 할아버지가 수레를 미는 걸음을 더 자연스럽게 다듬었어요"
+      ],
+      "en": [
+        "The peddler now pushes his cart with a more natural walk"
+      ]
+    }
+  },
+  {
     "version": "2.0.2",
     "date": "2026-11-20",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.2/LemonDesk-2.0.2.dmg",

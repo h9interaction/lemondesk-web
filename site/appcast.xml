@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>2.0.2</title>
-      <pubDate>Fri, 20 Nov 2026 05:11:54 GMT</pubDate>
-      <sparkle:version>44</sparkle:version>
-      <sparkle:shortVersionString>2.0.2</sparkle:shortVersionString>
+      <title>2.0.3</title>
+      <pubDate>Fri, 20 Nov 2026 05:22:13 GMT</pubDate>
+      <sparkle:version>45</sparkle:version>
+      <sparkle:shortVersionString>2.0.3</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>일꾼과 손님들의 걷는 모습을 다듬었어요. 팔이 하나 더 보이거나 같은 발만 나가던 걸음을 고쳤어요</li><li>따는 일꾼은 창고에 걸터앉아 발만 흔들고, 목장 동물은 풀을 뜯어도 몸이 밀리지 않아요</li><li>바닷가 전복이 물에 매단 그물망에서 자라고, 행상 할아버지가 수레를 밀며 다녀요</li><li>텃밭 상자와 바닷가 물이 띠 끝까지 자연스럽게 이어져요</li></ul><ul><li>Workers and visitors walk more naturally: no more extra arms or the same foot stepping forward</li><li>Harvesters sit on the crate and just swing their feet, and ranch animals no longer slide when they graze</li><li>Seaside abalone now grow in hanging net cages, and the peddler pushes his cart</li><li>Field beds and the seaside water now run smoothly to the end of the strip</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.2/LemonDesk-2.0.2.dmg" type="application/octet-stream" sparkle:edSignature="xXewahmzq7eeOewQnGvXUlfVBi+6KhWqTrCKjwIQxaS+8px0Q8+s3jNNn2huCuSBUoxLo40cL5k26Mjd94agBQ==" length="29072789"/>
+      <description><![CDATA[<ul><li>행상 할아버지가 수레를 미는 걸음을 더 자연스럽게 다듬었어요</li></ul><ul><li>The peddler now pushes his cart with a more natural walk</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.3/LemonDesk-2.0.3.dmg" type="application/octet-stream" sparkle:edSignature="ZE4gndNO0gG+6s7BFyNaIRZCDmrZt/n1Jah7Ue0U2NWRknFvoUele35Y7UHye/KvxIHilfSGGXoDGGRjDktjBA==" length="29079254"/>
     </item>
   </channel>
 </rss>

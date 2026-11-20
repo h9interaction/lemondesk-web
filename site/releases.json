@@ -1,5 +1,84 @@
 [
   {
+    "version": "2.0.8",
+    "date": "2026-11-20",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.8/LemonDesk-2.0.8.dmg",
+    "notes": {
+      "ko": [
+        "바닷가가 훨씬 귀엽고 예뻐졌어요. 맑은 물속 산호 정원에 여러 물고기와 해마·문어·해파리가 살고, 수달과 돌고래, 등대 섬과 물 위 오두막이 생겼어요",
+        "일꾼이 칸마다 기르는 것에 맞는 도구로 일해요. 무를 쑥 뽑고, 소 젖을 짜고, 양털을 깎고, 나룻배를 저어 가서 바다의 줄을 끌어올려요",
+        "텃밭에 옥수수·접시꽃·콩 원두막·바람개비가 칸마다 다르게 서고, 토끼와 무당벌레가 놀러 와요",
+        "과수원 공방 앞에서 일꾼이 레몬을 썰고 냄비를 저어요",
+        "이웃에게 쪽지를 보내거나 받을 때 앱이 꺼지던 문제를 고쳤어요"
+      ],
+      "en": [
+        "The Seaside is much cuter: a coral garden in clear water full of fish, seahorses, an octopus and jellyfish, plus an otter, dolphins, a lighthouse island and a little floating cottage",
+        "Workers now use the right tool for what each plot grows: pulling radishes, milking cows, shearing sheep, and rowing out to haul up the sea lines",
+        "The Field has corn, hollyhocks, bean teepees and pinwheels that differ from plot to plot, and rabbits and ladybugs drop by",
+        "In front of the orchard workshop, workers slice lemons and stir the pot",
+        "Fixed the app quitting when sending or receiving a note from a neighbor"
+      ]
+    },
+    "shots": [
+      {
+        "video": "updates/2.0.8/sea.mp4",
+        "src": "updates/2.0.8/sea.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "산호 정원이 생긴 바닷가",
+          "en": "A seaside with a coral garden"
+        },
+        "text": {
+          "ko": "맑은 물속에 산호와 물고기, 해마와 문어가 살아요. 일꾼은 나룻배를 저어 칸으로 가서 줄을 끌어올리고, 오른쪽 끝에는 수달이 둥둥 떠 있어요.",
+          "en": "Corals, fish, seahorses and an octopus live in the clear water. Workers row out to the plots to haul up the lines, and an otter floats at the far end."
+        }
+      },
+      {
+        "video": "updates/2.0.8/field.mp4",
+        "src": "updates/2.0.8/field.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "기르는 것에 맞는 텃밭 일",
+          "en": "Field work that fits each crop"
+        },
+        "text": {
+          "ko": "일꾼이 칸 앞으로 가서 무를 쑥 뽑고, 가위로 토마토를 따고, 수박을 통통 두드려 봐요. 칸마다 다른 키 큰 꽃과 작물이 자라요.",
+          "en": "Workers go to each plot to pull radishes, snip tomatoes and tap watermelons. Each plot has its own tall flowers and crops."
+        }
+      },
+      {
+        "video": "updates/2.0.8/ranch.mp4",
+        "src": "updates/2.0.8/ranch.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "동물 곁에서 일하는 목장",
+          "en": "Ranch work beside the animals"
+        },
+        "text": {
+          "ko": "소 젖을 짜고, 양털을 깎고, 닭에게 모이를 주고, 송아지에게 젖병을 물려요.",
+          "en": "Workers milk the cows, shear the sheep, feed the chickens and bottle-feed the calves."
+        }
+      },
+      {
+        "video": "updates/2.0.8/orchard.mp4",
+        "src": "updates/2.0.8/orchard.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "과수원 공방 앞 작업",
+          "en": "Work in front of the orchard workshop"
+        },
+        "text": {
+          "ko": "공방 앞에서 레몬을 썰고 냄비를 저어요.",
+          "en": "Workers slice lemons and stir the pot in front of the workshop."
+        }
+      }
+    ]
+  },
+  {
     "version": "2.0.6",
     "date": "2026-11-20",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.6/LemonDesk-2.0.6.dmg",

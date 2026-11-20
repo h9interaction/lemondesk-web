@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>2.0.4</title>
-      <pubDate>Fri, 20 Nov 2026 05:32:41 GMT</pubDate>
-      <sparkle:version>46</sparkle:version>
-      <sparkle:shortVersionString>2.0.4</sparkle:shortVersionString>
+      <title>2.0.5</title>
+      <pubDate>Fri, 20 Nov 2026 06:15:48 GMT</pubDate>
+      <sparkle:version>47</sparkle:version>
+      <sparkle:shortVersionString>2.0.5</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>자잘한 문제를 고쳤어요</li></ul><ul><li>Minor fixes</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.4/LemonDesk-2.0.4.dmg" type="application/octet-stream" sparkle:edSignature="/O6Ag56WRmFdWV9UpvJAsRo3gW69+tDOG8qBQepGpK6P/MR/xXo4VcrNZ26eDdj5TugM/P6jLQ9q+GNQplu5DA==" length="29074814"/>
+      <description><![CDATA[<ul><li>텃밭·목장·바닷가 띠가 더 풍성해졌어요. 먼 풍경이 생기고, 콩 지지대와 해바라기, 그늘 나무와 풍차, 나무 말뚝과 김 건조대가 띠를 채워요</li><li>띠가 자랄수록 나무와 말뚝도 늘어나고, 바닷가는 썰물에도 물이 너무 빠지지 않아요</li></ul><ul><li>The field, ranch and seaside strips feel fuller: distant scenery, bean trellises and sunflowers, shade trees and a windmill, wooden piles and a laver drying rack now fill the strip</li><li>More trees and piles appear as a strip grows, and the seaside water no longer drops too low at low tide</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.5/LemonDesk-2.0.5.dmg" type="application/octet-stream" sparkle:edSignature="Ofut4ze45+BT7d+Y1I+F7cYSUpPSJHjqXjY2fh0kqKN1M1kb7/t0Su9M9pyhCpV1lXfXgrC2D+Q/vipk0bayCg==" length="29188692"/>
     </item>
   </channel>
 </rss>

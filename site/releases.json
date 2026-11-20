@@ -1,5 +1,20 @@
 [
   {
+    "version": "2.0.5",
+    "date": "2026-11-20",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.5/LemonDesk-2.0.5.dmg",
+    "notes": {
+      "ko": [
+        "텃밭·목장·바닷가 띠가 더 풍성해졌어요. 먼 풍경이 생기고, 콩 지지대와 해바라기, 그늘 나무와 풍차, 나무 말뚝과 김 건조대가 띠를 채워요",
+        "띠가 자랄수록 나무와 말뚝도 늘어나고, 바닷가는 썰물에도 물이 너무 빠지지 않아요"
+      ],
+      "en": [
+        "The field, ranch and seaside strips feel fuller: distant scenery, bean trellises and sunflowers, shade trees and a windmill, wooden piles and a laver drying rack now fill the strip",
+        "More trees and piles appear as a strip grows, and the seaside water no longer drops too low at low tide"
+      ]
+    }
+  },
+  {
     "version": "2.0.4",
     "date": "2026-11-20",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.0.4/LemonDesk-2.0.4.dmg",

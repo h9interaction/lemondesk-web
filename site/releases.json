@@ -1,5 +1,52 @@
 [
   {
+    "version": "2.1.1",
+    "date": "2026-11-21",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.1.1/LemonDesk-2.1.1.dmg",
+    "notes": {
+      "ko": [
+        "일꾼 그림이 더 또렷해졌어요. 눈과 표정, 옷의 작은 무늬까지 작은 띠에서도 잘 보여요",
+        "옆을 보고 일하는 돌보미와 수확꾼의 얼굴을 옆모습에 맞게 다시 그렸어요",
+        "배를 탄 일꾼이 노를 크게 저으며 나아가고, 앉은 자리는 흔들리지 않아요"
+      ],
+      "en": [
+        "Worker sprites are crisper: eyes, expressions and the little patterns on their clothes now read clearly even in the small strip",
+        "Caretakers and harvesters working side-on now have faces redrawn to match their profile",
+        "Workers in the boat now row with big, full strokes while staying steady in their seat"
+      ]
+    },
+    "shots": [
+      {
+        "video": "updates/2.1.1/workers.mp4",
+        "src": "updates/2.1.1/workers.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "더 또렷해진 일꾼",
+          "en": "Crisper workers"
+        },
+        "text": {
+          "ko": "눈과 표정, 옷의 작은 무늬가 작은 띠에서도 또렷하게 보여요. 옆을 보고 일하는 일꾼은 얼굴도 옆모습이에요.",
+          "en": "Eyes, expressions and the little patterns on their clothes now stand out in the small strip, and workers facing sideways show a proper profile."
+        }
+      },
+      {
+        "video": "updates/2.1.1/row.mp4",
+        "src": "updates/2.1.1/row.webp",
+        "w": 1240,
+        "h": 144,
+        "title": {
+          "ko": "힘차게 노 젓기",
+          "en": "Big, steady rowing"
+        },
+        "text": {
+          "ko": "배를 탄 일꾼이 노를 크게 저으며 나아가요. 몸은 앞뒤로 움직여도 앉은 자리는 그대로예요.",
+          "en": "Workers in the boat pull the oars in big strokes, leaning forward and back while staying put in their seat."
+        }
+      }
+    ]
+  },
+  {
     "version": "2.1.0",
     "date": "2026-11-20",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.1.0/LemonDesk-2.1.0.dmg",

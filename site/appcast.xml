@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>2.1.2</title>
-      <pubDate>Sun, 22 Nov 2026 01:04:17 GMT</pubDate>
-      <sparkle:version>53</sparkle:version>
-      <sparkle:shortVersionString>2.1.2</sparkle:shortVersionString>
+      <title>2.2.0</title>
+      <pubDate>Sun, 22 Nov 2026 06:47:27 GMT</pubDate>
+      <sparkle:version>54</sparkle:version>
+      <sparkle:shortVersionString>2.2.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<p><img src="https://lemondesk.interaction.hnine.com/updates/2.1.2/celebrate.webp" alt="더 화려해진 축하" style="max-width:260px;height:auto;border-radius:8px"></p><p><b>더 화려해진 축하</b><br>카드가 열리는 순간 빛이 터져 햇살과 금빛 고리로 퍼지고, 햇살 끝에서 별이 반짝이며 색종이가 흩날려요.</p><p><a href="https://lemondesk.interaction.hnine.com/brag/#updates">업데이트 소식에서 움직이는 모습 보기 · See it in motion</a></p><ul><li>목표를 이루거나 새 나무가 열릴 때 뜨는 축하 화면이 더 화려해졌어요. 빛이 팡 터지며 햇살이 퍼지고, 반짝이는 별과 색종이가 흩날려요</li><li>배를 탄 일꾼이 배가 가는 반대쪽을 보고 노를 저어요</li></ul><ul><li>The celebration that pops up when you reach a goal or unlock a new tree is now more dazzling: a burst of light spreads into sunbeams while sparkling stars and confetti fly</li><li>Workers in the boat now face backwards while rowing, just like real rowers</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.1.2/LemonDesk-2.1.2.dmg" type="application/octet-stream" sparkle:edSignature="i26DyMOctDxD+YTWPjqYmmsk5pbtjNoma4WSMPFhS0dFEQmMEyFEp6McFni+C3oOVAYsQzgWQMcRO0DboBvkAg==" length="30513198"/>
+      <description><![CDATA[<p><img src="https://lemondesk.interaction.hnine.com/updates/2.2.0/ai.webp" alt="AI 연결" style="max-width:260px;height:auto;border-radius:8px"></p><p><b>AI 연결</b><br>설정에서 AI 연결을 켜고 쓰는 AI 옆 [연결]을 누르면 끝이에요. AI 앱을 다시 열고 &quot;과수원 상태 알려줘&quot;, &quot;다 팔아줘&quot;처럼 말해 보세요.</p><p><a href="https://lemondesk.interaction.hnine.com/brag/#updates">업데이트 소식에서 움직이는 모습 보기 · See it in motion</a></p><ul><li>AI 연결이 생겼어요. 설정에서 켜고 Claude·Codex·Cursor 옆 [연결]을 누르면, AI에게 말로 과수원을 맡길 수 있어요. 팔기·심기부터 띠·직군·조합·장터·이웃·서리·꾸미기까지 내가 할 수 있는 일은 AI도 할 수 있어요</li><li>AI는 이 Mac 안에서만 연결되고, 다른 AI 도구도 설정을 복사해 직접 등록할 수 있어요</li></ul><ul><li>New: AI Connection. Turn it on in Settings and click Connect next to Claude, Codex, or Cursor to hand your orchard to an AI with plain words. Anything you can do, from selling and planting to strips, careers, the co-op, the market, neighbors, raids, and decorating, the AI can do too</li><li>The AI connects only on this Mac, and you can copy the settings to add other AI tools yourself</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.0/LemonDesk-2.2.0.dmg" type="application/octet-stream" sparkle:edSignature="+arU5kM5t8UvAGL9b80WmFrG9BYqdSLaxzK50ie5jV84Ln/FTBKk9o51nn8MFavaE8zscx/MoqQkUFPW5P0mAQ==" length="30692255"/>
     </item>
   </channel>
 </rss>

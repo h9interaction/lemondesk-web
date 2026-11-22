@@ -1,5 +1,36 @@
 [
   {
+    "version": "2.2.0",
+    "date": "2026-11-22",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.0/LemonDesk-2.2.0.dmg",
+    "notes": {
+      "ko": [
+        "AI 연결이 생겼어요. 설정에서 켜고 Claude·Codex·Cursor 옆 [연결]을 누르면, AI에게 말로 과수원을 맡길 수 있어요. 팔기·심기부터 띠·직군·조합·장터·이웃·서리·꾸미기까지 내가 할 수 있는 일은 AI도 할 수 있어요",
+        "AI는 이 Mac 안에서만 연결되고, 다른 AI 도구도 설정을 복사해 직접 등록할 수 있어요"
+      ],
+      "en": [
+        "New: AI Connection. Turn it on in Settings and click Connect next to Claude, Codex, or Cursor to hand your orchard to an AI with plain words. Anything you can do, from selling and planting to strips, careers, the co-op, the market, neighbors, raids, and decorating, the AI can do too",
+        "The AI connects only on this Mac, and you can copy the settings to add other AI tools yourself"
+      ]
+    },
+    "shots": [
+      {
+        "src": "updates/2.2.0/ai.webp",
+        "dark": "updates/2.2.0/ai-dark.webp",
+        "w": 880,
+        "h": 562,
+        "title": {
+          "ko": "AI 연결",
+          "en": "AI Connection"
+        },
+        "text": {
+          "ko": "설정에서 AI 연결을 켜고 쓰는 AI 옆 [연결]을 누르면 끝이에요. AI 앱을 다시 열고 \"과수원 상태 알려줘\", \"다 팔아줘\"처럼 말해 보세요.",
+          "en": "Turn on AI Connection in Settings and click Connect next to the AI you use. Reopen the AI app and try \"How is my orchard?\" or \"Sell everything.\""
+        }
+      }
+    ]
+  },
+  {
     "version": "2.1.2",
     "date": "2026-11-22",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.1.2/LemonDesk-2.1.2.dmg",

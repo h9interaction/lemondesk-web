@@ -313,7 +313,7 @@ BADGES_MAX = 3
 SHOWCASE = {"variety", "plaque", "frame", "nickname", "trophy", "friend"}
 BOARD_STAMPS = ("lemon", "flower", "laugh", "clap")  # 탐나요·예뻐요·웃겨요·대단해요
 WEEK_THEMES = ("pink", "even", "manager", "dogs", "decor", "stand", "rare")  # ISO 주 번호 % 7
-BRAG_TICKET_TTL = 3600
+BRAG_TICKET_TTL = 86400
 BURST = (600, 2)             # 보상 집계: 게시 뒤 10분 안에 같은 IP 해시에서 2개 넘게 몰린 반응은 뺀다
 DECOR_ID = re.compile(r"[a-z0-9-]{1,32}")
 POST_ID = re.compile(r"[A-Za-z0-9_-]{1,32}")
@@ -1162,7 +1162,7 @@ class Board:
 
     @locked
     def brag_ticket(self, owner_key, now):
-        """1.17 앱이 '자랑 게시판…'을 열 때 받는 표(1시간, 그 동안 여러 번). 구경꾼 날과 내 반응 빼기에만 쓴다."""
+        """1.17 앱이 '자랑 게시판…'을 열 때 받는 표(2.2.1: 24시간, 그 동안 여러 번). 구경꾼 날과 내 반응 빼기에만 쓴다."""
         me = self.owner(owner_key)
         self.limit("brag_ticket", me, now)
         t = self._active(me, now)

@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>2.2.0</title>
-      <pubDate>Sun, 22 Nov 2026 06:47:27 GMT</pubDate>
-      <sparkle:version>54</sparkle:version>
-      <sparkle:shortVersionString>2.2.0</sparkle:shortVersionString>
+      <title>2.2.1</title>
+      <pubDate>Mon, 23 Nov 2026 07:14:12 GMT</pubDate>
+      <sparkle:version>55</sparkle:version>
+      <sparkle:shortVersionString>2.2.1</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<p><img src="https://lemondesk.interaction.hnine.com/updates/2.2.0/ai.webp" alt="AI 연결" style="max-width:260px;height:auto;border-radius:8px"></p><p><b>AI 연결</b><br>설정에서 AI 연결을 켜고 쓰는 AI 옆 [연결]을 누르면 끝이에요. AI 앱을 다시 열고 &quot;과수원 상태 알려줘&quot;, &quot;다 팔아줘&quot;처럼 말해 보세요.</p><p><a href="https://lemondesk.interaction.hnine.com/brag/#updates">업데이트 소식에서 움직이는 모습 보기 · See it in motion</a></p><ul><li>AI 연결이 생겼어요. 설정에서 켜고 Claude·Codex·Cursor 옆 [연결]을 누르면, AI에게 말로 과수원을 맡길 수 있어요. 팔기·심기부터 띠·직군·조합·장터·이웃·서리·꾸미기까지 내가 할 수 있는 일은 AI도 할 수 있어요</li><li>AI는 이 Mac 안에서만 연결되고, 다른 AI 도구도 설정을 복사해 직접 등록할 수 있어요</li></ul><ul><li>New: AI Connection. Turn it on in Settings and click Connect next to Claude, Codex, or Cursor to hand your orchard to an AI with plain words. Anything you can do, from selling and planting to strips, careers, the co-op, the market, neighbors, raids, and decorating, the AI can do too</li><li>The AI connects only on this Mac, and you can copy the settings to add other AI tools yourself</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.0/LemonDesk-2.2.0.dmg" type="application/octet-stream" sparkle:edSignature="+arU5kM5t8UvAGL9b80WmFrG9BYqdSLaxzK50ie5jV84Ln/FTBKk9o51nn8MFavaE8zscx/MoqQkUFPW5P0mAQ==" length="30692255"/>
+      <description><![CDATA[<ul><li>앱에서 연 자랑 게시판에서는 언제든 댓글을 달 수 있어요. 자랑을 올린 뒤 바로 보기, 새로운 기능 소식, 게시판을 새 탭으로 열었을 때도요</li><li>게시판을 열어 둔 채 시간이 지나도 그날은 계속 댓글을 쓸 수 있어요</li></ul><ul><li>You can now always comment on the Orchard Board when you open it from the app, including right after posting your brag, from What&#x27;s New, and in new tabs</li><li>Leaving the board open for a while no longer stops you from commenting that day</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.1/LemonDesk-2.2.1.dmg" type="application/octet-stream" sparkle:edSignature="Syr/MOrAgcheW5YI/laFJOF/HLFbWXKgB7tWQNmYaTbHx/B7XOuoBQkljsPOR5PCGUYVQuyXman1VEJ5Z6t9Bg==" length="30687261"/>
     </item>
   </channel>
 </rss>

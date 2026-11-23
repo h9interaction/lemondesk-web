@@ -1,5 +1,20 @@
 [
   {
+    "version": "2.2.1",
+    "date": "2026-11-23",
+    "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.1/LemonDesk-2.2.1.dmg",
+    "notes": {
+      "ko": [
+        "앱에서 연 자랑 게시판에서는 언제든 댓글을 달 수 있어요. 자랑을 올린 뒤 바로 보기, 새로운 기능 소식, 게시판을 새 탭으로 열었을 때도요",
+        "게시판을 열어 둔 채 시간이 지나도 그날은 계속 댓글을 쓸 수 있어요"
+      ],
+      "en": [
+        "You can now always comment on the Orchard Board when you open it from the app, including right after posting your brag, from What's New, and in new tabs",
+        "Leaving the board open for a while no longer stops you from commenting that day"
+      ]
+    }
+  },
+  {
     "version": "2.2.0",
     "date": "2026-11-22",
     "url": "https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.0/LemonDesk-2.2.0.dmg",

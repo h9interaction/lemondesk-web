@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>2.2.1</title>
-      <pubDate>Mon, 23 Nov 2026 07:14:12 GMT</pubDate>
-      <sparkle:version>55</sparkle:version>
-      <sparkle:shortVersionString>2.2.1</sparkle:shortVersionString>
+      <title>2.2.2</title>
+      <pubDate>Tue, 24 Nov 2026 11:13:21 GMT</pubDate>
+      <sparkle:version>56</sparkle:version>
+      <sparkle:shortVersionString>2.2.2</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>앱에서 연 자랑 게시판에서는 언제든 댓글을 달 수 있어요. 자랑을 올린 뒤 바로 보기, 새로운 기능 소식, 게시판을 새 탭으로 열었을 때도요</li><li>게시판을 열어 둔 채 시간이 지나도 그날은 계속 댓글을 쓸 수 있어요</li></ul><ul><li>You can now always comment on the Orchard Board when you open it from the app, including right after posting your brag, from What&#x27;s New, and in new tabs</li><li>Leaving the board open for a while no longer stops you from commenting that day</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.1/LemonDesk-2.2.1.dmg" type="application/octet-stream" sparkle:edSignature="Syr/MOrAgcheW5YI/laFJOF/HLFbWXKgB7tWQNmYaTbHx/B7XOuoBQkljsPOR5PCGUYVQuyXman1VEJ5Z6t9Bg==" length="30687261"/>
+      <description><![CDATA[<ul><li>이웃 찾기 목록은 [찾기]를 눌렀을 때만 펼쳐져요. 이웃 탭이 짧아져서 내 이웃을 바로 볼 수 있고, [목록 접기]로 다시 접을 수 있어요</li><li>꾸미기 소품 &#x27;나만의 품종 나무&#x27;가 품종 색 레몬이 달린 작은 화분 묘목으로 바뀌어, 과수원 나무와 겹쳐 보이지 않아요</li></ul><ul><li>Find Neighbors now shows the list only after you press Find, so the Neighbors tab is shorter and your neighbors are right there. Use Hide List to fold it again</li><li>The My Own Variety Tree decoration is now a small potted sapling with lemons in your variety&#x27;s color, so it no longer overlaps your orchard trees</li></ul>]]></description>
+      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.2/LemonDesk-2.2.2.dmg" type="application/octet-stream" sparkle:edSignature="BwHwmgX/X00udDjjG+8A3zRT83H56rhaDULhi54/bhf3vaoFi//6IW7aU/apQWmwF9JtvUFuVKoGl3zR60nVDg==" length="30657201"/>
     </item>
   </channel>
 </rss>

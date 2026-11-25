@@ -97,7 +97,7 @@
 (() => {
   // 로컬 확인(127.0.0.1, server/brag.py --static site)에서는 같은 주소의 API 와 #token= 을 쓴다
   const local = location.hostname === '127.0.0.1';
-  const API = local ? '/lemondesk/api/stats?days=30' : 'https://lemondesk-api.interaction.hnine.com/api/stats?days=30';
+  const API = local ? '/lemondesk/api/stats?days=30' : 'https://lemongrove.club/lemondesk/api/stats?days=30';
   if (local && location.hash.startsWith('#token=')) localStorage.setItem('ld-stats-token', decodeURIComponent(location.hash.slice(7)));
   const $ = id => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -234,7 +234,7 @@
     }
   }
   // 버그 신고: 이미지도 토큰이 있어야 받으므로 fetch 로 받아 blob 주소로 보여 준다
-  const BUGS = local ? '/lemondesk/api/bugs' : 'https://lemondesk-api.interaction.hnine.com/api/bugs';
+  const BUGS = local ? '/lemondesk/api/bugs' : 'https://lemongrove.club/lemondesk/api/bugs';
   async function loadBugs(token) {
     const auth = {headers: {Authorization: 'Bearer ' + token}};
     const r = await fetch(BUGS, auth);

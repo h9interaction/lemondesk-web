@@ -3,13 +3,13 @@
   <channel>
     <title>Lemon Desk</title>
     <item>
-      <title>2.2.2</title>
-      <pubDate>Tue, 24 Nov 2026 11:13:21 GMT</pubDate>
-      <sparkle:version>56</sparkle:version>
-      <sparkle:shortVersionString>2.2.2</sparkle:shortVersionString>
+      <title>2.2.3</title>
+      <pubDate>Wed, 25 Nov 2026 19:38:48 GMT</pubDate>
+      <sparkle:version>57</sparkle:version>
+      <sparkle:shortVersionString>2.2.3</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<ul><li>이웃 찾기 목록은 [찾기]를 눌렀을 때만 펼쳐져요. 이웃 탭이 짧아져서 내 이웃을 바로 볼 수 있고, [목록 접기]로 다시 접을 수 있어요</li><li>꾸미기 소품 &#x27;나만의 품종 나무&#x27;가 품종 색 레몬이 달린 작은 화분 묘목으로 바뀌어, 과수원 나무와 겹쳐 보이지 않아요</li></ul><ul><li>Find Neighbors now shows the list only after you press Find, so the Neighbors tab is shorter and your neighbors are right there. Use Hide List to fold it again</li><li>The My Own Variety Tree decoration is now a small potted sapling with lemons in your variety&#x27;s color, so it no longer overlaps your orchard trees</li></ul>]]></description>
-      <enclosure url="https://github.com/h9interaction/lemondesk-web/releases/download/v2.2.2/LemonDesk-2.2.2.dmg" type="application/octet-stream" sparkle:edSignature="BwHwmgX/X00udDjjG+8A3zRT83H56rhaDULhi54/bhf3vaoFi//6IW7aU/apQWmwF9JtvUFuVKoGl3zR60nVDg==" length="30657201"/>
+      <description><![CDATA[<ul><li>Lemon Desk를 이제 레몬그로브(Lemon Grove)가 직접 운영해요. 사이트와 자랑 게시판, 업데이트가 lemongrove.club/lemondesk로 옮겨 갔어요. 과수원과 게시판 기록, 이웃은 그대로 이어져요</li><li>문의는 hello@lemongrove.club으로 보내 주세요</li></ul><ul><li>Lemon Desk is now run by Lemon Grove. The site, the Orchard Board and updates have moved to lemongrove.club/lemondesk. Your orchard, board history and neighbors all carry over</li><li>For questions, write to hello@lemongrove.club</li></ul>]]></description>
+      <enclosure url="https://github.com/cbs9799/lemondesk-web/releases/download/v2.2.3/LemonDesk-2.2.3.dmg" type="application/octet-stream" sparkle:edSignature="EtrfMM0ntC2duC5/3USHDKODMk88VdRXiOGX6RPTdjEnJK4v4gow42Cpkb0x9ZAA5kYJ+T/gDpXQqjyulDWvDQ==" length="30658070"/>
     </item>
   </channel>
 </rss>

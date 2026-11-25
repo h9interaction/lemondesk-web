@@ -334,7 +334,7 @@
 (() => {
   const LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
   if (new URLSearchParams(location.search).has('wide')) document.documentElement.classList.add('wide');
-  const API = LOCAL ? location.origin + '/lemondesk/api/relay/' : 'https://lemondesk-api.interaction.hnine.com/api/relay/';
+  const API = LOCAL ? location.origin + '/lemondesk/api/relay/' : 'https://lemongrove.club/lemondesk/api/relay/';
   const S = 'sprites/';
   const en = (navigator.language || '').toLowerCase().startsWith('en');
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1872,7 +1872,7 @@
     if (m) send({action: 'nb_add', code: m[1].toUpperCase()}, $('code-go')); else toast(T.why.bad_code);
   };
   $('invite').onclick = async () => {
-    const u = `https://lemondesk.interaction.hnine.com/n/?c=${state().myCode}`;
+    const u = `https://lemongrove.club/lemondesk/n/?c=${state().myCode}`;
     try { await navigator.clipboard.writeText(u); toast(T.copied); } catch (e) { toast(T.copyThis(u)); }
   };
   function renderRaid() {

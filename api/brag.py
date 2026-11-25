@@ -61,7 +61,9 @@ KST = timezone(timedelta(hours=9))
 # 실행 인자로 바꾼다(main). 기본값은 집서버(경로 규칙 /lemondesk/api/) 설정, 회사 인프라는 --prefix /api/ --board … --cors …
 PREFIX = "/lemondesk/api/"
 BOARD_URL = "https://lemondesk.interaction.hnine.com/brag/"
-CORS_ORIGIN = ""  # 게시판 페이지가 다른 호스트에 있으면 그 출처(예: https://lemondesk.interaction.hnine.com)
+CORS_ORIGINS = ()  # 게시판 페이지가 다른 호스트에 있으면 그 출처들
+RELAY_IPS = ()  # 회사 주소 중계(relay.py)의 나가는 IP. 그곳에서 온 요청만 X-LD-Client-IP 를 믿는다
+MAINT = False
 KEEP_WEEKS = 8
 TOP_N = 10
 PAGE = 20
@@ -3238,13 +3240,16 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
         def client_ip(self):
             # Cloudflare 터널(집서버) → CF-Connecting-IP, Caddy(회사 인프라) → X-Forwarded-For 첫 번째.
             # 회사 인프라 앞에는 Cloudflare 가 없어 CF 헤더를 누구나 지어 보낼 수 있으니 집서버 경로일 때만 믿는다.
-            fwd = (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
             cf = self.headers.get("CF-Connecting-IP") if PREFIX == "/lemondesk/api/" else None
+            if cf and cf in RELAY_IPS and self.headers.get("X-LD-Client-IP"):
+                return self.headers["X-LD-Client-IP"]
+            fwd = (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
             return cf or fwd or self.client_address[0]
 
         def cors(self):
-            if CORS_ORIGIN and self.headers.get("Origin") == CORS_ORIGIN:
-                self.send_header("Access-Control-Allow-Origin", CORS_ORIGIN)
+            o = self.headers.get("Origin")
+            if o and o in CORS_ORIGINS:
+                self.send_header("Access-Control-Allow-Origin", o)
                 self.send_header("Vary", "Origin")
 
         def send(self, status, obj):
@@ -3274,6 +3279,8 @@ def make_server(board, port=8891, host="127.0.0.1", static=None, relay=None):
                 return self.send(200, {"ok": True})
             if not u.path.startswith(PREFIX):
                 return self.send(404, {"error": "not_found"})
+            if MAINT and method != "GET":
+                return self.send(503, {"error": "maintenance"})
             parts = [p for p in u.path[len(PREFIX):].split("/") if p]
             q = {k: v[0] for k, v in parse_qs(u.query).items()}
             now = datetime.now(KST)
@@ -3554,14 +3561,17 @@ def fast_raids():
 
 
 def main(argv):
-    global PREFIX, BOARD_URL, CORS_ORIGIN, STATS_TOKEN
+    global PREFIX, BOARD_URL, CORS_ORIGINS, STATS_TOKEN, RELAY_IPS, MAINT
     STATS_TOKEN = os.environ.get("STATS_TOKEN", "")
+    RELAY_IPS = tuple(i for i in os.environ.get("LD_RELAY_IPS", "").split(",") if i)
+    MAINT = os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "MAINT"))
     args = dict(zip(argv[1::2], argv[2::2])) if argv[1:2] != ["admin"] else {}
     # 회사 인프라는 Data dir 을 IX_DATA_DIR 로, 포트를 PORT 로 넣어 준다
     data = os.path.expanduser(os.environ.get("IX_DATA_DIR") or os.environ.get("BRAG_DATA") or args.get("--data") or "~/sites-data/lemondesk")
     PREFIX = args.get("--prefix", PREFIX)
     BOARD_URL = args.get("--board", BOARD_URL)
-    CORS_ORIGIN = args.get("--cors", CORS_ORIGIN)
+    if "--cors" in args:
+        CORS_ORIGINS = tuple(o for o in args["--cors"].split(",") if o)
     if args.get("--raid-fast") == "YES":  # 로컬 확인 전용(자체 점검·캡처)
         fast_raids()
     board = open_board(data)

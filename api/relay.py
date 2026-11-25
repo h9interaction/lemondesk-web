@@ -46,6 +46,7 @@ class Handler(BaseHTTPRequestHandler):
         headers = {k: v for k, v in self.headers.items() if k.lower() not in SKIP}
         ip = (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip() or self.client_address[0]
         headers["X-LD-Client-IP"] = ip
+        headers.setdefault("User-Agent", "LemonDesk-relay")  # 윈도우 앱은 UA 가 없다. 없으면 urllib 가 붙이는 Python-urllib 를 Cloudflare 가 막는다(1010)
         req = urllib.request.Request(UPSTREAM + self.path[len(PREFIX):], data=body, method=self.command, headers=headers)
         try:
             r = opener.open(req, timeout=60)  # 폰 보기 롱폴링(25초)보다 길게

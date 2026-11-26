@@ -11,7 +11,7 @@
 <meta property="og:title" content="Lemon Desk 자랑 게시판">
 <meta property="og:description" content="서로 키운 레몬 과수원을 구경하고 별을 주는 곳.">
 <meta property="og:image" content="https://lemongrove.club/lemondesk/og.jpg?v=1">
-<link rel="icon" href="../icon.png?v=1">
+<link rel="icon" href="../icon.png?v=2">
 <style>
   :root {
     --bg: #FFFBEC; --ink: #23511F; --text: #3E4A33; --muted: #6F7862; --card: #FFFFFF;
@@ -152,6 +152,7 @@
   .stamps button[aria-pressed="true"] { background: var(--lemon); color: #23511F; border-color: var(--lemon); font-weight: 700; }
   .stamps button:disabled { cursor: default; }
   .post > footer { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
+  .post > footer .acts { display: inline-flex; gap: 4px; margin-left: auto; }
   .nb { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
   .nb a { font-weight: 700; text-decoration: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; min-height: 36px; display: inline-flex; align-items: center; }
   .nb small { font-size: 12px; color: var(--muted); }
@@ -172,6 +173,7 @@
   .cmt-meta b { color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
   .cmt-meta time { color: var(--muted); font-variant-numeric: tabular-nums; }
   .cmt-meta .report { margin-left: auto; min-height: 28px; padding: 2px 8px; }
+  .cmt-meta .report + .report { margin-left: 0; }
   .cmt-list p { font-size: 15px; overflow-wrap: anywhere; }
   .cmt-form { display: flex; gap: 8px; }
   .cmt-form input { flex: 1; min-width: 0; font: inherit; font-size: 15px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-height: 40px; }
@@ -201,7 +203,7 @@
 </head>
 <body>
 <header class="wrap top">
-  <a class="brand" href="../"><img src="../icon.png?v=1" alt="" width="36" height="36">Lemon Desk</a>
+  <a class="brand" href="../"><img src="../icon.png?v=2" alt="" width="36" height="36">Lemon Desk</a>
   <h1 data-t="title">자랑 게시판</h1>
   <p class="lead" data-t="lead">Lemon Desk 사용자들이 키운 과수원이에요. 마음에 드는 과수원에 별을 주세요. 별을 많이 받은 과수원은 이주의 하이라이트에 올라가요.</p>
   <div class="tabs views" role="tablist" aria-label="게시판">
@@ -269,6 +271,7 @@
 <footer class="wrap">
   <div class="foot">
     <span>© 2026 Lemon Desk</span>
+    <span><span data-t="contact">문의</span> <a href="mailto:hello@lemongrove.club">hello@lemongrove.club</a></span>
     <span><a href="../" data-t="home">Lemon Desk 소개</a> · <a href="../privacy.html" data-t="privacy">개인정보 처리방침</a></span>
   </div>
 </footer>
@@ -276,6 +279,14 @@
 <div id="ach-pop" popover role="dialog" aria-live="polite"></div>
 <script src="../m/motion.js?v=1150"></script>
 <script>
+  // App Store 판이 연 게시판(?mas=1): 무료 내려받기로 가는 길을 숨긴다(같은 탭 안에서는 계속)
+  const MAS = new URLSearchParams(location.search).has('mas') || sessionStorage.getItem('ld-mas') === '1';
+  if (MAS) {
+    sessionStorage.setItem('ld-mas', '1');
+    document.querySelector('.brand')?.removeAttribute('href');
+    const home = document.querySelector('.foot a[data-t="home"]');
+    if (home) { home.nextSibling?.remove(); home.remove(); } // 뒤의 ' · ' 도
+  }
 (() => {
   // 로컬 확인(brag.py --static site)에서는 같은 서버의 API 를 쓴다
   const API = /^(127\.0\.0\.1|localhost)$/.test(location.hostname) ? location.origin + '/lemondesk/api/' : 'https://lemongrove.club/lemondesk/api/';
@@ -305,6 +316,8 @@
     cmtN: n => n ? `Comments ${n}` : 'Comment', cmtEmpty: 'No comments yet.', cmtLabel: 'Comment', cmtHolder: 'Leave a comment', cmtSend: 'Post',
     cmtNoTicket: 'Open the board from the Lemon Desk app to leave a comment.', cmtExpired: 'This page has expired. Open the board again from the app to comment.',
     cmtDelete: 'Delete', cmtDelAsk: 'Delete this comment?', cmtReportAsk: 'Report this comment? Comments with several reports are hidden.',
+    block: 'Block', blockAsk: "You and this orchard won't see each other's posts, works, or listings. You can undo this in Settings.",
+    blockLocal: 'Hide this in this browser?', blockSelf: "That's your own orchard.", contact: 'Contact',
     cmtFull: 'This post is full of comments.', cmtSlow: 'Please wait a moment before commenting again.', cmtBad: "That has words we can't show",
     cmtLoadFail: "Couldn't load the comments. Please try again in a moment.", cmtFail: "Couldn't post it. Please try again in a moment.", unnamed: 'Unnamed orchard',
     shared: 'Shared orchard', weekOf: d => `Week of ${d.toLocaleDateString('en', {month: 'short', day: 'numeric'})}`,
@@ -352,6 +365,8 @@
     cmtN: n => n ? `댓글 ${n}` : '댓글 쓰기', cmtEmpty: '아직 댓글이 없어요.', cmtLabel: '댓글', cmtHolder: '댓글을 남겨 주세요', cmtSend: '남기기',
     cmtNoTicket: '앱에서 게시판을 열면 댓글을 쓸 수 있어요', cmtExpired: '시간이 지나 댓글을 쓸 수 없어요. 앱에서 게시판을 다시 열어 주세요.',
     cmtDelete: '지우기', cmtDelAsk: '이 댓글을 지울까요?', cmtReportAsk: '이 댓글을 신고할까요? 신고가 여러 번 쌓이면 숨겨져요.',
+    block: '차단', blockAsk: '이 과수원의 글·작품·진열이 서로 보이지 않아요. 설정에서 풀 수 있어요.',
+    blockLocal: '이 브라우저에서 숨길까요?', blockSelf: '내 과수원이에요.', contact: '문의',
     cmtFull: '댓글이 가득 찼어요', cmtSlow: '잠시 뒤에 다시 남겨 주세요', cmtBad: '쓸 수 없는 말이 들어 있어요',
     cmtLoadFail: '댓글을 불러오지 못했어요. 잠시 뒤에 다시 해 주세요.', cmtFail: '남기지 못했어요. 잠시 뒤에 다시 해 주세요.', unnamed: '이름 없는 과수원',
     shared: '공유된 자랑', weekOf: d => `${d.getMonth() + 1}월 ${d.getDate()}일 주`,
@@ -675,6 +690,30 @@
   const setBragTicket = t => { try { localStorage.setItem('ld-brag', JSON.stringify({t, exp: Date.now() + 864e5})); } catch (e) {} };
   const dropBragTicket = () => { try { localStorage.removeItem('ld-brag'); } catch (e) {} };
   const withTicket = body => { const t = bragTicket(); return JSON.stringify(t ? {...body, ticket: t} : body); };
+  // 2.3 차단: 앱이 연 게시판(표)이면 서버의 차단(서로 안 보임), 아니면 이 브라우저에서만 그 글을 숨긴다(ld-blocked)
+  const localBlocked = () => { try { return new Set(JSON.parse(localStorage.getItem('ld-blocked') || '[]')); } catch (e) { return new Set(); } };
+  const shown = x => !localBlocked().has(x.id);
+  const withT = path => { const t = bragTicket(); return t ? path + (path.includes('?') ? '&' : '?') + 'ticket=' + encodeURIComponent(t) : path; };
+  function blockButton(kind, id, gone, note) {
+    const b = el('button', 'report', T.block); b.type = 'button';
+    b.onclick = async () => {
+      const t = bragTicket();
+      if (!confirm(t ? T.blockAsk : T.blockLocal)) return;
+      b.disabled = true;
+      if (t) {
+        try { await api('blocks', {method: 'POST', body: JSON.stringify({kind, id, ticket: t})}); gone(); return reloadBoard(); }
+        catch (e) {
+          b.disabled = false;
+          if (e.status !== 403) { note().textContent = e.status === 409 ? T.blockSelf : e.status === 429 ? T.slow : T.loadFail; return; }
+          dropBragTicket(); // 표가 지났으면 이 브라우저에서만
+        }
+      }
+      const s = localBlocked(); s.add(id);
+      try { localStorage.setItem('ld-blocked', JSON.stringify([...s].slice(-500))); } catch (e) {}
+      gone();
+    };
+    return b;
+  }
   const sendStamp = (p, kind) => api(`posts/${p.id}/stamp`, {method: 'POST', body: withTicket({kind, voter})});
   function stampRow(p, readonly) {
     const row = el('div', 'stamps'); row.setAttribute('role', 'group'); row.setAttribute('aria-label', T.stampsLabel);
@@ -726,7 +765,7 @@
         try { await api(`posts/${p.id}/report`, {method: 'POST', body: '{}'}); r.textContent = T.reported; r.disabled = true; }
         catch (e) { $('note').textContent = e.status === 429 ? T.slow : T.loadFail; }
       };
-      f.append(r);
+      const acts = el('span', 'acts'); acts.append(r, blockButton('post', p.id, () => a.remove(), () => $('note'))); f.append(acts);
     }
     a.append(f);
     if (Number.isFinite(p.comments)) a.append(comments(p)); // 옛 서버(댓글 없음)면 숨김
@@ -765,6 +804,7 @@
         } catch (e) { act.disabled = false; note.textContent = c.canDelete ? fail(e) ?? T.cmtFail : e.status === 429 ? T.slow : T.cmtFail; }
       };
       meta.append(act);
+      if (!c.mine) meta.append(blockButton('comment', c.id, () => li.remove(), () => note));
       li.append(meta, el('p', null, c.text));
       return li;
     }
@@ -794,8 +834,9 @@
       loaded = true; list.setAttribute('aria-busy', 'true');
       try {
         const r = await api(`posts/${pid}/comments` + (ticket() ? '?ticket=' + encodeURIComponent(ticket()) : ''));
-        list.replaceChildren(...r.comments.map(row)); p.comments = r.comments.length; label();
-        empty.hidden = !!r.comments.length;
+        const cs = r.comments.filter(shown);
+        list.replaceChildren(...cs.map(row)); p.comments = cs.length; label();
+        empty.hidden = !!cs.length;
       } catch (e) { loaded = false; note.textContent = T.cmtLoadFail; }
       list.removeAttribute('aria-busy');
     };
@@ -829,7 +870,9 @@
   }
   let current = '';
   async function loadHighlights(week) {
-    const h = await api('highlights?week=' + encodeURIComponent(week));
+    const h = await api(withT('highlights?week=' + encodeURIComponent(week)));
+    h.top = h.top.filter(shown);
+    for (const k in h.categories) if (h.categories[k] && !shown(h.categories[k])) h.categories[k] = null;
     $('hl-note').textContent = h.final ? T.final : T.live;
     const cats = $('cats'); cats.textContent = '';
     // 1.17 이주의 주제(응답의 themeId) 부문은 맨 앞, 아직 뽑힌 과수원이 없어도 주제는 보인다
@@ -860,12 +903,15 @@
   let sort = 'new', page = 0;
   async function loadList(reset) {
     if (reset) { page = 0; $('list').textContent = ''; }
-    const r = await api(`posts?sort=${sort}&page=${page}&voter=${voter}`);
-    if (reset && !r.posts.length) $('list').append(el('p', 'empty', T.noPosts));
-    r.posts.forEach(p => $('list').append(card(p)));
+    const r = await api(withT(`posts?sort=${sort}&page=${page}&voter=${voter}`));
+    const ps = r.posts.filter(shown);
+    if (reset && !ps.length) $('list').append(el('p', 'empty', T.noPosts));
+    ps.forEach(p => $('list').append(card(p)));
     $('more').hidden = r.posts.length < 20;
   }
+  const reloadBoard = () => Promise.all([loadHighlights($('week').value || current), loadList(true)]).catch(() => { $('note').textContent = T.loadFail; });
   function showShared(p, readonly) {
+    if (!shown(p)) return;
     const box = $('shared'); box.textContent = '';
     const sec = document.createElement('section'); sec.append(el('h2', null, T.shared));
     const g = el('div', 'grid'); g.append(card(p, {shared: true, readonly})); sec.append(g); box.append(sec);
@@ -920,7 +966,7 @@
         a.append(h);
         if (rel.shots) { const f = el('div', 'feats'); rel.shots.forEach(s => f.append(feat(s))); a.append(f); }
         a.append(ul);
-        if (i === 0 && rel.url) { const d = el('a', 'dl', T.download); d.href = rel.url; a.append(d); }
+        if (i === 0 && rel.url && !MAS) { const d = el('a', 'dl', T.download); d.href = rel.url; a.append(d); }
         box.append(a);
       });
     } catch (e) { notesLoaded = false; box.textContent = ''; box.append(el('p', 'empty', T.notesFail)); }
@@ -1040,7 +1086,7 @@
       }
       await Promise.all([loadHighlights(current), loadList(true)]);
       const id = new URLSearchParams(location.search).get('p');
-      if (id) { try { showShared(await api(`posts/${encodeURIComponent(id)}?voter=${voter}`), false); } catch (e) {} }
+      if (id) { try { showShared(await api(withT(`posts/${encodeURIComponent(id)}?voter=${voter}`)), false); } catch (e) {} }
     } catch (e) {
       $('note').textContent = T.loadFail;
     }

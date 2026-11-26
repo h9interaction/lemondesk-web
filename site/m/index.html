@@ -16,11 +16,11 @@
 <meta name="apple-mobile-web-app-title" content="Lemon Desk">
 <meta name="theme-color" content="#FFF6D8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
-<link rel="apple-touch-icon" href="../icon.png?v=1">
+<link rel="apple-touch-icon" href="../icon.png?v=2">
 <link rel="icon" href="sprites/icon-64.png">
-<link rel="preload" href="fonts/galmuri11-bold.woff2?v=2001" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/galmuri11-bold.woff2?v=2004" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=2001) format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=2004) format("woff2"); font-display: swap; }
   :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
   @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
@@ -196,6 +196,12 @@
   .away .lemon { display: none !important; }
   .strips { margin: 0 0 8px; }
   .ico { height: 22px; width: auto; vertical-align: -5px; margin-right: 6px; }
+  .labme { display: flex; gap: 10px; align-items: center; }
+  .labme img { flex: none; }
+  .work { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+  .work .pic { display: flex; justify-content: center; align-items: flex-end; min-height: 120px; padding: 8px 0; background: rgba(201, 165, 107, .16); }
+  .work .pic img { max-width: 100%; height: auto; image-rendering: pixelated; }
+  #lab > .seg { margin: 10px 0; }
   .seg button.shown::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: 5px; background: #58B02C; vertical-align: 1px; }
   #strip > .panel, #career > .panel, #market > .panel { margin-top: 10px; }
   footer { margin-top: 20px; font-size: 14px; color: var(--page-soft); text-align: center; }
@@ -279,6 +285,7 @@
           <p class="note" data-t="stampH">보낼 때 붙일 스탬프</p>
           <div class="seg" id="stamps"></div>
         </div>
+        <div id="lab"></div>
         <div id="market"></div>
         <h2 class="sec px num" id="nb-h"></h2>
         <div id="nb-list"></div>
@@ -483,6 +490,22 @@
     wallet: n => `${n} co-op coins`, days: ['Today', 'Tomorrow', 'In 2 days'], fcLine: (d, k, w) => `${d}: ${k} · ${w}`,
     disasters: {typhoon: 'Typhoon', drought: 'Drought', cold: 'Cold snap', redtide: 'Red tide', poor: 'Poor harvest'},
     titles: {wish: k => `${k} Apprentice`, stage: (k, n) => `${k} Stage ${n}`, master: k => `${k} Master`, solo: k => `${k} Pure Master`},
+    labH: 'My works', labMac: 'Make and edit works and choose your seal on your Mac.', labHosted: n => `Works from neighbors: ${n}`, labHostedH: 'From neighbors · ',
+    benches: {tree: 'Varieties', friend: 'Friends', prop: 'Props'}, workNoPic: "Couldn't draw this work. Update the app on your Mac.",
+    labPublic: 'Public', labSend: 'Send to a neighbor', labWho: 'Send this work to which neighbor?',
+    labSentToday: 'You sent a work today. You can send another tomorrow.', labNone: 'No works on this bench yet.',
+    rankLine: t => `This week's ranking · ${t}`, rankNone: "Not in this week's ranking yet", rankAt: (k, n) => `${k} #${n}`,
+    rankCats: {spread: 'Most spread work', newline: 'New lineage', loved: 'Most loved work', goodneighbor: 'Good neighbor'},
+    village: (n, g) => `Village goal · saplings planted for each other ${n} / ${g}`, villageDone: "This week's village goal is done",
+    labDone: {lab_send: 'Work sent', on: 'Now public', off: 'Now private'},
+    labWhy: {done_today: 'You already sent one today. You can send another tomorrow.', taken_today: 'You already sent one today. You can send another tomorrow.',
+      full: "That neighbor's strip has no room for more works from this bench", already: 'That neighbor already has this work', not_found: "Couldn't find that work",
+      public_full: 'Public slots are full. Make another one private first.', over_limit: 'Public slots are full. Make another one private first.',
+      hidden: "Hidden works can't be sent", bad_work: "This work can't be sent. Update the app on your Mac.",
+      no_seal: 'Choose your lemon seal on your Mac first.', not_neighbor: 'Not your neighbor'},
+    words: {color: ['Lemon', 'Tangerine', 'Apricot', 'Coral', 'Cherry', 'Melon', 'Mint', 'Lime', 'Leaf', 'Sky', 'Sea', 'Sand'],
+      core: ['Seed', 'Star', 'Heart', 'Leaf', 'Drop', 'Bloom', 'Sun', 'Moon', 'Cloud', 'Shell', 'Paw', 'Bee', 'Key', 'Crown', 'Note', 'Sprout'],
+      rim: ['Smooth', 'Zigzag', 'Double', 'Ribbon']},
     marketH: 'Market', stallH: 'My stall', stallRow: (k, n, v) => `${k} ×${n} · ${v} each`, stallEmpty: 'Nothing on your stall.', stallMac: 'List and buy on your Mac.',
     notesLine: n => `Notes from ${n} ${n === '1' ? 'neighbor' : 'neighbors'} · read and send them on your Mac`, farmSold: e => e > 0 ? `Sold! +${fmt(e)} co-op coins` : 'Sold',
     crops: {driedLemon: 'Dried Lemon', lemonCandy: 'Lemon Candy', lemonVinegar: 'Lemon Vinegar', lemonCurd: 'Lemon Curd', honeyCake: 'Lemon Honey Cake',
@@ -627,6 +650,22 @@
     wallet: n => `조합 코인 ${n}`, days: ['오늘', '내일', '모레'], fcLine: (d, k, w) => `${d} ${k} 예보 · ${w}`,
     disasters: {typhoon: '태풍', drought: '가뭄', cold: '한파', redtide: '적조', poor: '흉작'},
     titles: {wish: k => `견습 · ${k}`, stage: (k, n) => `${k} ${n}단계`, master: k => `${k} 명인`, solo: k => `외길 명인 · ${k}`},
+    labH: '내 작품', labMac: '작품 만들기·고치기와 인장 정하기는 Mac에서 해요.', labHosted: n => `이웃에게 받은 작품 ${n}개`, labHostedH: '이웃에게 받은 작품 · ',
+    benches: {tree: '품종', friend: '친구', prop: '소품'}, workNoPic: '이 작품을 그리지 못했어요. Mac에서 앱을 업데이트해 주세요.',
+    labPublic: '공개', labSend: '이웃에게 보내기', labWho: '어느 이웃에게 보낼까요?',
+    labSentToday: '오늘은 작품을 보냈어요. 내일 또 보낼 수 있어요.', labNone: '이 작업대에는 아직 작품이 없어요.',
+    rankLine: t => `이번 주 순위 · ${t}`, rankNone: '이번 주 순위에는 아직 없어요', rankAt: (k, n) => `${k} ${n}위`,
+    rankCats: {spread: '많이 퍼진 작품', newline: '새 계보', loved: '사랑받은 작품', goodneighbor: '좋은 이웃'},
+    village: (n, g) => `마을 목표 · 서로 심어 준 묘목 ${n} / ${g}`, villageDone: '이번 주 마을 목표를 이뤘어요',
+    labDone: {lab_send: '작품을 보냈어요', on: '공개로 바꿨어요', off: '비공개로 바꿨어요'},
+    labWhy: {done_today: '오늘은 이미 보냈어요. 내일 또 보낼 수 있어요.', taken_today: '오늘은 이미 보냈어요. 내일 또 보낼 수 있어요.',
+      full: '그 이웃 띠에 이 작업대 작품 자리가 없어요', already: '그 이웃은 이미 이 작품을 받았어요', not_found: '그 작품을 찾지 못했어요',
+      public_full: '공개 칸이 가득 찼어요. 다른 작품을 먼저 비공개로 바꿔 주세요.', over_limit: '공개 칸이 가득 찼어요. 다른 작품을 먼저 비공개로 바꿔 주세요.',
+      hidden: '숨겨진 작품은 보낼 수 없어요', bad_work: '이 작품은 보낼 수 없어요. Mac에서 앱을 업데이트해 주세요.',
+      no_seal: '먼저 Mac에서 레몬 인장을 정해 주세요.', not_neighbor: '이웃이 아니에요'},
+    words: {color: ['레몬', '귤', '살구', '산호', '체리', '수박', '민트', '연두', '잎새', '하늘', '바다', '모래'],
+      core: ['씨앗', '별', '하트', '잎', '물방울', '꽃', '해', '달', '구름', '조개', '발자국', '벌', '열쇠', '왕관', '음표', '새싹'],
+      rim: ['매끈', '톱니', '이중', '리본']},
     marketH: '장터', stallH: '내 가판대', stallRow: (k, n, v) => `${k} ${n}개 · 개당 ${v}`, stallEmpty: '올린 물건이 없어요.', stallMac: '올리기·사기는 Mac에서 해요.',
     notesLine: n => `쪽지가 온 이웃 ${n}명 · 읽기와 보내기는 Mac에서 해요`, farmSold: e => e > 0 ? `팔았어요 · 조합 코인 +${fmt(e)}` : '팔았어요',
     crops: {driedLemon: '레몬 말랭이', lemonCandy: '레몬 사탕', lemonVinegar: '레몬 식초', lemonCurd: '레몬 커드', honeyCake: '레몬 꿀 케이크',
@@ -639,7 +678,7 @@
   // 윈도우판(상태의 platform 이 win)이면 연결 뒤 문구의 'Mac' 을 'PC' 로. 맥 앱은 platform 을 보내지 않는다.
   let pc = false;
   const toPC = t => t.replace(/Mac이/g, 'PC가').replace(/Mac을/g, 'PC를').replace(/Mac/g, 'PC');
-  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN', 'update15', 'showBtn', 'shownNow', 'stallMac', 'notesLine']) {
+  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN', 'update15', 'showBtn', 'shownNow', 'stallMac', 'notesLine', 'labMac', 'workNoPic']) {
     const v = T[k];
     if (typeof v === 'function') T[k] = (...a) => pc ? toPC(v(...a)) : v(...a);
     else Object.defineProperty(T, k, { get: () => pc ? toPC(v) : v });
@@ -706,7 +745,7 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=2003'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=2006'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
@@ -1847,6 +1886,7 @@
       rout.length && panel(el('b', 'px', T.reqOut), ...rout.map(r => el('p', 'note', `${nameOf(r)} · ${T.noAnswerYet}`))),
     ]);
     $('nb-h').textContent = T.nbH(nbs.length, 10);
+    renderLab(s);
     keep('nb-list', [nbs, s.kinds, s.workers.map(w => [w.level, w.away]), stamp, amNow(), en], () => nbs.length ? nbs.map(n => nbCard(n, s)) : [panel(el('p', 'note', T.noNb))]);
     $('sorts').replaceChildren(...['recent', 'similar', 'new', ...(v15() ? ['mentor'] : [])].map(k => { const b = el('button', '', T.sorts[k]); b.type = 'button'; b.setAttribute('aria-pressed', k === sort); b.onclick = () => { sort = k; page = 0; renderNb(); discover(); }; return b; }));
     const out = rout.map(r => r.id);
@@ -1875,6 +1915,93 @@
     const u = `https://lemongrove.club/lemondesk/n/?c=${state().myCode}`;
     try { await navigator.clipboard.writeText(u); toast(T.copied); } catch (e) { toast(T.copyThis(u)); }
   };
+  // ── 2.3 내 인장·내 작품(docs/research/workshop-2.3.0.md W9): 작품 공개 켜고 끄기·이웃에게 보내기, 이번 주 순위·마을 목표는 보기만.
+  // 작품 그림은 상태의 나눔 코드(LD1)를 풀어 공방 엔진(workshop-core.js = art/preview/workshop/core.js)으로 그린다. 만들기·고치기는 Mac/PC 에서만.
+  const SEAL_PAL = [[48, 1, 1], [30, 1.05, 1], [30, .62, 1.02], [10, .85, 1], [351, 1, .86], [352, .6, 1.02], [162, .75, .92], [84, .9, .92], [127, .8, .74],
+    [202, .75, .98], [190, .95, .72], [38, .45, .94]]; // art/dye.json 'seal' [색상, 채도 배수, 명도 배수]
+  const toHsv = (r, g, b) => { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); let h = 0; if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, mx ? d / mx : 0, mx]; };
+  const toRgb = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return [f(5), f(3), f(1)].map(x => Math.round(x * 255)); };
+  function paint(x, w, h, f) { const d = x.getImageData(0, 0, w, h), p = d.data; for (let i = 0; i < p.length; i += 4) if (p[i + 3]) { const o = f(...toHsv(p[i], p[i + 1], p[i + 2])); if (o) [p[i], p[i + 1], p[i + 2]] = toRgb(...o); } x.putImageData(d, 0, 0); }
+  const canvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d', {willReadFrequently: true}); x.imageSmoothingEnabled = false; return [c, x]; };
+  const part = n => load(S + n + '.png' + V), labPics = new Map();
+  /** 인장 코드 "색-심-테두리-정규 칸" → 번호(cells 는 상태의 고른 방향, 없으면 정규 칸) */
+  const sealOf = seal => { const m = /^(\d\d)-(\d\d)-(\d)-([0-3]{8})$/.exec(seal?.code || ''); return m && {color: +m[1], core: +m[2], rim: +m[3], cells: Array.isArray(seal.cells) && seal.cells.length === 8 ? seal.cells : [...m[4]].map(Number)}; };
+  const sealName = q => [T.words.color[q.color], T.words.core[q.core], T.words.rim[q.rim]].map(w => w || '?').join(' ');
+  /** 인장 그림(76px 정사각, 맥 SealRender.image) */
+  function sealPic(q) {
+    const key = `s${q.cells.join('')}-${q.color}-${q.core}-${q.rim}`;
+    if (!labPics.has(key)) labPics.set(key, Promise.all(['seal-base', ...q.cells.map((p, i) => `seal-wedge-${p}-${i % 2 ? 'd' : 'o'}`), `seal-rim-${q.rim}`, `seal-core-${q.core}`].map(part)).then(ims => {
+      const [c, x] = canvas(76, 76), core = ims.pop(), rim = ims.pop(), base = ims.shift(), P = SEAL_PAL[q.color];
+      x.drawImage(base, 0, 0);
+      ims.forEach((w, i) => { x.save(); x.translate(38, 38); x.rotate(Math.PI / 2 * Math.floor(i / 2)); x.translate(-38, -38); x.drawImage(w, 0, 0); x.restore(); });
+      x.drawImage(rim, 0, 0);
+      if (q.color && P) paint(x, 76, 76, (h, s, v) => s > .12 && [(h + P[0] - 48 + 360) % 360, Math.min(1, s * P[1]), Math.min(1, v * P[2])]);
+      x.drawImage(core, 0, 0);
+      return c.toDataURL();
+    }));
+    return labPics.get(key);
+  }
+  // 공방 엔진은 '내 작품'이 있을 때만 불러온다(부품 목록 + 엔진, gzip 약 46KB)
+  let shop = null;
+  const workshop = () => shop || (shop = new Promise((ok, no) => {
+    const add = (src, next) => { const t = el('script'); t.src = src + V; t.onload = next; t.onerror = no; document.head.append(t); };
+    add('workshop-catalog.js', () => add('workshop-core.js', () => ok(window.WorkshopCore)));
+  }));
+  const PIX = new Map();
+  /** 작품 그림: LD1 → 작품 → 층마다 쓰는 부품 그림(행동의 첫 프레임, sprites/ws/)을 불러 RGBA 로 → compose(tick 0) → 보이는 곳만 잘라 dataURL */
+  function workPic(share) {
+    if (!labPics.has(share)) labPics.set(share, workshop().then(async K => {
+      const w = await K.decodeShare(share), names = new Set();
+      for (const L of w.L) { const P = K.PARTS[L.p]; if (P) names.add(P.acts[K.actOf(P, L, null)][0]); }
+      await Promise.all([...names].filter(n => !PIX.has(n)).map(n => load(S + 'ws/' + n + '.png' + V).then(im => {
+        const [, x] = canvas(im.naturalWidth, im.naturalHeight); x.drawImage(im, 0, 0);
+        PIX.set(n, {w: im.naturalWidth, h: im.naturalHeight, data: x.getImageData(0, 0, im.naturalWidth, im.naturalHeight).data});
+      }, () => PIX.set(n, null))));
+      const R = K.compose(w, n => PIX.get(n) || null), b = K.bbox(R);
+      const [c, x] = canvas(R.w, R.h); x.putImageData(new ImageData(new Uint8ClampedArray(R.data), R.w, R.h), 0, 0);
+      const [o, ox] = canvas(b.w, b.h); ox.drawImage(c, b.x, b.y, b.w, b.h, 0, 0, b.w, b.h);
+      return {url: o.toDataURL(), work: w, name: K.nameOf(w, en ? 'en' : 'ko')};
+    }));
+    return labPics.get(share);
+  }
+  /** 그림을 건 img(크기 = 그림 픽셀 × k) */
+  const labImg = (made, k, alt = '') => { const i = el('img'); i.alt = alt; made.then(u => { u = u.url || u; i.onload = () => { i.width = i.naturalWidth * k; i.height = i.naturalHeight * k; }; i.src = u; }, () => i.remove()); return i; };
+  // 작품 이름: 작품의 n(낱말 번호 3개)을 엔진 표로 폰 언어 글자로(nameOf)
+  const workName = (d, made, h) => {
+    h.textContent = '…'; made.then(r => { h.textContent = r.name; }, () => { h.textContent = '?'; });
+  };
+  const BENCHES = ['tree', 'friend', 'prop'];
+  let bench = localStorage.getItem('ld-bench') || 'tree';
+  function renderLab(s) {
+    const q = sealOf(s.seal), ws = s.works || [], nbs = s.neighbors || [];
+    keep('lab', [q, ws, s.hosted, s.labSent, s.rank, s.village, nbs.map(n => [n.id, n.name]), bench, en], () => {
+      if (!q) return [];
+      const mine = Object.entries(s.rank?.mine || {}).filter(([k, n]) => T.rankCats[k] && n > 0).map(([k, n]) => T.rankAt(T.rankCats[k], n));
+      const V2 = s.village, who = el('div'), hs = s.hosted; // 띠에 둔 받은 작품 수: 작업대마다 {tree, friend, prop} 또는 합계 숫자
+      who.append(el('b', 'px', sealName(q)));
+      if (hs != null) who.append(el('p', 'note num', typeof hs === 'number' ? T.labHosted(fmt(hs)) : T.labHostedH + BENCHES.map(b => `${T.benches[b]} ${fmt(hs[b] || 0)}`).join(' · ')));
+      const me = el('div', 'labme'); me.append(labImg(sealPic(q), 1, sealName(q)), who);
+      const head = panel(me, el('p', 'note num', mine.length ? T.rankLine(mine.join(' · ')) : T.rankNone),
+        V2 && el('p', 'note num', V2.done ? T.villageDone : T.village(fmt(V2.planted || 0), fmt(V2.goal || 0))), el('p', 'note', T.labMac));
+      const tabs = el('div', 'seg'); tabs.setAttribute('role', 'tablist');
+      tabs.append(...BENCHES.map(b => {
+        const n = ws.filter(d => d.b === b).length, t = el('button', 'num', n ? `${T.benches[b]} ${n}` : T.benches[b]);
+        t.type = 'button'; t.setAttribute('role', 'tab'); t.setAttribute('aria-selected', b === bench);
+        t.onclick = () => { bench = b; localStorage.setItem('ld-bench', b); renderLab(state()); }; return t;
+      }));
+      const cards = ws.filter(d => d.b === bench).map(d => {
+        const box = el('div', 'work'), pic2 = el('div', 'pic'), h = el('b', 'px'), seg = el('div', 'seg'), made = d.share ? workPic(d.share) : Promise.reject();
+        made.catch(() => {});
+        pic2.append(labImg(made, 2)); workName(d, made, h);
+        made.then(() => { pic2.querySelector('img').alt = h.textContent; }, () => pic2.append(el('p', 'note', T.workNoPic)));
+        seg.append(toggle(T.labPublic, d.pub, {action: 'lab_public', work: d.id, on: !d.pub}));
+        box.append(pic2, h, seg);
+        return panel(box, row(act(T.labSend, () => choose(T.labWho, nbs.map(n => ({label: nameOf(n), value: n.id})), target => send({action: 'lab_send', work: d.id, target})),
+          {off: !!s.labSent || !nbs.length, need: awake})));
+      });
+      return [el('h2', 'sec px', T.labH), head, tabs, ...(cards.length ? cards : [panel(el('p', 'note', T.labNone))]), s.labSent && ws.length && el('p', 'note', T.labSentToday)];
+    });
+  }
   function renderRaid() {
     const s = state(), R = s && v14() && s.raid; if (!R) { $('raid').replaceChildren(); return; }
     keep('raid', [R, s.workers.map(w => [w.level, w.away]), en], () => {
@@ -2028,7 +2155,7 @@
   const doneText = (p, r) => p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
     : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : p.action === 'crate' ? T.grown
     : p.action === 'mgr_hire' ? (state()?.manager?.level === 1 ? T.mgrHired : T.mgrUp) : p.action === 'stand_up' ? (state()?.stand?.level === 1 ? T.standOpen : T.standUp)
-    : p.action === 'make' ? T.started(T.recipes[p.recipe] || p.recipe) : p.action === 'fill' ? T.filled(r.earned || 0) : p.action === 'farm_sell' ? T.farmSold(r.earned || 0) : T.done[p.action] || '';
+    : p.action === 'make' ? T.started(T.recipes[p.recipe] || p.recipe) : p.action === 'fill' ? T.filled(r.earned || 0) : p.action === 'farm_sell' ? T.farmSold(r.earned || 0) : p.action === 'lab_public' ? T.labDone[p.on ? 'on' : 'off'] : T.done[p.action] || T.labDone[p.action] || '';
   function settle(r) {
     let p = pending.get(r.id), late = false;
     if (p) pending.delete(r.id);
@@ -2039,7 +2166,7 @@
     if (r.ok && p.action === 'sell' && !late) sold();
     // 실패는 Mac 이 쓴 문장(message, Mac 언어)을 그대로. 옛 앱은 reason 만 보낸다
     // 서버 대리 결과의 message 는 한국어뿐이라 영어 화면은 code 로 고른다
-    const W = p.action === 'farm_share' ? {...T.why, taken_week: T.shareWeek} : T.why; // 2.0 보내기의 taken_week 는 보낸 사람 쪽 주 1번
+    const W = p.action === 'farm_share' ? {...T.why, taken_week: T.shareWeek} : /^lab_/.test(p.action) ? {...T.why, ...T.labWhy} : T.why; // 2.0 보내기의 taken_week 는 보낸 사람 쪽 주 1번, 2.3 품종은 같은 code 가 뜻이 달라 따로
     const own = (en && W[r.code]) || (late && r.reason === 'poor' ? T.poorThen : W[r.code] || W[r.reason] || (typeof T[r.reason] === 'string' && T[r.reason]));
     const msg = r.ok ? (p.action === 'nb_request' && r.added ? T.done.nb_accept : doneText(p, r)) : (en && /[가-힣]/.test(r.message || '') ? own : r.message || own) || T.unavailable;
     if (msg) toast(late ? T.late(msg) : msg);

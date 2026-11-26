@@ -1,5 +1,68 @@
 [
   {
+    "version": "2.3.2",
+    "date": "2026-11-26",
+    "url": "https://github.com/cbs9799/lemondesk-web/releases/download/v2.3.2/LemonDesk-2.3.2.dmg",
+    "notes": {
+      "ko": [
+        "레몬 공방이 훨씬 쉬워졌어요. 무엇을 만들지 고르고, 마음에 드는 모양과 색을 누른 뒤 버튼 하나면 띠에 놓여요. 세세하게 다듬고 싶을 때는 [자세히 다듬기]로 예전 화면을 그대로 쓸 수 있어요",
+        "작품마다 [친구에게 보내기]가 생겼어요. 이웃은 얼굴을 누르면 바로 가고, 이웃이 아닌 친구에게는 링크 하나를 보내면 돼요. 링크를 연 친구는 버튼 한 번으로 자기 띠에 놓아요",
+        "둘러보기에서 마음에 드는 작품을 [내 띠에 두기]로 바로 데려올 수 있어요",
+        "레몬 인장은 처음 친구에게 보내거나 공개할 때 정하면 돼요. 저장 횟수 제한이 없어졌고, 이웃에게 더 자주 보낼 수 있어요",
+        "공방 안내 창이 생겼어요. 공방 오른쪽 위 [?]나 메뉴의 '공방 안내…'에서 열어요"
+      ],
+      "en": [
+        "The Lemon Workshop is much easier now. Pick what to make, tap a shape and colors you like, and one button puts it on your strip. Want to fine-tune? Fine-Tune opens the full editor you know",
+        "Every work now has Send to a Friend. Tap a neighbor's face to send it right away, or share a single link with any friend. Opening the link puts it on their strip with one click",
+        "Spot something you love while browsing? Put on My Strip brings it straight to your strip",
+        "You only need a Lemon Seal the first time you share or publish. There's no daily save limit anymore, and you can send to neighbors more often",
+        "A new Workshop Guide window explains it all. Open it from the [?] at the top right of the Workshop or Workshop Guide… in the menu"
+      ]
+    },
+    "shots": [
+      {
+        "src": "updates/2.3.2/easy.webp",
+        "dark": "updates/2.3.2/easy-dark.webp",
+        "w": 1198,
+        "h": 1435,
+        "title": {
+          "ko": "쉬운 만들기",
+          "en": "Easy Make"
+        },
+        "text": {
+          "ko": "무엇을 만들지 고르고, 모양과 색을 누른 뒤 버튼 하나면 띠에 놓여요.",
+          "en": "Pick what to make, tap a shape and colors, and one button puts it on your strip."
+        }
+      },
+      {
+        "src": "updates/2.3.2/send.webp",
+        "w": 1198,
+        "h": 1435,
+        "title": {
+          "ko": "친구에게 보내기",
+          "en": "Send to a Friend"
+        },
+        "text": {
+          "ko": "이웃은 얼굴을 누르면 바로, 다른 친구에게는 링크 하나로 보내요.",
+          "en": "Tap a neighbor's face to send right away, or share one link with any friend."
+        }
+      },
+      {
+        "src": "updates/2.3.2/guide.webp",
+        "w": 1040,
+        "h": 1344,
+        "title": {
+          "ko": "공방 안내",
+          "en": "Workshop Guide"
+        },
+        "text": {
+          "ko": "공방이 처음이라면 안내 창이 그림과 함께 차근차근 알려 줘요.",
+          "en": "New to the Workshop? The guide walks you through it with pictures."
+        }
+      }
+    ]
+  },
+  {
     "version": "2.3.0",
     "date": "2026-11-26",
     "url": "https://github.com/cbs9799/lemondesk-web/releases/download/v2.3.0/LemonDesk-2.3.0.dmg",

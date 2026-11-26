@@ -1,0 +1,158 @@
+<!doctype html>
+<!-- ponytail: 공방 작품 링크(2.3.2) 정적 한 장. ?c=LD1.… 를 브라우저에서 풀어(../m/workshop-core.js) 그리고, 앱 열기(lemondesk://work?c=…)·코드 복사·내려받기를 보여 준다. 서버를 부르지 않는다. -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lemon Desk 공방 작품</title>
+<meta name="description" content="친구가 Lemon Desk 공방에서 만든 작품을 보냈어요. A friend sent you a piece from the Lemon Desk workshop.">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lemon Desk">
+<meta property="og:title" content="Lemon Desk 공방 작품이 도착했어요">
+<meta property="og:description" content="친구가 만든 작품을 보고, 내 띠에 놓아 보세요. A friend sent you a piece from the Lemon Desk workshop.">
+<meta property="og:image" content="https://lemongrove.club/lemondesk/og.jpg?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../icon.png?v=2">
+<style>
+  :root { --bg: #FFFBEC; --ink: #23511F; --text: #3E4A33; --muted: #6F7862; --line: #EDE6CC; --lemon: #F5CE2E; --lemon-soft: #FFF3C2; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #14170F; --ink: #EEF3DF; --text: #C9CFBA; --muted: #959C85; --line: #2A2F21; --lemon-soft: #2C2A14; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.7 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+         word-break: keep-all; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 48px 24px 64px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; font-weight: 700; color: var(--ink); text-decoration: none; }
+  .brand img { width: 40px; height: 40px; border-radius: 9px; }
+  h1 { margin: 0 0 4px; color: var(--ink); font-size: 30px; line-height: 1.3; letter-spacing: -0.02em; }
+  p { margin: 0 0 16px; }
+  .muted { color: var(--muted); font-size: 15px; }
+  .pic { display: flex; align-items: flex-end; justify-content: center; min-height: 240px; margin: 0 0 24px; padding: 28px 16px;
+         border: 1px solid var(--line); border-radius: 12px; background: var(--lemon-soft); }
+  .pic canvas { display: block; image-rendering: pixelated; max-width: 100%; height: auto; }
+  .meta { margin: 0 0 24px; }
+  .meta b { color: var(--ink); }
+  .buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+  .btn { display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 10px; font: inherit; font-weight: 700;
+         text-decoration: none; cursor: pointer; border: 0; }
+  .primary { background: var(--lemon); color: #23511F; }
+  .primary:hover { background: #E9BF14; }
+  .ghost { background: none; color: var(--ink); border: 1px solid var(--line); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 36px 0 28px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="brand" id="home" href="../"><img src="../icon.png?v=2" alt="" width="40" height="40">Lemon Desk</a>
+
+  <div id="ok" hidden>
+    <p class="muted" data-t="kicker"></p>
+    <h1 id="name"></h1>
+    <p class="meta"><span id="bench"></span><br><span class="muted" id="seal"></span></p>
+    <div class="pic"><canvas id="art" role="img"></canvas></div>
+    <div class="buttons">
+      <a class="btn primary" id="open" href="#" data-t="open"></a>
+      <button class="btn ghost" id="copy" type="button" data-t="copy"></button>
+    </div>
+    <p class="muted" id="copied" role="status" aria-live="polite"></p>
+    <p class="muted" id="hint"></p>
+  </div>
+  <div id="bad" hidden>
+    <h1 data-t="bad"></h1>
+    <p data-t="badHint"></p>
+  </div>
+  <p class="muted" id="loading" data-t="loading"></p>
+
+  <hr>
+  <p data-t="get"></p>
+  <div class="buttons">
+    <a class="btn ghost" href="https://github.com/cbs9799/lemondesk-web/releases/download/v2.3.2/LemonDesk-2.3.2.dmg" data-t="mac"></a>
+    <a class="btn ghost" href="https://github.com/cbs9799/lemondesk-web/releases/download/windows/LemonDesk-win-Setup.exe" data-t="win"></a>
+  </div>
+</main>
+<script src="../m/workshop-catalog.js?v=2006"></script>
+<script src="../m/workshop-core.js?v=2006"></script>
+<script>
+(async () => {
+  const en = !/^ko\b/i.test(navigator.language || '');
+  const T = en ? {
+    title: 'Lemon Desk workshop piece', kicker: 'A piece from the Lemon Desk workshop', open: 'Open in Lemon Desk', copy: 'Copy code',
+    copied: 'Code copied.', copyFail: "Couldn't copy. Please select the address and copy it.",
+    hint: "If the app doesn't open, copy the code and paste it in the Lemon Desk workshop.",
+    phone: 'Lemon Desk is for Mac and Windows. Open this link on your computer to place it on your strip.',
+    bad: "Couldn't read this piece", badHint: 'The link may be cut off. Please check the link you received.', loading: 'Loading the piece…',
+    get: "Don't have Lemon Desk yet? It's a game where a lemon orchard grows at the bottom of your screen while you work. Free beta for Mac, and a Windows beta.",
+    mac: 'Mac beta download', win: 'Windows beta download', by: 'Made with seal ',
+    benches: { tree: 'Tree · grows in the yard by your crate', friend: 'Friend · wanders along your strip', prop: 'Trinket · sits in a decoration spot' },
+    words: { color: ['Lemon', 'Tangerine', 'Apricot', 'Coral', 'Cherry', 'Melon', 'Mint', 'Lime', 'Leaf', 'Sky', 'Sea', 'Sand'],
+      core: ['Seed', 'Star', 'Heart', 'Leaf', 'Drop', 'Bloom', 'Sun', 'Moon', 'Cloud', 'Shell', 'Paw', 'Bee', 'Key', 'Crown', 'Note', 'Sprout'],
+      rim: ['Smooth', 'Zigzag', 'Double', 'Ribbon'] },
+  } : {
+    title: 'Lemon Desk 공방 작품', kicker: 'Lemon Desk 공방에서 만든 작품이에요', open: 'Lemon Desk에서 열기', copy: '코드 복사',
+    copied: '코드를 복사했어요.', copyFail: '복사하지 못했어요. 주소창의 주소를 직접 복사해 주세요.',
+    hint: '앱이 열리지 않으면 코드를 복사해 Lemon Desk 공방에 붙여 넣어 주세요.',
+    phone: 'Lemon Desk는 Mac·Windows용이에요. 컴퓨터에서 이 링크를 열면 내 띠에 놓을 수 있어요.',
+    bad: '작품을 읽지 못했어요', badHint: '링크가 잘렸을 수 있어요. 받은 링크를 다시 확인해 주세요.', loading: '작품을 불러오는 중…',
+    get: '아직 Lemon Desk가 없나요? 일하는 동안 화면 맨 아래에서 레몬 과수원이 자라는 게임이에요. Mac은 무료 베타, Windows도 베타가 있어요.',
+    mac: 'Mac 베타 내려받기', win: 'Windows 베타 내려받기', by: '만든 인장 ',
+    benches: { tree: '나무 · 창고 옆 뜰에 심겨요', friend: '친구 · 띠를 돌아다녀요', prop: '소품 · 꾸미기 자리에 놓여요' },
+    words: { color: ['레몬', '귤', '살구', '산호', '체리', '수박', '민트', '연두', '잎새', '하늘', '바다', '모래'],
+      core: ['씨앗', '별', '하트', '잎', '물방울', '꽃', '해', '달', '구름', '조개', '발자국', '벌', '열쇠', '왕관', '음표', '새싹'],
+      rim: ['매끈', '톱니', '이중', '리본'] },
+  };
+  const $ = id => document.getElementById(id);
+  document.documentElement.lang = en ? 'en' : 'ko';
+  document.title = T.title;
+  if (en) $('home').href = '../en/';
+  document.querySelectorAll('[data-t]').forEach(e => { e.textContent = T[e.dataset.t]; });
+
+  const K = window.WorkshopCore, code = (new URLSearchParams(location.hash.slice(1)).get('c') || new URLSearchParams(location.search).get('c') || '').trim(); // #c= 가 기본(서버 로그에 안 남음), 옛 ?c= 도 받음
+  let w = null;
+  try { w = await K.decodeShare(code); if (K.validate(w).length) w = null; } catch (e) { w = null; }
+  $('loading').hidden = true;
+  if (!w) { $('bad').hidden = false; return; }
+
+  // 그림: 층마다 쓰는 부품의 첫 프레임(../m/sprites/ws/) → compose → 보이는 곳만 잘라 정수배로
+  const pix = new Map();
+  const names = new Set(w.L.filter(L => K.PARTS[L.p]).map(L => K.PARTS[L.p].acts[K.actOf(K.PARTS[L.p], L, null)][0]));
+  await Promise.all([...names].map(n => new Promise(ok => {
+    const im = new Image();
+    im.onload = () => {
+      const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+      const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+      pix.set(n, { w: c.width, h: c.height, data: x.getImageData(0, 0, c.width, c.height).data }); ok();
+    };
+    im.onerror = () => ok();
+    im.src = '../m/sprites/ws/' + n + '.png?v=2006';
+  })));
+  const R = K.compose(w, n => pix.get(n) || null), b = K.bbox(R);
+  const src = document.createElement('canvas'); src.width = R.w; src.height = R.h;
+  src.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(R.data), R.w, R.h), 0, 0);
+  const k = Math.max(1, Math.floor(Math.min(320, innerWidth - 90) / Math.max(b.w, b.h, 1)));
+  const art = $('art'), ax = art.getContext('2d');
+  art.width = b.w * k; art.height = b.h * k; art.style.width = b.w * k + 'px';
+  ax.imageSmoothingEnabled = false;
+  ax.drawImage(src, b.x, b.y, b.w, b.h, 0, 0, b.w * k, b.h * k);
+
+  const name = K.nameOf(w, en ? 'en' : 'ko');
+  const m = /^(\d\d)-(\d\d)-(\d)-[0-3]{8}$/.exec(w.seal || '');
+  const seal = m ? [T.words.color[+m[1]], T.words.core[+m[2]], T.words.rim[+m[3]]].map(x => x || '?').join(' ') : w.seal;
+  $('name').textContent = name;
+  art.setAttribute('aria-label', name);
+  $('bench').textContent = T.benches[w.b];
+  $('seal').textContent = seal ? T.by + seal : '';
+  $('open').href = 'lemondesk://work?c=' + encodeURIComponent(code);
+  const phone = /iPhone|iPad|Android/i.test(navigator.userAgent);
+  $('open').hidden = phone;
+  $('hint').textContent = phone ? T.phone : T.hint;
+  $('copy').onclick = async () => {
+    try { await navigator.clipboard.writeText(code); $('copied').textContent = T.copied; } catch (e) { $('copied').textContent = T.copyFail; }
+  };
+  $('ok').hidden = false;
+})();
+</script>
+</body>
+</html>

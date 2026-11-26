@@ -438,7 +438,7 @@
   // ── 1.17 살아 있는 과수원: 폰 장면(site/m)의 그림·움직임 규칙(motion.js)을 그대로 쓰는 작은 띠 ─────────────
   // ponytail: 폰 장면의 일부만(나무 단계·일꾼 일/쉼/걷기·개·소품·테마 색). 창고·하늘·날씨·감정 표시는 뺐다 — 게시물은 '그 과수원의 모습'만.
   // 그림 주소 꼬리표는 site/m/index.html 의 V 와 같이 올린다.
-  const MS = '../m/sprites/', MV = '?v=2003';
+  const MS = '../m/sprites/', MV = '?v=2005';
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let idx = null;
   const idxReady = fetch(MS + 'index.json' + MV).then(r => r.json()).then(d => { idx = d; }).catch(() => {});

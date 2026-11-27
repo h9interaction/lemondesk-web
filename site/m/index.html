@@ -36,11 +36,12 @@
   .wrap { max-width: 480px; margin: 0 auto; padding: 0 12px calc(96px + env(safe-area-inset-bottom)); }
   .wide .wrap { max-width: none; } /* 확인·캡처용 ?wide: 과수원 전체를 한 화면에 */
   /* 과수원 장면은 탭과 상관없이 탭 막대 바로 위에 늘 붙어 있다(Mac 띠처럼). 옆으로 밀기는 그대로 */
-  .dock { position: fixed; left: 0; right: 0; bottom: calc(68px + env(safe-area-inset-bottom)); z-index: 4; padding: 0 12px; background: var(--bg); }
-  .dock .scene { max-width: 456px; margin: 0 auto; }
-  .wrap:has(#app:not([hidden])) { padding-bottom: calc(272px + env(safe-area-inset-bottom)); }
-  body:has(#app:not([hidden])) .toast { bottom: calc(254px + env(safe-area-inset-bottom)); }
-  .wide .dock { position: static; padding: 0; }
+  .dock { position: fixed; left: 0; right: 0; bottom: calc(68px + env(safe-area-inset-bottom)); z-index: 4; }
+  #dock .scene { border: 0; background: none; zoom: .5; } /* 데스크톱 띠처럼 하늘·테두리 없이, 화면 폭 끝까지(뒤 내용이 비친다). 0.5배(높이 86px, 같은 폭에 두 배 넓게) */
+  .wrap:has(#app:not([hidden])) { padding-bottom: calc(186px + env(safe-area-inset-bottom)); }
+  body:has(#app:not([hidden])) .toast { bottom: calc(168px + env(safe-area-inset-bottom)); }
+  .wide .dock { position: static; }
+  .wide #dock .scene { zoom: 1; }
   body:has(input:focus, textarea:focus) .dock { display: none; } /* 키보드가 올라오면 입력할 자리를 남긴다 */
 
   header.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 2px 8px; color: var(--page-ink); }

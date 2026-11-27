@@ -35,6 +35,13 @@
   :focus-visible { outline: 3px solid #2F6FD0; outline-offset: 2px; }
   .wrap { max-width: 480px; margin: 0 auto; padding: 0 12px calc(96px + env(safe-area-inset-bottom)); }
   .wide .wrap { max-width: none; } /* 확인·캡처용 ?wide: 과수원 전체를 한 화면에 */
+  /* 과수원 장면은 탭과 상관없이 탭 막대 바로 위에 늘 붙어 있다(Mac 띠처럼). 옆으로 밀기는 그대로 */
+  .dock { position: fixed; left: 0; right: 0; bottom: calc(68px + env(safe-area-inset-bottom)); z-index: 4; padding: 0 12px; background: var(--bg); }
+  .dock .scene { max-width: 456px; margin: 0 auto; }
+  .wrap:has(#app:not([hidden])) { padding-bottom: calc(272px + env(safe-area-inset-bottom)); }
+  body:has(#app:not([hidden])) .toast { bottom: calc(254px + env(safe-area-inset-bottom)); }
+  .wide .dock { position: static; padding: 0; }
+  body:has(input:focus, textarea:focus) .dock { display: none; } /* 키보드가 올라오면 입력할 자리를 남긴다 */
 
   header.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 2px 8px; color: var(--page-ink); }
   .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 16.5px; }
@@ -220,9 +227,9 @@
   </header>
 
   <main id="app" hidden>
+    <div class="dock" id="dock"><div class="scene lemon" id="scene"><div class="sky" id="sky"></div><div class="pan" id="pan" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div><div class="yard" id="yard"></div></div></div><div class="sky front" id="sky2"></div></div></div>
     <section id="tab-orchard" role="tabpanel" aria-labelledby="t-orchard">
       <div class="seg strips" id="strips" role="tablist" hidden></div>
-      <div class="scene lemon" id="scene"><div class="sky" id="sky"></div><div class="pan" id="pan" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div><div class="yard" id="yard"></div></div></div><div class="sky front" id="sky2"></div></div>
       <p class="hint num lemon" id="clear" hidden></p>
       <p class="hint lemon" id="seedling" hidden></p>
       <p class="hint lemon" id="hint" hidden></p>
@@ -848,7 +855,7 @@
   }
   const discrete = (values, prop, fmt) => values.map((v, i) => ({[prop]: fmt(v), offset: i / values.length, easing: 'steps(1, end)'})).concat({[prop]: fmt(values[values.length - 1]), offset: 1});
   const later = (s, f) => setTimeout(f, s * 1000);
-  const resting = () => scene.hidden || $('tab-orchard').hidden || $('tab-orchard').classList.contains('away') || document.visibilityState !== 'visible'; // 안 보이면 장면도 쉰다
+  const resting = () => scene.hidden || document.visibilityState !== 'visible'; // 장면은 탭과 상관없이 늘 보인다(아래 고정). 앱이 안 보일 때만 쉰다
 
   // ── 효과·세상의 반응 ─────────────────────────────
   function puff(name, x, y, perFrame = 0.1, lit = false) { // 한 번 재생하고 사라진다
@@ -2240,7 +2247,7 @@
   // 탭
   const tabs = ['orchard', 'plant', 'crew', 'nb', 'col'];
   const showTab = name => tabs.forEach(t => { $('tab-' + t).hidden = t !== name; $('t-' + t).setAttribute('aria-selected', t === name); });
-  tabs.forEach(t => { $('t-' + t).onclick = () => { showTab(t); scrollTo(0, 0); if (t === 'orchard' && data && index) renderScene(); }; }); // 숨어 있던 장면은 보이는 칸을 그때 그린다
+  tabs.forEach(t => { $('t-' + t).onclick = () => { showTab(t); scrollTo(0, 0); }; }); // 장면은 아래에 고정이라 탭을 바꿔도 그대로
   const startTab = new URLSearchParams(location.search).get('tab'); // 확인·캡처용 ?tab=plant|crew|nb|col
   if (tabs.includes(startTab)) showTab(startTab);
 

@@ -18,9 +18,9 @@
 <meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="../icon.png?v=2">
 <link rel="icon" href="sprites/icon-64.png">
-<link rel="preload" href="fonts/galmuri11-bold.woff2?v=2004" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/galmuri11-bold.woff2?v=2005" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=2004) format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=2005) format("woff2"); font-display: swap; }
   :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
   @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
@@ -211,7 +211,28 @@
   .work .pic img { max-width: 100%; height: auto; image-rendering: pixelated; }
   #lab > .seg { margin: 10px 0; }
   .seg button.shown::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: 5px; background: #58B02C; vertical-align: 1px; }
-  #strip > .panel, #career > .panel, #market > .panel { margin-top: 10px; }
+  #strip > .panel, #career > .panel, #market > .panel, #coop > .panel { margin-top: 10px; }
+  /* 2.3.3 폰 조작(맥 관리 창 일터·직군·조합·장터): 한 줄(그림·이름·설명·버튼), 물건 칸, 시트 안 입력 */
+  .irow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .irow > div { flex: 1; min-width: 0; }
+  .irow > div > * { display: block; }
+  .irow b { font-size: 15px; font-weight: 600; }
+  .irow > .btn { flex: 0 0 auto; min-width: 96px; min-height: 44px; font-size: 15px; }
+  .irow > .ico { margin: 0; height: 28px; }
+  .row:has(> .col) { align-items: flex-start; }
+  .row > .col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .seg button .st { display: block; font-size: 12px; font-weight: 400; color: #7A5B3A; }
+  .seg.two button { flex: 1 1 calc(50% - 3px); }
+  .items { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+  .items button { min-height: 64px; padding: 4px 2px; border: 2px solid #C9A56B; background: #FFFDF3; color: #4A2E14; font: inherit; font-size: 12px; line-height: 1.2; cursor: pointer; overflow-wrap: anywhere; }
+  .items button img { display: block; height: 28px; width: auto; margin: 0 auto 2px; }
+  .items button[aria-pressed="true"] { background: #FFD84A; border-color: #5B3A1A; font-weight: 700; }
+  .items button:disabled { opacity: .45; cursor: default; }
+  .shelf { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 13px; }
+  .shelf span { display: inline-flex; align-items: center; gap: 2px; }
+  .shelf img { height: 24px; width: auto; }
+  #plots.form { margin: 10px 0; max-height: 62vh; overflow-y: auto; }
+  #plots.form > * + * { margin-top: 8px; }
   footer { margin-top: 20px; font-size: 14px; color: var(--page-soft); text-align: center; }
   footer a { color: inherit; }
   @media (prefers-reduced-motion: reduce) {
@@ -250,6 +271,7 @@
       <div id="farm" class="lemon"></div>
       <div id="stand" class="lemon"></div>
       <div id="career"></div>
+      <div id="coop"></div>
       <p class="raid-note" id="raid-note" role="status" hidden></p>
       <div class="panel banner" id="banner" hidden><p id="banner-text"></p><button class="btn y px" id="retry" type="button" hidden></button></div>
       <div class="panel week lemon" id="week" hidden>
@@ -345,6 +367,7 @@
 </dialog>
 
 <script src="motion.js?v=1150"></script>
+<script src="farm.js?v=2009"></script>
 <script>
 (() => {
   const LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
@@ -520,8 +543,74 @@
       lettuce: 'Lettuce', potato: 'Potato', radish: 'Radish', cabbage: 'Napa Cabbage', tomato: 'Tomato', cucumber: 'Cucumber', pepper: 'Chili Pepper', watermelon: 'Watermelon',
       strawberry: 'Strawberry', ginseng: 'Ginseng', kimchi: 'Kimchi Crock', egg: 'Egg', duckEgg: 'Duck Egg', milk: 'Milk', wool: 'Wool', compost: 'Compost', honey: 'Honey',
       down: 'Down', calf: 'Calf', lamb: 'Lamb', ricotta: 'Ricotta', laver: 'Laver', seaweed: 'Seaweed', kelp: 'Kelp', oyster: 'Oyster', abalone: 'Abalone',
-      flatfish: 'Flatfish', seabream: 'Sea Bream', shrimp: 'Shrimp', pearl: 'Pearl', fry: 'Fry', giftSet: 'Abalone Ginseng Gift Set'},
+      flatfish: 'Flatfish', seabream: 'Sea Bream', shrimp: 'Shrimp', pearl: 'Pearl', fry: 'Fry', giftSet: 'Abalone Ginseng Gift Set',
+      chicken: 'Chicken', duck: 'Duck', cow: 'Cow', sheep: 'Sheep', pig: 'Pig', bee: 'Bee', goose: 'Goose'},
     adjs: ['Sleepy', 'Busy', 'Shy', 'Lazy', 'Tangy', 'Sparkly', 'Plucky', 'Quiet', 'Hungry', 'Humming', 'Sunny', 'Breezy'], farm: (a, f) => `${a} ${f} orchard`,
+    awakeOnly: 'This works while your Mac is awake.', notesLine2: n => `Notes from ${n} ${n === '1' ? 'neighbor' : 'neighbors'} · read them on your Mac`,
+    // 2.3.3 폰 조작(영어는 맥 Localizable.xcstrings 그대로, 폰에만 있는 줄은 새로)
+    w: {coins: n => `${n} co-op coins`, buy: 'Buy', short: v => `${v} co-op coins short`, sellFor: v => `Sell All ◎${v}`, nowHit: k => `Now: ${k}`, auto: 'Auto-plant in season',
+      suggestH: 'Suggested', putIn: (n, k) => `Put ${k} in plot ${n}`, unlockX: k => `Unlock ${k}`, growShop: 'Expand the Workshop', growCrate: 'Expand the Crate',
+      part: {field: 'Plots', ranch: 'Pens', sea: 'Sea'}, benchH: n => `Workshop Bench · Stage ${n}`, plotsH: (k, n, m) => `${k} · Stage ${n} · ${m} plots`,
+      put: 'Add', swap: 'Replace', emptyPlot: n => `Plot ${n} · Empty`, empty: 'Empty', slotTitle: (n, k) => `Plot ${n} · ${k}`,
+      slot: {empty: 'Choose a kind to add', rest: 'Resting · Not enough expertise', grow: p => `Growing ${p}%`, stack: (n, m) => `Stacked ${n} / ${m}`, ready: n => `Ready ${n}`,
+        waitN: n => `Waiting for ingredients · Done ${n}`, wait: 'Waiting for ingredients', full: n => `Done ${n} · Shelf full`, make: (p, n) => `Making ${p}% · Done ${n}`},
+      unlockH: 'Unlock a new kind', unlock: 'Unlock', need: (k, n, h) => `Needs ${n} ${k} · have ${h}`, opensAt: (n, ks) => `Opens at stage ${n}: ${ks}`,
+      keptH: (n, m) => `Storage ${n} / ${m}`, nOf: (k, n) => `${k} ×${n}`, bonus: b => `Aging bonus +${b}%`, sellV: v => `Sell ◎${v}`, releaseOnly: 'Release only', release: 'Release',
+      shelfH: 'Workshop Shelf', crateLv: (l, c) => `Level ${l} · holds ${c}`, grow: 'Expand',
+      crew: 'Workers', shopCrew: 'Workshop Workers', noneYet: 'None yet', levelUp: 'Level up', crewNote: 'Planters raise value, caretakers speed up growth, and harvesters pick faster.',
+      sellAll: v => `Sell all open strips ◎${v}`,
+      gateOpen: 'Your orchard is fully grown', gateOpenText: 'Now you can choose a career and open a new workplace.', chooseBtn: 'Choose a Career',
+      chooseText: 'Your chosen career gets 6 expertise points and a new workplace opens.', chooseQ: k => `Choose ${k}?`, chooseNote: 'You can change once for free.', choose: 'Choose',
+      party: 'A new workplace is open!', wishH: 'What would you like to do someday?',
+      wishNote: 'You can change your mind as often as you like before you pass the gate. Only your title and style change; your orchard stays the same.',
+      fun: {orchard: "The longer it ages, the more it's worth. You choose when to take it out.", field: "Read the seasons. Plant by what's in season and the poor-harvest forecast.",
+        ranch: 'Steady. A little every day, the most stable income.', sea: 'Timing is everything. Tides and typhoons: big earnings, big swings.'},
+      pointsH: n => `Expertise +${n}`, subCareer: 'Side career', mainCareer: 'Main career', toMain: k => `To main (${k})`, toSub: k => `To side (${k})`,
+      opens: (k, n) => `${k} Stage ${n} opens`, craft: k => `${k} craft improves`, warn: "Giving this point to your side career means you can't reach Master",
+      pointNote: 'Your side career is set the first time you give it a point. You can change it with Rechoose.',
+      respecDots: 'Rechoose…', respec: 'Rechoose', firstFree: 'The first one is free', relearn: 'Relearn', from: d => `Available from ${d}`, none: 'None', subPts: n => `Side career ${n} pts`,
+      freeNow: "This one's free", cost: v => `Cost ◎${v}`, respecQ: 'Rechoose your career?',
+      respecNote: 'If a career loses points, the stages above its limit rest. Nothing is erased; give the points back and they keep growing.',
+      coopH: 'Co-op', offer: {start: 'The co-op offers a starter loan', recover: 'The co-op offers a recovery loan'},
+      offerText: {start: 'You just started your career. Borrowed co-op coins can bring your first unlock sooner.', recover: 'A disaster hit without insurance. Borrowed co-op coins can help you rebuild.'},
+      borrowV: v => `Borrow ◎${v}`, noThanks: 'No thanks', borrowQ: v => `Borrow ◎${v}?`, borrowNote: 'Repaid automatically from your sales. One loan at a time.',
+      autoRenew: 'Renew automatically next season', joinFor: v => `Join for ◎${v}`, joinShort: v => `◎${v} · Not enough co-op coins`, overdueNo: "Can't join while overdue", noNeed: 'No need this season',
+      loanH: 'Loan', owe: v => `Left to repay ◎${v}`, repayV: v => `Repay ◎${v}`, canBorrow: v => `You can borrow ◎${v}`, borrowDots: 'Borrow…',
+      borrowLater: "You can borrow once your main career's strip starts earning", overdue: 'Your loan is overdue',
+      deliveryH: 'Delivery order', deliveryDue: t => `Delivery order · ${t} left`, reward: v => `Reward ◎${v} + delivery stamp`, deliver: 'Deliver',
+      otherJob: "Another career's item · buy it at the co-op store or market", nextOrder: 'The next order comes on Monday.', stamps: n => `Delivery stamps: ${n}`,
+      days: n => `${n} ${n === 1 ? 'day' : 'days'}`, hours: n => `${n} ${n === 1 ? 'hour' : 'hours'}`,
+      lossH: 'The disaster has passed', lossPaid: 'A co-op clerk brought your payout and stamped it.', lossNone: "Your trees, animals and plots are fine. Here's what was lost.",
+      lost: v => `Lost ◎${v}`, nothingLost: 'Nothing was lost; work just paused for a while.', paid: v => `Paid by insurance ◎${v}`, noPay: 'No payout without insurance.', ok: 'OK',
+      peddlerH: t => `The peddler is here · leaves in ${t}`, peddlerText: 'Sells a few stage 4–5 items of each kind at a premium. Your fallback when the market has none.',
+      soldOut: 'The peddler is sold out.', leftShelf: (n, p) => `${n} left · ${p} on shelf`, buy1: 'Buy 1',
+      parts: {browse: 'Browse', mine: 'My stall', coop: 'Co-op store'}, findH: 'What are you looking for?', stallsOf: k => `Stalls selling ${k}`, refresh: 'Refresh', noStalls: 'No stalls yet',
+      coopHas: 'You can always buy it at the co-op store, a bit pricier than the market.', coopNot: "The co-op store doesn't carry this. A peddler stops by once a week with a few.",
+      toCoop: 'Go to Co-op Store', wantDots: 'Post a Request…', pickFirst: 'Pick an item to see stalls selling it.',
+      browseNote: "Neighbors' stalls first, then cheapest. Items you buy go to your ingredient shelf; the seller is paid next time they open the app.",
+      pantryH: 'Ingredient shelf', pantryEmpty: "Items you buy go here. They're for ingredients only and can't be resold.", neighbor: 'Neighbor', leftN: n => `${n} left`,
+      buyDots: 'Buy…', buyFrom: k => `Buy from ${k}`, nPrice: (n, v) => `×${n} · ◎${v}`, resell: "For ingredients only; can't be resold.",
+      wantsH: (n, m) => `My requests ${n} / ${m}`, noWants: 'No requests yet.', takeDown: 'Take Down', daysLeft: n => `${n} ${n === 1 ? 'day' : 'days'} left`, wantH: 'Post Request',
+      howMany: k => `How many ${k}?`, wantsNote: "Shown in the market of people who make it. We'll let you know when someone lists it. Removed after 7 days.",
+      listedH: (n, m) => `Listed ${n} / ${m} slots`, noneListed: 'Nothing listed yet.', listDots: 'List an Item…', listH: 'List an Item', listFrom1: 'You can list from career stage 1',
+      nothingToList: 'Nothing to list. You can list goods you made (not lemons, bottles or bought items).', nHave: (k, n, h) => `${k} ×${n} · you have ${h}`, each: 'Each', ifSold: 'If all sell',
+      listNote: f => `Set a price between 1× and 1.5× the base price. A ${f}% co-op fee is taken when items sell. Listed items leave your crate and come back if unsold after 7 days.`,
+      stallFull: 'Your stall is full. Take something down or add more of an item already listed.', post: 'Post',
+      mineNote: 'Unsold items return to your crate after 7 days. A co-op fee is taken from sales.',
+      coopBuyH: 'Buy at Co-op Store', onShelf: n => `${n} on shelf`,
+      coopNote: 'Sells items up to stage 3 at the same price any time (whatever the market rate). Find stage 4–5 items from the peddler or at the market.',
+      noteDots: 'Note…', noteTitle: k => `Notes · ${k}`, groups: ['Greetings', 'Market', 'Weather', 'Cheers'], goods: 'Goods', pick: 'Choose…', stampH: 'Stamp', optional: '(optional)',
+      mute: "Don't receive notes from this neighbor", sendNote: 'Send',
+      phrases: ['Hello', 'How are you?', 'Have a nice day', 'Long time no see', 'Just dropping by', 'See you', i => `Looking for ${i}`, i => `Listed ${i}`, i => `No ${i} right now`,
+        i => `${i} coming soon`, "I'll put it to good use", 'Count on you again', 'Watch out for the typhoon', 'Are you okay?', 'All safe here', 'Get some insurance', 'Lovely weather',
+        "It's cold, stay warm", 'Thank you', 'Congratulations', 'Awesome', 'Hang in there', "You're a master now!", 'Your strip is lovely'],
+      done: {farm_buy: p => p.what === 'plant' ? `Added ${T.crops[p.item] || p.item}` : p.what === 'unlock' ? `Unlocked ${T.crops[p.item] || p.item}` : p.what === 'worker' ? T.hired(p.role) : T.grown,
+        sell_kept: (p, r) => T.farmSold(r.earned || 0), sell_farms: (p, r) => T.farmSold(r.earned || 0), delivery_fill: (p, r) => `Delivered · +${fmt(r.earned || 0)} co-op coins`,
+        farm_auto: p => p.on ? 'Auto-plant is on' : 'Auto-plant is off', farm_release: () => 'Released the fry into the sea', wish: () => 'Your wish is set',
+        career_choose: () => 'Career chosen', career_point: () => 'Point given', career_respec: () => 'Career rechosen', coop_buy: () => 'Put on your ingredient shelf',
+        peddler_buy: () => 'Put on your ingredient shelf', market_buy: () => 'Put on your ingredient shelf', coop_renew: () => 'Insurance updated', coop_borrow: () => 'Borrowed',
+        coop_repay: (p, r) => `Repaid ◎${fmt(r.earned || 0)}`, coop_dismiss: () => '', market_find: () => '', market_list: () => 'Listed on your stall', market_take: () => 'Taken down',
+        market_wants: () => 'Requests updated', note: () => 'Note sent', note_mute: p => p.on ? "You won't get notes from this neighbor" : "You'll get notes from this neighbor again"}},
   } : {
     crate: '창고', sell: '모두 팔기', sellFor: v => `모두 팔기 +${v}`,
     fullIn: t => `가득까지 ${t}`, full: '창고가 가득 찼어요', slow: '천천히 차는 중', field: (n, m) => `밭 ${n} / ${m}칸`, fieldFull: (n, m) => `밭 ${n} / ${m}칸 · 다 차서 바꿔 심을 수 있어요`,
@@ -680,13 +769,79 @@
       lettuce: '상추', potato: '감자', radish: '무', cabbage: '배추', tomato: '토마토', cucumber: '오이', pepper: '고추', watermelon: '수박',
       strawberry: '딸기', ginseng: '인삼', kimchi: '김장 김치 독', egg: '달걀', duckEgg: '오리알', milk: '우유', wool: '양털', compost: '퇴비', honey: '꿀',
       down: '거위털', calf: '송아지', lamb: '새끼 양', ricotta: '리코타 치즈', laver: '김', seaweed: '미역', kelp: '다시마', oyster: '굴', abalone: '전복',
-      flatfish: '넙치', seabream: '참돔', shrimp: '새우', pearl: '진주', fry: '치어', giftSet: '전복 인삼 선물 세트'},
+      flatfish: '넙치', seabream: '참돔', shrimp: '새우', pearl: '진주', fry: '치어', giftSet: '전복 인삼 선물 세트',
+      chicken: '닭', duck: '오리', cow: '젖소', sheep: '양', pig: '돼지', bee: '꿀벌', goose: '거위'},
     adjs: ['졸린', '부지런한', '수줍은', '느긋한', '새콤한', '반짝이는', '씩씩한', '조용한', '배고픈', '콧노래 부르는', '햇살 가득한', '바람 부는'], farm: (a, f) => `${a} ${f} 과수원`,
+    awakeOnly: 'Mac이 깨어 있을 때 돼요.', notesLine2: n => `쪽지가 온 이웃 ${n}명 · 읽기는 Mac에서 해요`,
+    // 2.3.3 폰 조작(맥 관리 창 FarmWorkView·CareerView·CoopView·MarketView·NoteSheet 문구 그대로)
+    w: {coins: n => `조합 코인 ${n}`, buy: '사기', short: v => `조합 코인이 ${v} 모자라요`, sellFor: v => `모두 팔기 ◎${v}`, nowHit: k => `지금 ${k}`, auto: '제철 자동 심기',
+      suggestH: '추천', putIn: (n, k) => `${n}번 칸에 ${k} 들이기`, unlockX: k => `${k} 해금`, growShop: '공방 넓히기', growCrate: '창고 넓히기',
+      part: {field: '밭', ranch: '우리', sea: '바다'}, benchH: n => `공방 작업대 · ${n}단계`, plotsH: (k, n, m) => `${k} · ${n}단계 · ${m}칸`,
+      put: '들이기', swap: '바꿔 들이기', emptyPlot: n => `${n}번 칸 · 빈 칸`, empty: '빈 칸', slotTitle: (n, k) => `${n}번 칸 · ${k}`,
+      slot: {empty: '들일 종류를 골라 주세요', rest: '쉬는 중 · 전문 점수가 모자라요', grow: p => `자라는 중 ${p}%`, stack: (n, m) => `쌓인 것 ${n} / ${m}`, ready: n => `거둘 것 ${n}`,
+        waitN: n => `재료를 기다려요 · 다 된 것 ${n}`, wait: '재료를 기다려요', full: n => `다 된 것 ${n} · 선반이 찼어요`, make: (p, n) => `만드는 중 ${p}% · 다 된 것 ${n}`},
+      unlockH: '새 종류 해금', unlock: '해금', need: (k, n, h) => `${k} ${n}개 필요 · 가진 것 ${h}`, opensAt: (n, ks) => `${n}단계에 열려요: ${ks}`,
+      keptH: (n, m) => `보관함 ${n} / ${m}`, nOf: (k, n) => `${k} ${n}개`, bonus: b => `숙성 덤 +${b}%`, sellV: v => `팔기 ◎${v}`, releaseOnly: '방류 전용', release: '방류',
+      shelfH: '공방 선반', crateLv: (l, c) => `레벨 ${l} · ${c}개 보관`, grow: '넓히기',
+      crew: '일꾼', shopCrew: '공방 일꾼', noneYet: '아직 없어요', levelUp: '레벨 업', crewNote: '심기 일꾼은 값을, 돌보기 일꾼은 자람을, 수확 일꾼은 거두는 빠르기를 올려요.',
+      sellAll: v => `열린 띠 모두 팔기 ◎${v}`,
+      gateOpen: '과수원을 다 키웠어요', gateOpenText: '이제 직군을 하나 골라 새 일터를 열 수 있어요.', chooseBtn: '직군 고르기',
+      chooseText: '고른 직군에 전문 점수 6점이 들어가고 새 일터가 열려요.', chooseQ: k => `${ro(k)} 정할까요?`, chooseNote: '한 번은 무료로 다시 고를 수 있어요.', choose: '정하기',
+      party: '새 일터가 열렸어요', wishH: '나중에 무슨 일을 하고 싶어요?',
+      wishNote: '뜻은 관문을 넘기 전까지 얼마든지 바꿀 수 있어요. 칭호와 꾸미기만 바뀌고 과수원은 그대로예요.',
+      fun: {orchard: '묵힐수록 값이 올라요. 언제 꺼낼지 고르는 숙성.', field: '철을 읽어요. 제철과 흉작 예보에 맞춰 심어요.',
+        ranch: '꾸준해요. 날마다 조금씩, 가장 안정된 수입.', sea: '때를 맞춰요. 물때와 태풍, 크게 벌고 크게 흔들려요.'},
+      pointsH: n => `전문 점수 +${n}`, subCareer: '부 직군', mainCareer: '주 직군', toMain: k => `주 직군(${k})에`, toSub: k => `부 직군(${k})에`,
+      opens: (k, n) => `${k} ${n}단계가 열려요`, craft: k => `${k} 손재주가 늘어요`, warn: '이 점수를 부 직군에 주면 명인까지는 갈 수 없어요',
+      pointNote: '부 직군은 처음 점수를 줄 때 정해져요. 다시 고르기로 바꿀 수 있어요.',
+      respecDots: '다시 고르기…', respec: '다시 고르기', firstFree: '첫 한 번은 무료예요', relearn: '다시 배우기', from: d => `${d}부터 할 수 있어요`, none: '없음', subPts: n => `부 직군 점수 ${n}`,
+      freeNow: '이번은 무료예요', cost: v => `대가 ◎${v}`, respecQ: '직군을 다시 고를까요?',
+      respecNote: '점수가 줄어든 직군에서 넘치는 단계는 쉬어요. 지워지지 않고, 점수를 다시 주면 이어서 자라요.',
+      coopH: '조합', offer: {start: '조합이 시작 대출을 권해요', recover: '조합이 복구 대출을 권해요'},
+      offerText: {start: '직군을 막 열었어요. 빌린 조합 코인으로 첫 해금을 앞당길 수 있어요.', recover: '보험 없이 재해를 맞았어요. 빌린 조합 코인으로 다시 일으켜 세워요.'},
+      borrowV: v => `◎${v} 빌리기`, noThanks: '괜찮아요', borrowQ: v => `◎${v} 빌릴까요?`, borrowNote: '판매 수입에서 저절로 갚아요. 한 번에 하나만 빌려요.',
+      autoRenew: '다음 계절도 저절로 들기', joinFor: v => `들면 ◎${v}`, joinShort: v => `◎${v} · 조합 코인이 모자라요`, overdueNo: '연체 중이라 들 수 없어요', noNeed: '이번 계절에는 들 필요가 없어요',
+      loanH: '대출', owe: v => `갚을 값 ◎${v}`, repayV: v => `◎${v} 갚기`, canBorrow: v => `빌릴 수 있는 값 ◎${v}`, borrowDots: '빌리기…',
+      borrowLater: '주 직군 띠가 벌기 시작하면 빌릴 수 있어요', overdue: '대출이 연체됐어요',
+      deliveryH: '납품 주문', deliveryDue: t => `납품 주문 · 마감까지 ${t}`, reward: v => `보상 ◎${v} + 납품 도장`, deliver: '납품하기',
+      otherJob: '다른 직군 물건 · 공판장·장터에서 살 수 있어요', nextOrder: '다음 주문은 월요일에 와요.', stamps: n => `납품 도장 ${n}개`,
+      days: n => `${n}일`, hours: n => `${n}시간`,
+      lossH: '재해가 지나갔어요', lossPaid: '조합 직원이 보험금을 들고 와서 도장을 쾅 찍었어요.', lossNone: '나무·동물·칸은 그대로예요. 잃은 것만 적어 둘게요.',
+      lost: v => `잃은 것 ◎${v}`, nothingLost: '잃은 것은 없고, 잠깐 일이 멈췄어요.', paid: v => `보험으로 받은 것 ◎${v}`, noPay: '보험이 없어서 받은 것이 없어요.', ok: '확인',
+      peddlerH: t => `행상이 왔어요 · ${t} 뒤 떠나요`, peddlerText: '4·5단계 물건을 종류마다 몇 개씩 비싸게 팔아요. 장터에 없을 때 기댈 곳이에요.',
+      soldOut: '행상이 가져온 물건이 다 팔렸어요.', leftShelf: (n, p) => `${n}개 남음 · 선반에 ${p}개`, buy1: '1개 사기',
+      parts: {browse: '둘러보기', mine: '내 진열', coop: '공판장'}, findH: '어떤 물건을 찾나요?', stallsOf: k => `${k} 파는 가판대`, refresh: '새로 고침', noStalls: '아직 진열한 가판대가 없어요',
+      coopHas: '조합 공판장에서 언제든 살 수 있어요. 장터보다 조금 비싸요.', coopNot: '이 물건은 공판장에 없어요. 행상이 일주일에 한 번 들러 몇 개씩 팔아요.',
+      toCoop: '공판장으로', wantDots: '구해요 걸기…', pickFirst: '물건을 고르면 그 물건을 파는 가판대가 보여요.',
+      browseNote: '이웃 가판대가 먼저, 그다음 값이 싼 순서예요. 산 물건은 재료 선반에 들어가고, 판 사람 몫은 다음에 켤 때 들어가요.',
+      pantryH: '재료 선반', pantryEmpty: '사 온 물건이 여기 들어와요. 재료로만 쓰고 되팔 수는 없어요.', neighbor: '이웃', leftN: n => `${n}개 남음`,
+      buyDots: '사기…', buyFrom: k => `${k}에서 사기`, nPrice: (n, v) => `${n}개 · ◎${v}`, resell: '재료로만 쓰고 되팔 수는 없어요.',
+      wantsH: (n, m) => `내 구해요 ${n} / ${m}`, noWants: '구하는 물건이 없어요.', takeDown: '내리기', daysLeft: n => `${n}일 남음`, wantH: '구해요 걸기',
+      howMany: k => `${k} 몇 개를 구할까요?`, wantsNote: '그 물건을 만드는 사람의 장터에 보여요. 누가 올리면 알려 드려요. 7일 뒤 저절로 내려가요.',
+      listedH: (n, m) => `올린 것 ${n} / ${m}칸`, noneListed: '아직 올린 물건이 없어요.', listDots: '진열 올리기…', listH: '진열 올리기', listFrom1: '직군 1단계부터 올릴 수 있어요',
+      nothingToList: '올릴 물건이 없어요. 내가 만든 2.0 물건을 올려요(레몬·병·사 온 물건은 빼고).', nHave: (k, n, h) => `${k} ${n}개 · 가진 것 ${h}개`, each: '한 개', ifSold: '다 팔리면',
+      listNote: f => `기준가의 1배에서 1.5배 사이로 정해요. 다 팔리면 조합 수수료 ${f}%를 빼고 들어와요. 올리면 창고에서 빠지고, 7일 안에 안 팔리면 돌아와요.`,
+      stallFull: '장터 칸이 가득 찼어요. 올린 것을 내리거나 같은 물건을 더 올려요.', post: '올리기',
+      mineNote: '7일 안에 안 팔리면 창고로 돌아와요. 팔린 값에서 조합 수수료가 빠져요.',
+      coopBuyH: '공판장에서 사기', onShelf: n => `선반에 ${n}개`,
+      coopNote: '3단계까지의 물건을 언제든 같은 값에 팔아요(시세와 상관없음). 4·5단계 물건은 행상이나 장터에서 구해요.',
+      noteDots: '쪽지…', noteTitle: k => `쪽지 · ${k}`, groups: ['인사', '장터', '날씨', '응원'], goods: '물건', pick: '고르기', stampH: '스탬프', optional: '(없어도 돼요)',
+      mute: '이 이웃의 쪽지 받지 않기', sendNote: '보내기',
+      phrases: ['안녕하세요', '잘 지내요?', '좋은 하루 보내요', '오랜만이에요', '놀러 왔어요', '또 봐요', i => `${i} 구해요`, i => `${i} 올렸어요`, i => `${i} 지금은 없어요`,
+        i => `${i} 곧 나와요`, '잘 쓸게요', '또 부탁해요', '태풍 조심해요', '괜찮아요?', '무사해요', '보험 들어 두세요', '날이 좋네요', '추워요, 따뜻하게', '고마워요', '축하해요',
+        '멋져요', '힘내요', '명인이 되셨네요', '띠가 예뻐요'],
+      done: {farm_buy: p => p.what === 'plant' ? `${obj(T.crops[p.item] || p.item)} 들였어요` : p.what === 'unlock' ? `${obj(T.crops[p.item] || p.item)} 해금했어요` : p.what === 'worker' ? T.hired(p.role) : T.grown,
+        sell_kept: (p, r) => T.farmSold(r.earned || 0), sell_farms: (p, r) => T.farmSold(r.earned || 0), delivery_fill: (p, r) => `납품했어요 · 조합 코인 +${fmt(r.earned || 0)}`,
+        farm_auto: p => p.on ? '제철 자동 심기를 켰어요' : '제철 자동 심기를 껐어요', farm_release: () => '치어를 바다에 놓아줬어요', wish: () => '뜻을 세웠어요',
+        career_choose: () => '직군을 정했어요', career_point: () => '전문 점수를 줬어요', career_respec: () => '직군을 다시 골랐어요', coop_buy: () => '재료 선반에 넣었어요',
+        peddler_buy: () => '재료 선반에 넣었어요', market_buy: () => '재료 선반에 넣었어요', coop_renew: () => '보험을 바꿨어요', coop_borrow: () => '빌렸어요',
+        coop_repay: (p, r) => `◎${fmt(r.earned || 0)} 갚았어요`, coop_dismiss: () => '', market_find: () => '', market_list: () => '진열에 올렸어요', market_take: () => '진열에서 내렸어요',
+        market_wants: () => '구해요를 바꿨어요', note: () => '쪽지를 보냈어요', note_mute: p => p.on ? '이 이웃의 쪽지를 받지 않아요' : '이 이웃의 쪽지를 다시 받아요'}},
   };
   // 윈도우판(상태의 platform 이 win)이면 연결 뒤 문구의 'Mac' 을 'PC' 로. 맥 앱은 platform 을 보내지 않는다.
   let pc = false;
   const toPC = t => t.replace(/Mac이/g, 'PC가').replace(/Mac을/g, 'PC를').replace(/Mac/g, 'PC');
-  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN', 'update15', 'showBtn', 'shownNow', 'stallMac', 'notesLine', 'labMac', 'workNoPic']) {
+  for (const k of ['online', 'asleepChip', 'asleep', 'noState', 'upgrade', 'noAnswer', 'lostText', 'seedling', 'update14', 'raidAwake', 'asleepQ', 'queued', 'queuedSell', 'lockedN', 'update15', 'showBtn', 'shownNow', 'stallMac', 'notesLine', 'labMac', 'workNoPic', 'awakeOnly', 'notesLine2']) {
     const v = T[k];
     if (typeof v === 'function') T[k] = (...a) => pc ? toPC(v(...a)) : v(...a);
     else Object.defineProperty(T, k, { get: () => pc ? toPC(v) : v });
@@ -753,7 +908,7 @@
   // ── 과수원 장면: 맥 띠(OrchardView·Worker·Dog)와 같은 그림, 같은 움직임 규칙(motion.js) ─────────────
   // 1pt = 2px(아트 픽셀 1칸 = 1px). 좌표는 아래 가운데 기준(x 는 왼쪽에서, y 는 땅에서 위로). 맥처럼 CSS 애니메이션(WAAPI)을
   // 걸어 두고 동작이 끝날 때만 깨어난다. 동작 줄이기(calm)면 장식은 끄고 일꾼·개는 서 있는다.
-  const V = '?v=2008'; // 그림을 다시 만들면 올린다(브라우저 캐시)
+  const V = '?v=2009'; // 그림을 다시 만들면 올린다(브라우저 캐시)
   const H = 172, O = 12, CRATE_X = O + 60, TREE_Y = 12, WORKER_Y = 4;
   const plotX = i => O + 300 + i * 120;
   const ROLES = ['planter', 'caretaker', 'harvester'], TOWARD = new Set(['water', 'pick', 'dig', 'seed', 'tamp']);
@@ -856,7 +1011,7 @@
   }
   const discrete = (values, prop, fmt) => values.map((v, i) => ({[prop]: fmt(v), offset: i / values.length, easing: 'steps(1, end)'})).concat({[prop]: fmt(values[values.length - 1]), offset: 1});
   const later = (s, f) => setTimeout(f, s * 1000);
-  const resting = () => scene.hidden || document.visibilityState !== 'visible'; // 장면은 탭과 상관없이 늘 보인다(아래 고정). 앱이 안 보일 때만 쉰다
+  const resting = () => scene.hidden || document.visibilityState !== 'visible' || farm.on; // 장면은 탭과 상관없이 늘 보인다(아래 고정). 앱이 안 보일 때·다른 띠 장면을 볼 때만 쉰다
 
   // ── 효과·세상의 반응 ─────────────────────────────
   function puff(name, x, y, perFrame = 0.1, lit = false) { // 한 번 재생하고 사라진다
@@ -1234,6 +1389,15 @@
     world.replaceChildren(ground, yard); yard.replaceChildren(); sky.replaceChildren(); sky2.replaceChildren();
     for (const [k, p] of looks) if (!k.endsWith('|-')) { looks.delete(k); p.then(u => u.startsWith('blob:') && URL.revokeObjectURL(u)); }
   }
+  // 2.3.3 띠 장면(farm.js, 맥 FarmScene): 고른 띠의 상태 → 맥 FarmSceneState(물때·장면 단계·예보 구름은 폰이 계산, 계획서 '상태 키')
+  const farm = Farm.create({pan, calm, art, index: () => index, url: f => S + f + V, nowSec, quiet: () => quiet});
+  function farmView(s) {
+    const k = pick, st = k && k !== 'orchard' && v20() ? stripOf(s, k) : null;
+    if (!st || !st.open || !Array.isArray(st.plots)) return null; // 칸 정보가 없는 옛 앱은 과수원 장면
+    const fc = (s.forecast || []).find(e => (e.strips || []).includes(k) && e.kind !== 'poor');
+    return {strip: k, stage: Math.max(1, st.stage || 0), pens: st.plots.map(p => p.c ?? null), growth: st.plots.map(p => p.g ?? 2), disaster: st.disaster || null,
+      tide: Math.floor(nowSec() / 3600) % 2 === 0 ? 'flood' : 'ebb', workers: (st.workers || []).filter(w => w.level > 0).map(w => w.role), forecast: fc ? fc.kind : null, poor: st.poor || []};
+  }
   function renderScene() {
     const s = state(), has = !!(s && s.plots);
     scene.hidden = !has;
@@ -1245,7 +1409,16 @@
     period = quiet ? 'night' : periodOf(s.hour ?? new Date().getHours());
     scene.className = 'scene lemon ' + period;
     const g = then(THEME[s.theme] || null, PERIOD[period] || null), gk = g ? g.join() : '';
-    if (gk !== tintKey || !built) { clearScene(); tint = g; tintKey = gk; built = 'yes'; }
+    if (gk !== tintKey) { clearScene(); built = ''; tint = g; tintKey = gk; } // 색 보정이 바뀌면 그림을 전부 새로(띠 장면은 key 로)
+    const fs = farmView(s);
+    if (fs) { // 2.3.3 일터에서 고른 텃밭·목장·바닷가는 farm.js 가 그린다(과수원은 그대로 아래)
+      if (built) { clearScene(); built = ''; }
+      world.hidden = true;
+      $('hint').hidden = farm.show(fs, {key: tintKey, coop: s.coop, notes: s.notes || 0}) <= pan.clientWidth;
+      return;
+    }
+    if (farm.on) { farm.stop(); world.hidden = false; restore = +localStorage.getItem('ld-remote-scroll') || 0; }
+    if (!built) { clearScene(); built = 'yes'; }
     // 땅: 심은 칸 + 다음 빈 칸(다 차면 마지막 칸까지). 1.12 앱은 다 찬 밭 끝에 풀숲 한 칸(개간 중이면 일구는 칸)을 더 그린다
     const n = s.plots.length, land = landOf(s);
     wild = s.land != null && n >= land ? (landObj(s).clearing > 0 ? 'land-clearing-0' : `land-wild-${land % 2}`) : '';
@@ -1385,7 +1558,7 @@
   pan.addEventListener('scroll', () => {
     if (!panQueued) { panQueued = true; requestAnimationFrame(() => { panQueued = false; const s = state(); if (!treesBuilt || !s || !s.plots) return; syncTrees(s); syncWeeds(s); for (const w of crew.values()) if (w.playing === 'sit') w.interrupt([idle(0.4)]); }); }
     clearTimeout(panSave); panSave = setTimeout(() => { // 다 밀고 나서: 위치를 적고, 앉으러 가던 일꾼은 지금 창고 자리로 다시 간다(관성 중에 고른 자리는 허공이라)
-      try { localStorage.setItem('ld-remote-scroll', String(Math.round(pan.scrollLeft))); } catch (e) {}
+      if (!farm.on) try { localStorage.setItem('ld-remote-scroll', String(Math.round(pan.scrollLeft))); } catch (e) {} // 띠 장면을 민 자리는 과수원 자리를 덮지 않는다
       for (const w of crew.values()) if (w.steps.some(st => st.anim === 'sit')) w.interrupt([idle(0.4)]);
     }, 300);
   }, {passive: true});
@@ -1872,6 +2045,7 @@
       act(T.sapling, () => choose(T.saplingWhich, (n.saplings || []).map(k => ({label: kindName(k), img: `${S}tree-${k}-1.png`, value: k})),
         kind => send({action: 'nb_sapling', target: n.id, kind})), {off: !n.canSapling || !(n.saplings || []).length})));
     if (n.track > 0) p.append(el('p', 'note', T.trackLeft(dur(n.track))), row(act(T.recover, () => chooseRaid({action: 'raid_recover', target: n.id}), {need: awake})));
+    if (s.market) p.append(row(act(T.w.noteDots, () => noteSheet(n), {cls: 'y', need: awake}))); // 2.3.3 정해진 말 쪽지(Mac 이 깨어 있을 때)
     return p;
   }
   function renderNb() {
@@ -2111,33 +2285,130 @@
       const b = el('button', k === shown ? 'shown' : ''); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', k === pick);
       b.append(pic(`${S}menu-${k}.png${V}`), document.createTextNode(T.strip[k]));
       if (k === shown) b.ariaLabel = `${T.strip[k]}, ${T.shownNow}`;
-      b.onclick = () => { pick = k; renderWork(); if (k === 'orchard' && index) renderScene(); };
+      b.onclick = () => { pick = k; renderWork(); if (index) renderScene(); }; // 아래 띠도 고른 띠 장면으로(2.3.3)
       return b;
     }));
     const st = on && stripOf(s, pick);
     // 열린 띠면 카드(과수원 open = 공방이 열림). 다시 고르기로 점수가 없어진 띠는 stage 0 = 쉬는 중
-    keep('strip', [st, shown, on && (s.prices || {})[pick], on && (s.neighbors || []).map(n => [n.id, n.look?.career]), en], () => st && st.open ? [stripCard(s, st)] : []);
-    keep('career', [on && s.career, on && s.wallet, on && s.forecast, on && s.strips.map(x => x?.lock), open, en], () => on ? [careerPanel(s, open)] : []);
-    keep('market', [on && s.stall, on && s.notes, en], () => on ? marketPanels(s) : []);
+    const C = on && s.coop;
+    keep('strip', [st, shown, on && (s.prices || {})[pick], on && (s.neighbors || []).map(n => [n.id, n.look?.career]), on && s.wallet, C && C.premiums, C && C.loan.overdue, en], () => st && st.open ? stripCards(s, st) : []);
+    keep('career', [on && s.career, on && s.wallet, on && s.forecast, on && s.strips.map(x => [x?.lock, x?.value]), open, ui, en], () => on ? careerPanel(s, open) : []);
+    keep('coop', [C, on && s.wallet, on && s.career?.main, en], () => C ? coopPanels(s) : []);
+    keep('market', [on && s.stall, on && s.notes, on && s.market, C, on && s.wallet, on && s.career?.main, ui, en], () => on ? marketPanels(s) : []);
   }
-  function stripCard(s, st) {
-    const k = st.kind, ins = st.insured || [], P = (s.prices || {})[k], cap = Math.max(1, st.cap || 0);
-    const head = el('div', 'top2'); head.append(el('b', 'px num', `${jobName(k)} · ${st.stage > 0 ? T.stage(st.stage) : T.resting}`));
-    if (k === s.shown) head.append(el('span', 'note', T.shownNow));
+
+  // ── 2.3.3 폰에서 띠·직군·조합·장터·쪽지 전부(docs/research/phone-career-2.3.3.md 확정). 화면·문구·순서는 맥 관리 창
+  // (FarmWorkView·CareerView·CoopView·MarketView·NoteSheet) 그대로. 값·가능 여부는 Mac 이 보낸 상태 키로만 보이고 판정은 Mac 이 한다.
+  // 새 키가 없는 앱(2.3.2 이하)에서는 예전 카드만 보인다.
+  const ui = {sub: null, part: 'browse', strip: null, item: null, found: null}; // 폰에만 있는 화면 상태(부 직군 고르기·장터 칸·찾은 가판대)
+  const CROPS = {orchard: ['driedLemon', 'lemonCandy', 'lemonVinegar', 'lemonCurd', 'honeyCake'], // 맥 Crop 순서와 띠
+    field: ['lettuce', 'potato', 'radish', 'cabbage', 'tomato', 'cucumber', 'pepper', 'watermelon', 'strawberry', 'ginseng', 'kimchi'],
+    ranch: ['chicken', 'duck', 'cow', 'sheep', 'pig', 'bee', 'goose', 'calf', 'lamb', 'ricotta', 'egg', 'duckEgg', 'milk', 'wool', 'compost', 'honey', 'down'],
+    sea: ['laver', 'seaweed', 'kelp', 'oyster', 'abalone', 'flatfish', 'seabream', 'shrimp', 'pearl', 'fry', 'giftSet']};
+  const YIELD = {chicken: 'egg', duck: 'duckEgg', cow: 'milk', sheep: 'wool', pig: 'compost', bee: 'honey', goose: 'down'}; // 맥 Crop.yield(목장 동물 → 생산물)
+  const ORDER2 = Object.values(CROPS).flat(), cropStrip = c => STRIPS.find(k => CROPS[k].includes(c));
+  const NOTE_ITEMS = ORDER2.filter(c => !YIELD[c]); // 맥 NotePhrase.items(칸에서 나오는 물건)
+  const FARM_MAX = 20, POINTS_MAX = 10; // ponytail: 맥 Balance.Farm.maxWorkerLevel·Career.total(상태에 없음), 바뀌면 같이
+  const capOf = p => p <= 0 ? 0 : Math.min(5, Math.floor((p + 1) / 2)); // 맥 Career.cap(points:) — 점수 줄의 '몇 단계가 열려요' 안내에만
+  const itemSrc = c => `${S}item-${YIELD[c] || c}.png${V}`, itemPic = c => pic(itemSrc(c), 'ico');
+  const span = t => t >= 86400 ? T.w.days(Math.ceil(t / 86400)) : T.w.hours(Math.max(1, Math.ceil(t / 3600))); // 맥 CoopView.span
+  const day = t => new Date(t * 1000).toLocaleDateString(en ? 'en' : 'ko', {month: 'short', day: 'numeric'});
+  const wallet = () => state()?.wallet || 0;
+  /** 조합 코인 값이 붙은 버튼(맥 FarmBuyButton): 값이 없으면(최고·못 함) 못 누르고, 지갑보다 비싸면 눌리지 않는다 */
+  const wbtn = (label, cost, cmd, {cls = 'y', need = canAct} = {}) => {
+    const b = act(label, cmd, {cls, need, off: cost == null || cost > wallet()});
+    if (cost != null) { const m = el('small', 'num'); m.append(pic(`${S}coop-coin.png${V}`), short(cost)); b.append(m); b.ariaLabel = `${label}, ${T.w.coins(fmt(cost))}`; }
+    return b;
+  };
+  /** 한 줄: 그림 · 이름 · 설명 · 버튼(맥 LabeledContent + ItemLine) */
+  const irow = (img, title, detail, ...end) => { const r = el('div', 'irow'), t = el('div'); t.append(typeof title === 'string' ? el('b', '', title) : title); if (detail) t.append(el('span', 'note num', detail)); r.append(...[img, t, ...end].filter(Boolean)); return r; };
+  const head = text => el('b', 'px num', text);
+  /** 폰에만 있는 고르기(누르면 바로 다시 그린다, 명령을 보내지 않는다) */
+  const pickSeg = (opts, cur, set, cls = 'seg') => { const g = el('div', cls); g.setAttribute('role', 'group');
+    g.append(...opts.map(([v, label, img]) => { const b = el('button', '', label); b.type = 'button'; b.setAttribute('aria-pressed', v === cur); if (img) b.prepend(pic(img)); b.onclick = () => set(v); return b; })); return g; };
+  const stripSeg = () => pickSeg(STRIPS.map(k => [k, T.strip[k], `${S}menu-${k}.png${V}`]), ui.strip, v => { ui.strip = v; renderWork(); });
+  const itemGrid = (items, cur, pickIt, off = false) => { const g = el('div', 'items');
+    g.append(...items.map(c => { const b = el('button'); b.type = 'button'; b.disabled = off; b.setAttribute('aria-pressed', c === cur); b.append(pic(itemSrc(c)), el('span', '', cropName(c))); b.onclick = () => pickIt(c); return b; })); return g; };
+  const stepper = (label, v, lo, hi, set) => { const r = el('div', 'row'), m = el('button', 'btn y px', '-'), p = el('button', 'btn y px', '+'), t = el('span', 'num', label);
+    m.type = p.type = 'button'; m.disabled = v <= lo; p.disabled = v >= hi; m.ariaLabel = `${label} -1`; p.ariaLabel = `${label} +1`; m.onclick = () => set(v - 1); p.onclick = () => set(v + 1);
+    t.style.flex = '2 1 0'; t.style.textAlign = 'center'; r.append(m, t, p); return r; };
+  /** 시트에 아무 내용이나(고르기 시트와 같은 틀). draw(redraw) 가 내용을 돌려준다 */
+  function sheet(title, draw) {
+    $('sheet-title').textContent = title; $('plots').className = 'form';
+    const redraw = () => $('plots').replaceChildren(...draw(redraw).filter(Boolean));
+    redraw(); if (!$('sheet').open) $('sheet').showModal(); $('plots').scrollTop = 0; $('sheet-cancel').focus();
+  }
+  /** 확인 창(대표 결정 P4: 직군 고르기·다시 고르기·빌리기에만) */
+  const ask = (title, msg, ok, cmd) => sheet(title, () => [msg && el('p', '', msg), row(act(ok, () => { closeSheet(); send(cmd); }))]);
+
+  /** 띠 하나: 머리(창고·시세·모두 팔기·보험·보내기) · 추천 · 칸 · 해금 · 보관함 · 창고 · 일꾼 */
+  function stripCards(s, st) {
+    const k = st.kind, ins = st.insured || [], P = (s.prices || {})[k], cap = Math.max(1, st.cap || 0), w = s.wallet || 0, shop = k === 'orchard';
+    const prem = (s.coop?.premiums || {})[k] || {}, overdue = !!s.coop?.loan?.overdue;
+    const top = el('div', 'top2'); top.append(el('b', 'px num', `${jobName(k)} · ${st.stage > 0 ? T.stage(st.stage) : T.resting}`));
+    if (k === s.shown) top.append(el('span', 'note', T.shownNow));
     const bar = el('div', 'bar'), fill = el('i'); fill.style.width = `${Math.min(100, 100 * (st.crate || 0) / cap)}%`; bar.append(fill); bar.ariaHidden = 'true';
-    const p = panel(head, el('p', 'num', T.crateOf(fmt(st.crate || 0), fmt(st.cap || 0))), bar);
+    const p = panel(top, el('p', 'num', T.crateOf(fmt(st.crate || 0), fmt(st.cap || 0))), bar);
+    if (st.disaster) p.append(line(`farm-fx-${FX[st.disaster] || 'forecast'}-0`, T.w.nowHit(T.disasters[st.disaster] || st.disaster), 'why'));
     if (st.keep > 0) p.append(el('p', 'note num', T.keepN(fmt(st.keep))));
     if (Array.isArray(P)) p.append(el('p', 'note num', T.priceLine(...P.map(x => Math.round(x * 100)))));
-    p.append(row(act(T.sell, {action: 'farm_sell', strip: k}, {off: !(st.crate > 0)}), k !== s.shown && act(T.showBtn, {action: 'strip_show', strip: k}, {cls: 'y'})));
+    // 맥 일터 머리의 '모두 팔기 ◎값'(value = 지금 공판장에 다 팔면, 남길 재료 빼고). 화면의 주 버튼
+    const sellBtn = st.value != null ? act(T.w.sellFor(short(st.value)), {action: 'farm_sell', strip: k}, {off: !(st.value > 0)}) : act(T.sell, {action: 'farm_sell', strip: k}, {off: !(st.crate > 0)});
+    p.append(row(sellBtn, k !== s.shown && act(T.showBtn, {action: 'strip_show', strip: k}, {cls: 'y'})));
     const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.ariaLabel = T.insureH;
-    seg.append(...['disaster', 'price'].map(kind => toggle(T.insure[kind], ins.includes(kind), {action: 'coop_insure', strip: k, kind, on: !ins.includes(kind)})));
+    seg.append(...['disaster', 'price'].map(kind => {
+      const has = ins.includes(kind), b = toggle(T.insure[kind], has, {action: 'coop_insure', strip: k, kind, on: !has});
+      if (s.coop && !has) { // 맥 CoverSwitch 상태 줄: 들 때 값 · 못 드는 까닭
+        const v = prem[kind]; b.append(el('span', 'st num', v == null ? (overdue ? T.w.overdueNo : T.w.noNeed) : v > w ? T.w.joinShort(short(v)) : T.w.joinFor(short(v))));
+        if (v == null || v > w) b.disabled = true;
+      }
+      return b;
+    }));
     p.append(line('coop-policy', T.insureH, 'note'), seg); // insured 는 기다리는 3일도 포함(Mac 과 같이 켜짐으로 보인다)
+    if (st.auto != null) p.append(pickSeg([[true, T.w.auto]], st.auto, () => send({action: 'farm_auto', strip: k, on: !st.auto})));
     if (SHARES.has(k) && st.stage >= 4) { // 받을 수 있는 이웃 = 그 직군이 주 직군이고 4단계 이상(이웃 모습에 career 가 있을 때만 거른다. 최종 판단은 서버)
       const can = n => !n.look?.career || (n.look.career.main === k && n.look.career.stage >= 4), nbs = (s.neighbors || []).filter(can);
-      p.append(row(act(T.share[k], () => choose(T.shareWho, nbs.map(n => ({label: nameOf(n), value: n.id})), target => send({action: 'farm_share', strip: k, target})), {off: !nbs.length || !(st.keep > 0)}))); // 보관함이 비면 보낼 것이 없다
+      p.append(row(act(T.share[k], () => choose(T.shareWho, nbs.map(n => ({label: nameOf(n), value: n.id})), target => send({action: 'farm_share', strip: k, target})), {cls: 'y', off: !nbs.length || !(st.keep > 0)}))); // 보관함이 비면 보낼 것이 없다
     }
-    return p;
+    const out = [p];
+    if (!st.plots) return out; // 2.3.2 이하 앱
+    if (st.suggest) { // 맥 FarmSuggestion
+      const g = st.suggest, title = g.what === 'plant' ? T.w.putIn(g.plot + 1, cropName(g.item)) : g.what === 'unlock' ? T.w.unlockX(cropName(g.item))
+        : g.what === 'worker' ? T.roles[g.role] || g.role : shop ? T.w.growShop : T.w.growCrate;
+      out.push(panel(head(T.w.suggestH), irow(g.item && itemPic(g.item), title, g.cost > w ? T.w.short(short(g.cost - w)) : '',
+        wbtn(T.w.buy, g.cost, {action: 'farm_buy', strip: k, what: g.what, plot: g.plot, item: g.item, role: g.role}))));
+    }
+    // 칸(맥 FarmPlotRow): 이름 · 상태 · 들이기/바꿔 들이기(들일 수 있는 종류와 값)
+    const plots = panel(head(shop ? T.w.benchH(st.stage) : T.w.plotsH(T.w.part[k], st.stage, st.plots.length)));
+    st.plots.forEach((x, i) => {
+      const opts = (st.plant || []).filter(o => o.item !== x.c), name = x.c ? cropName(x.c) + (YIELD[x.c] ? ` → ${cropName(YIELD[x.c])}` : '') : T.w.emptyPlot(i + 1);
+      const go = () => choose(T.w.slotTitle(i + 1, x.c ? cropName(x.c) : T.w.empty), opts.map(o => ({label: `${cropName(o.item)} ◎${short(o.cost)}`, img: itemSrc(o.item), off: o.cost > w, value: o.item})),
+        item => send({action: 'farm_buy', strip: k, what: 'plant', plot: i, item}));
+      plots.append(irow(x.c ? itemPic(x.c) : null, name, slotText(x), act(x.c ? T.w.swap : T.w.put, go, {cls: 'y', off: !opts.length || !!x.order})));
+    });
+    out.push(plots);
+    const lk = st.unlocks || [], now = lk.filter(u => u.stage <= st.stage), next = lk.find(u => u.stage > st.stage);
+    if (lk.length) out.push(panel(head(T.w.unlockH), ...now.map(u => irow(itemPic(u.item), cropName(u.item), u.need && T.w.need(cropName(u.need.item), u.need.n, u.need.have),
+      wbtn(T.w.unlock, u.cost ?? null, {action: 'farm_buy', strip: k, what: 'unlock', item: u.item}))),
+      next && el('p', 'note', T.w.opensAt(next.stage, lk.filter(u => u.stage === next.stage).map(u => cropName(u.item)).join('·')))));
+    if ((st.kept || []).length) out.push(panel(head(T.w.keptH(st.keep, st.keepCap)), ...st.kept.map(a => a.item === 'fry'
+      ? irow(itemPic(a.item), T.w.nOf(cropName(a.item), a.n), T.w.releaseOnly, act(T.w.release, {action: 'farm_release', item: 'fry'}, {cls: 'y'}))
+      : irow(itemPic(a.item), T.w.nOf(cropName(a.item), a.n), T.w.bonus(a.bonus), act(T.w.sellV(short(a.value || 0)), {action: 'sell_kept', item: a.item}, {cls: 'y', off: !(a.value > 0)})))));
+    const items = Object.entries(st.items || {}).sort((a, b) => ORDER2.indexOf(a[0]) - ORDER2.indexOf(b[0])).map(([c, n]) => `${cropName(c)} ${fmt(n)}`).join(' · ');
+    out.push(panel(head(shop ? T.w.shelfH : T.crate), irow(null, T.w.crateLv(st.crateLevel, fmt(st.cap || 0)), items,
+      wbtn(st.crateCost == null ? T.maxed : T.w.grow, st.crateCost ?? null, {action: 'farm_buy', strip: k, what: 'crate'}))));
+    out.push(panel(head(shop ? T.w.shopCrew : T.w.crew), ...(st.workers || []).map(h => irow(null, T.roles[h.role] || h.role, h.level ? T.level(h.level, FARM_MAX) : T.w.noneYet,
+      wbtn(h.cost == null && h.level >= FARM_MAX ? T.maxed : h.level ? T.w.levelUp : T.hireBtn, h.cost ?? null, {action: 'farm_buy', strip: k, what: 'worker', role: h.role}))),
+      el('p', 'note', T.w.crewNote)));
+    return out;
   }
+  const slotText = x => { const t = T.w.slot; if (!x.c) return t.empty;
+    switch (x.st) {
+      case 'rest': return t.rest; case 'grow': return t.grow(x.pct || 0); case 'stack': return t.stack(x.n, x.cap); case 'ready': return t.ready(x.n);
+      case 'wait': return x.cap != null ? t.waitN(x.n) : t.wait; case 'full': return t.full(x.n); case 'make': return t.make(x.pct || 0, x.n); default: return '';
+    } };
+
+  /** 직군 줄 + (관문 전) 뜻 세우기·직군 고르기 / (고른 뒤) 전문 점수 카드·다시 고르기 */
   function careerPanel(s, open) {
     const c = s.career || {}, pts = c.points || {}, job = c.main || c.wish, master = /-(master|solo)$/.test(c.title || '');
     const p = panel(job ? line(master ? 'career-rosette' : `career-emblem-${job}`, titleText(c.title) || T.careerH, 'px') : el('b', 'px', titleText(c.title) || T.careerH));
@@ -2148,19 +2419,188 @@
       const w = (f.strips || []).filter(k => open.includes(k)); if (!w.length) continue;
       p.append(line(`farm-fx-${FX[f.kind] || 'forecast'}-0`, T.fcLine(T.days[f.day] || T.days[2], T.disasters[f.kind] || f.kind, w.map(jobName).join('·')), 'why'));
     }
-    return p;
-  }
-  function marketPanels(s) {
-    const out = [el('h2', 'sec px', T.marketH)], stall = s.stall || [];
-    if (s.notes > 0) out.push(panel(line('note-mailbox-flag', T.notesLine(fmt(s.notes))))); // notes = 안 본 쪽지가 있는 이웃 수
-    out.push(panel(line('market-sign', T.stallH, 'px'), ...(stall.length ? stall.map(x => line('item-' + x.item, T.stallRow(cropName(x.item), fmt(x.n), fmt(x.price)))) : [el('p', 'note', T.stallEmpty)]), el('p', 'note', T.stallMac)));
+    const all = s.strips.reduce((a, x) => a + (x?.value || 0), 0);
+    if (s.strips.some(x => x?.value != null)) p.append(row(act(T.w.sellAll(short(all)), {action: 'sell_farms'}, {cls: 'y', off: !(all > 0)})));
+    const out = [p];
+    if (!c.main) {
+      if (c.due) out.push(panel(head(T.w.gateOpen), el('p', 'note', T.w.gateOpenText), row(act(T.w.chooseBtn, () => pickCareer()))));
+      else if (c.canWish) { // 맥 WishSection: 넷 중 하나(이름 + 한 줄 재미)
+        const g = pickSeg(STRIPS.map(k => [k, T.strip[k], `${S}menu-${k}.png${V}`]), c.wish, k => send({action: 'wish', strip: k}), 'seg list');
+        [...g.children].forEach((b, i) => { b.disabled = busy(); b.append(el('span', '', T.w.fun[STRIPS[i]])); });
+        out.push(panel(head(T.w.wishH), g, el('p', 'note', T.w.wishNote)));
+      }
+    } else {
+      if (c.unspent > 0) out.push(pointPanel(c));
+      if (c.respecCost != null) { const wait = c.respecAt > nowSec();
+        out.push(panel(irow(null, c.respecCost ? T.w.relearn : T.w.firstFree, wait ? T.w.from(day(c.respecAt)) : '', act(T.w.respecDots, () => respecSheet(s), {cls: 'y'})), el('p', 'note', T.w.respecNote)));
+      }
+    }
     return out;
+  }
+  function pickCareer() {
+    choose(T.w.chooseBtn, STRIPS.map(k => ({label: `${T.strip[k]} · ${T.w.fun[k]}`, img: `${S}career-emblem-${k}.png${V}`, value: k})),
+      k => later(0, () => ask(T.w.chooseQ(T.strip[k]), `${T.w.chooseText} ${T.w.chooseNote}`, T.w.choose, {action: 'career_choose', strip: k})));
+  }
+  function pointPanel(c) { // 맥 PointCard: 받은 점수 하나를 주 직군 또는 부 직군에
+    const m = c.main, pts = c.points || {}, others = STRIPS.filter(k => k !== m), sub = c.sub || (others.includes(ui.sub) ? ui.sub : others[0]);
+    const choice = (k, main) => { const n = pts[k] || 0, d = el('div', 'col');
+      d.append(act(main ? T.w.toMain(T.strip[k]) : T.w.toSub(T.strip[k]), {action: 'career_point', strip: k}, {cls: 'y', off: n >= POINTS_MAX}),
+        el('span', 'note', capOf(n + 1) > capOf(n) ? T.w.opens(T.strip[k], capOf(n + 1)) : T.w.craft(T.strip[k])));
+      if (!main && (c.warn || []).includes(k)) d.append(el('span', 'why', T.w.warn));
+      return d; };
+    return panel(head(T.w.pointsH(c.unspent)), !c.sub && el('p', 'note', T.w.subCareer), !c.sub && pickSeg(others.map(k => [k, T.strip[k]]), sub, v => { ui.sub = v; renderWork(); }),
+      row(choice(m, true), choice(sub, false)), el('p', 'note', T.w.pointNote));
+  }
+  function respecSheet(s) { // 맥 RespecSheet: 주 직군·부 직군·부 직군 점수, 대가와 날짜 → 확인
+    const c = s.career, pts = c.points || {}, spent = Object.values(pts).reduce((a, b) => a + b, 0);
+    const r = {main: c.main, sub: c.sub || null, n: Math.max(1, (c.sub && pts[c.sub]) || 0)};
+    sheet(T.w.respec, redraw => {
+      const cost = c.respecCost || 0, wait = c.respecAt > nowSec(), poor = cost > (s.wallet || 0);
+      const same = r.main === c.main && r.sub === (c.sub || null) && (!r.sub || r.n === (pts[r.sub] || 0));
+      const sum = [`${T.w.mainCareer} · ${T.strip[r.main]}`, r.sub && `${T.w.subCareer} · ${T.strip[r.sub]} · ${T.w.subPts(r.n)}`, cost ? T.w.cost(short(cost)) : T.w.freeNow].filter(Boolean).join(' · ');
+      return [el('p', 'note', T.w.mainCareer), pickSeg(STRIPS.map(k => [k, T.strip[k]]), r.main, v => { r.main = v; if (r.sub === v) r.sub = null; redraw(); }),
+        el('p', 'note', T.w.subCareer), pickSeg([[null, T.w.none], ...STRIPS.filter(k => k !== r.main).map(k => [k, T.strip[k]])], r.sub, v => { r.sub = v; redraw(); }),
+        r.sub && spent > 0 && stepper(T.w.subPts(r.n), r.n, 1, spent, v => { r.n = v; redraw(); }),
+        el('p', 'num', cost ? T.w.cost(fmt(cost)) : T.w.freeNow),
+        wait ? el('p', 'why', T.w.from(day(c.respecAt))) : poor ? el('p', 'why', T.w.short(short(cost - (s.wallet || 0)))) : null,
+        row(act(T.w.respec, () => ask(T.w.respecQ, sum, T.w.respec, {action: 'career_respec', main: r.main, sub: r.sub || undefined, subPoints: r.sub ? r.n : 0}), {off: wait || poor || same}))];
+    });
+  }
+
+  /** 조합(맥 CoopView): 권하는 대출 · 피해 카드 · 보험 자동 갱신 · 대출 · 납품 */
+  function coopPanels(s) {
+    const c = s.coop, L = c.loan, w = s.wallet || 0, t = nowSec(), out = [el('h2', 'sec px', T.w.coopH)];
+    const borrow = n => ask(T.w.borrowQ(short(n)), T.w.borrowNote, T.w.borrowV(short(n)), {action: 'coop_borrow', n});
+    if (L.offer) out.push(panel(line('coop-coin', T.w.offer[L.offer] || '', 'px'), el('p', 'note', T.w.offerText[L.offer] || ''),
+      row(act(T.w.borrowV(short(L.limit)), () => borrow(L.limit), {cls: 'y', off: L.limit < 1}), act(T.w.noThanks, {action: 'coop_dismiss', what: 'loan'}, {cls: 'y'}))));
+    if (c.losses.length) {
+      const paid = c.losses.reduce((a, x) => a + x.paid, 0);
+      out.push(panel(head(T.w.lossH), el('p', 'note', paid > 0 ? T.w.lossPaid : T.w.lossNone), ...c.losses.map(x => {
+        const d = el('div'); d.append(line(`farm-fx-${FX[x.kind] || 'forecast'}-0`, `${T.strip[x.strip] || x.strip} · ${T.disasters[x.kind] || x.kind}`, 'px'),
+          el('p', 'num', x.lost > 0 ? T.w.lost(short(x.lost)) : T.w.nothingLost), (x.paid > 0 || x.lost > 0) && el('p', 'note num', x.paid > 0 ? T.w.paid(short(x.paid)) : T.w.noPay));
+        d.style.marginTop = '8px'; return d;
+      }), row(act(T.w.ok, {action: 'coop_dismiss', what: 'losses'}, {cls: 'y'}))));
+    }
+    out.push(panel(head(T.insureH), pickSeg([[true, T.w.autoRenew]], c.autoRenew, () => send({action: 'coop_renew', on: !c.autoRenew}))));
+    const all = Math.min(L.left, w), half = Math.floor(all / 2), amounts = [...new Set([Math.floor(L.limit / 4), Math.floor(L.limit / 2), L.limit].filter(n => n > 0))]; // 맥 LoanSection.amounts
+    out.push(panel(head(T.w.loanH), ...(L.left > 0
+      ? [el('p', 'num', T.w.owe(fmt(L.left))), L.overdue && el('p', 'why', T.w.overdue),
+        row(act(T.w.repayV(short(all)), {action: 'coop_repay', n: all}, {cls: 'y', off: all < 1}), half > 0 && half < all && act(T.w.repayV(short(half)), {action: 'coop_repay', n: half}, {cls: 'y'}))]
+      : [el('p', 'num', T.w.canBorrow(fmt(L.limit))), row(act(T.w.borrowDots, () => choose(T.w.loanH, amounts.map(n => ({label: T.w.borrowV(short(n)), value: n})), n => later(0, () => borrow(n))),
+        {cls: 'y', off: L.limit < 1 || L.overdue})), L.limit < 1 && el('p', 'note', T.w.borrowLater)])));
+    const d = c.delivery;
+    out.push(panel(head(d && d.due > t ? T.w.deliveryDue(span(d.due - t)) : T.w.deliveryH), ...(d
+      ? [...d.items.map(x => irow(itemPic(x.item), cropName(x.item), cropStrip(x.item) !== s.career?.main ? T.w.otherJob : '', el('span', 'num', `${fmt(Math.min(x.have, x.n))} / ${fmt(x.n)}`))),
+        el('p', 'num', T.w.reward(short(d.reward))), row(act(T.w.deliver, {action: 'delivery_fill'}, {cls: 'y', off: !d.can}))]
+      : [el('p', 'note', T.w.nextOrder)]), el('p', 'note num', T.w.stamps(c.stamps))));
+    return out;
+  }
+
+  /** 장터(맥 MarketView): 재료 선반 · 행상 · [둘러보기 | 내 진열 | 공판장] · 내 구해요. 둘러보기·진열·구해요는 Mac 이 깨어 있을 때만(지갑이 앱에 있다) */
+  function marketPanels(s) {
+    const out = [el('h2', 'sec px', T.marketH)], stall = s.stall || [], M = s.market, C = s.coop, t = nowSec();
+    if (s.notes > 0) out.push(panel(line('note-mailbox-flag', (M ? T.notesLine2 : T.notesLine)(fmt(s.notes))))); // notes = 안 본 쪽지가 있는 이웃 수
+    if (!M || !C) { // 2.3.2 이하 앱: 보기만
+      out.push(panel(line('market-sign', T.stallH, 'px'), ...(stall.length ? stall.map(x => line('item-' + x.item, T.stallRow(cropName(x.item), fmt(x.n), fmt(x.price)))) : [el('p', 'note', T.stallEmpty)]), el('p', 'note', T.stallMac)));
+      return out;
+    }
+    if (!ui.strip) ui.strip = STRIPS.find(k => k !== s.career?.main) || 'field'; // 내 직군 밖의 물건부터(맥과 같이)
+    const shelf = Object.entries(C.pantry || {}).sort((a, b) => ORDER2.indexOf(a[0]) - ORDER2.indexOf(b[0]));
+    const sh = el('div', 'shelf'); for (const [c, n] of shelf) { const x = el('span', 'num'); x.append(pic(itemSrc(c)), fmt(n)); x.title = x.ariaLabel = T.w.nOf(cropName(c), n); sh.append(x); }
+    const top = el('div', 'top2'); top.append(head(T.w.pantryH), line('coop-coin', fmt(s.wallet || 0)));
+    out.push(panel(top, shelf.length ? sh : el('p', 'note', T.w.pantryEmpty)));
+    const pd = C.peddler;
+    if (pd && pd.until > t) out.push(panel(head(T.w.peddlerH(span(pd.until - t))), el('p', 'note', T.w.peddlerText), ...(pd.stock.length ? pd.stock.map(x =>
+      irow(itemPic(x.item), cropName(x.item), T.w.leftShelf(x.n, (C.pantry || {})[x.item] || 0), wbtn(T.w.buy1, x.price, {action: 'peddler_buy', item: x.item, n: 1}))) : [el('p', 'note', T.w.soldOut)])));
+    out.push(pickSeg(['browse', 'mine', 'coop'].map(k => [k, T.w.parts[k]]), ui.part, v => { ui.part = v; renderWork(); }));
+    if (!awake() && ui.part !== 'coop') out.push(panel(el('p', 'why', T.awakeOnly)));
+    if (ui.part === 'mine') out.push(minePanel(s));
+    else if (ui.part === 'coop') out.push(panel(head(T.w.coopBuyH), stripSeg(), ...C.shop.filter(x => cropStrip(x.item) === ui.strip).map(x =>
+      irow(itemPic(x.item), cropName(x.item), T.w.onShelf((C.pantry || {})[x.item] || 0), wbtn(T.w.buy1, x.price, {action: 'coop_buy', item: x.item, n: 1}))), el('p', 'note', T.w.coopNote)));
+    else out.push(...browsePanels(s));
+    return out;
+  }
+  const find = item => { ui.item = item; ui.found = null; renderWork(); send({action: 'market_find', item}); };
+  function browsePanels(s) {
+    const M = s.market, C = s.coop, up = awake(), w = s.wallet || 0, it = ui.item;
+    const out = [panel(head(T.w.findH), stripSeg(), itemGrid(M.items.filter(c => cropStrip(c) === ui.strip), it, find, !up || pending.size > 0))];
+    if (!it) out.push(panel(el('p', 'note', T.w.pickFirst)));
+    else {
+      const top = el('div', 'top2'); top.append(head(T.w.stallsOf(cropName(it))), act(T.w.refresh, () => find(it), {cls: 'y', need: awake}));
+      const f = ui.found, has = C.shop.some(x => x.item === it), wants = M.wants || [];
+      out.push(panel(top, ...(f == null ? [el('p', 'note', '…')] : f.length ? f.map(x => {
+        const most = Math.min(x.n, Math.floor(w / Math.max(1, x.price))), name = el('b', '', x.name);
+        if (x.neighbor) name.append(el('span', 'tag', T.w.neighbor));
+        return irow(null, name, T.w.leftN(x.n), el('span', 'num', `◎${short(x.price)}`), act(T.w.buyDots, () => buyFrom(x, most), {cls: 'y', need: awake, off: most < 1}));
+      }) : [el('b', '', T.w.noStalls), el('p', 'note', has ? T.w.coopHas : T.w.coopNot),
+        row(has && act(T.w.toCoop, () => { ui.part = 'coop'; ui.strip = cropStrip(it); renderWork(); }, {cls: 'y'}),
+          act(T.w.wantDots, () => wantCount(it, wants), {cls: 'y', need: awake, off: wants.length >= M.wantsMax || wants.some(x => x.item === it)}))]), el('p', 'note', T.w.browseNote)));
+    }
+    out.push(wantsPanel(s));
+    return out;
+  }
+  function buyFrom(x, most) { // 맥 StallRow 사기 팝오버(개수 · 모두 값). 숫자 입력 없이 몇 가지에서 고른다
+    const ns = [...new Set([1, 2, 3, 5, 10, 20, most].filter(n => n >= 1 && n <= most))].sort((a, b) => a - b);
+    choose(T.w.buyFrom(x.name), ns.map(n => ({label: T.w.nPrice(n, short(n * x.price)), value: n})), n => send({action: 'market_buy', item: ui.item, stall: x.stall, n}));
+    $('plots').prepend(el('p', 'note', T.w.resell));
+  }
+  const wantsOf = wants => wants.map(({item, n}) => ({item, n}));
+  function wantCount(item, wants) { // 구해요 걸기: 물건과 개수만(글 없음)
+    choose(T.w.howMany(cropName(item)), [1, 2, 3, 5, 10, 20, 50, 99].map(n => ({label: T.w.nOf(cropName(item), n), value: n})),
+      n => send({action: 'market_wants', items: [...wantsOf(wants.filter(x => x.item !== item)), {item, n}].slice(-state().market.wantsMax)}));
+  }
+  function wantsPanel(s) {
+    const M = s.market, wants = M.wants || [], t = nowSec();
+    return panel(head(T.w.wantsH(wants.length, M.wantsMax)), ...(wants.length ? wants.map(x => irow(itemPic(x.item), T.w.nOf(cropName(x.item), x.n), T.w.daysLeft(Math.max(1, Math.ceil((x.at + 7 * 86400 - t) / 86400))),
+      act(T.w.takeDown, {action: 'market_wants', items: wantsOf(wants.filter(y => y.item !== x.item))}, {cls: 'y', need: awake}))) : [el('p', 'note', T.w.noWants)]),
+      row(act(T.w.wantDots, () => choose(T.w.wantH, M.items.filter(c => !wants.some(x => x.item === c)).map(c => ({label: cropName(c), img: itemSrc(c), value: c})), c => later(0, () => wantCount(c, wants))),
+        {cls: 'y', need: awake, off: wants.length >= M.wantsMax})), el('p', 'note', T.w.wantsNote));
+  }
+  function minePanel(s) {
+    const M = s.market, stall = s.stall || [], can = (M.sell || []).length > 0;
+    return panel(head(T.w.listedH(stall.length, M.slots)), ...(stall.length ? stall.map(x => irow(itemPic(x.item), T.w.nOf(cropName(x.item), x.n), `◎${short(x.price)}`,
+      act(T.w.takeDown, {action: 'market_take', item: x.item}, {cls: 'y', need: awake}))) : [el('p', 'note', T.w.noneListed)]),
+      row(act(T.w.listDots, () => listSheet(s), {cls: 'y', need: awake, off: !M.slots || !can})),
+      !M.slots ? el('p', 'note', T.w.listFrom1) : !can ? el('p', 'note', T.w.nothingToList) : null, el('p', 'note', T.w.mineNote));
+  }
+  function listSheet(s) { // 맥 ListSheet: 물건 · 개수 · 값 칸 여섯(기준가 ×1.0~×1.5)
+    const M = s.market, listed = new Set((s.stall || []).map(x => x.item)), r = {item: M.sell[0].item, n: 1, step: 2};
+    sheet(T.w.listH, redraw => {
+      const it = M.sell.find(x => x.item === r.item), price = it.prices[r.step], total = price * r.n, full = listed.size >= M.slots && !listed.has(r.item);
+      const steps = pickSeg(it.prices.map((v, i) => [i, `×${(1 + i / 10).toFixed(1)}`]), r.step, v => { r.step = v; redraw(); });
+      [...steps.children].forEach((b, i) => { b.style.minWidth = '0'; b.append(el('span', 'st num', `◎${short(it.prices[i])}`)); }); // 여섯 칸이 한 줄에
+      return [itemGrid(M.sell.map(x => x.item), r.item, c => { r.item = c; r.n = Math.min(r.n, M.sell.find(x => x.item === c).have); redraw(); }),
+        stepper(T.w.nHave(cropName(r.item), r.n, it.have), r.n, 1, it.have, v => { r.n = v; redraw(); }), steps,
+        el('p', 'num', `${T.w.each} ◎${fmt(price)} · ${T.w.ifSold} ◎${fmt(total - Math.round(total * M.fee))}`),
+        el('p', 'note', T.w.listNote(Math.round(M.fee * 100))), full && el('p', 'why', T.w.stallFull),
+        row(act(T.w.post, () => { closeSheet(); send({action: 'market_list', item: r.item, n: r.n, step: r.step}); }, {need: awake, off: full}))];
+    });
+  }
+
+  // 쪽지(맥 NoteSheet): 말 묶음 넷에서 하나 + 물건(말 6~9) + 스탬프(없어도 됨). 자유 글 없음. 이 이웃의 쪽지 받지 않기도
+  const mutedMap = () => { try { return JSON.parse(localStorage.getItem('ld-muted') || '{}'); } catch (e) { return {}; } }; // ponytail: 상태에 muted 가 없어 폰이 고른 것을 기억, Mac 이 보내면 그것을 쓴다
+  const phraseText = (p, item) => { const f = T.w.phrases[p]; return typeof f === 'function' ? f(item ? cropName(item) : T.w.goods) : f || ''; };
+  function noteSheet(n) {
+    const r = {g: 0, p: null, item: null, stamp: null};
+    sheet(T.w.noteTitle(nameOf(n)), redraw => {
+      const needs = r.p >= 6 && r.p <= 9, muted = n.muted ?? !!mutedMap()[n.id];
+      const sel = el('select', 'field'); sel.ariaLabel = T.w.goods; sel.style.width = '100%';
+      sel.append(new Option(T.w.pick, ''), ...STRIPS.map(k => { const g = document.createElement('optgroup'); g.label = T.strip[k]; g.append(...NOTE_ITEMS.filter(c => cropStrip(c) === k).map(c => new Option(cropName(c), c))); return g; }));
+      sel.value = r.item || ''; sel.onchange = () => { r.item = sel.value || null; redraw(); };
+      const stamps = pickSeg(STAMPS.map(k => [k, T.stamps[k], `${S}emote-${k}.png`]), r.stamp, v => { r.stamp = r.stamp === v ? null : v; redraw(); });
+      const mute = pickSeg([[true, T.w.mute]], muted, () => { const m = mutedMap(); m[n.id] = !muted; try { localStorage.setItem('ld-muted', JSON.stringify(m)); } catch (e) {} n.muted = undefined; send({action: 'note_mute', target: n.id, on: !muted}); redraw(); });
+      return [pickSeg(T.w.groups.map((g, i) => [i, g]), r.g, v => { r.g = v; r.p = null; redraw(); }),
+        pickSeg([0, 1, 2, 3, 4, 5].map(i => [r.g * 6 + i, phraseText(r.g * 6 + i, r.item)]), r.p, v => { r.p = v; redraw(); }, 'seg two'),
+        needs && sel, el('p', 'note', `${T.w.stampH} ${T.w.optional}`), stamps, mute,
+        r.p != null && el('p', 'num', phraseText(r.p, r.item)),
+        row(act(T.w.sendNote, () => { closeSheet(); send({action: 'note', target: n.id, phrase: r.p, item: needs ? r.item : undefined, stamp: r.stamp || undefined}); }, {need: awake, off: r.p == null || (needs && !r.item)}))];
+    });
   }
 
   // 결과: 누른 명령(pending)이나 예약해 둔 명령(localStorage, Mac 이 깨어 반영하면 결과가 온다)
   const queuedMap = () => { try { return JSON.parse(localStorage.getItem('ld-queued') || '{}'); } catch (e) { return {}; } };
   const saveQueued = q => { const t = Date.now() - 72 * 3600e3; for (const k in q) if (q[k].at < t) delete q[k]; try { localStorage.setItem('ld-queued', JSON.stringify(q)); } catch (e) {} };
-  const doneText = (p, r) => p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
+  const doneText = (p, r) => T.w.done[p.action] ? T.w.done[p.action](p, r) : p.action === 'sell' ? T.sold(r.earned || 0) : p.action === 'plant' ? T.planted(p.kind) : p.action === 'replant' ? T.swapped(p.kind)
     : p.action === 'unlock' ? T.unlocked(p.kind) : p.action === 'hire' ? T.hired(p.role) : p.action === 'hire2' ? T.hired2(p.role) : p.action === 'crate' ? T.grown
     : p.action === 'mgr_hire' ? (state()?.manager?.level === 1 ? T.mgrHired : T.mgrUp) : p.action === 'stand_up' ? (state()?.stand?.level === 1 ? T.standOpen : T.standUp)
     : p.action === 'make' ? T.started(T.recipes[p.recipe] || p.recipe) : p.action === 'fill' ? T.filled(r.earned || 0) : p.action === 'farm_sell' ? T.farmSold(r.earned || 0) : p.action === 'lab_public' ? T.labDone[p.on ? 'on' : 'off'] : T.done[p.action] || T.labDone[p.action] || '';
@@ -2172,6 +2612,9 @@
     if (r.discover) found = r.discover;
     if (r.ok && p.action === 'unlock') party(T.newKind, `${S}tree-${p.kind}-6.png`, T.kinds[p.kind] || p.kind);
     if (r.ok && p.action === 'sell' && !late) sold();
+    if (p.action === 'market_find' && p.item === ui.item) ui.found = r.found || []; // 2.3.3 둘러보기 목록(실패면 빈 목록 + 안내)
+    if (r.ok && p.action === 'market_buy' && ui.item && !late) later(0, () => find(ui.item)); // 남은 개수를 다시 받는다(맥도 사기 전에 다시 찾는다)
+    if (r.ok && p.action === 'career_choose') party(T.w.party, `${S}career-emblem-${p.strip}.png${V}`, T.strip[p.strip] || p.strip);
     // 실패는 Mac 이 쓴 문장(message, Mac 언어)을 그대로. 옛 앱은 reason 만 보낸다
     // 서버 대리 결과의 message 는 한국어뿐이라 영어 화면은 code 로 고른다
     const W = p.action === 'farm_share' ? {...T.why, taken_week: T.shareWeek} : /^lab_/.test(p.action) ? {...T.why, ...T.labWhy} : T.why; // 2.0 보내기의 taken_week 는 보낸 사람 쪽 주 1번, 2.3 품종은 같은 code 가 뜻이 달라 따로
@@ -2232,7 +2675,8 @@
       } else if (d.result) settle(d.result); // 이웃 일은 Mac 이 잠들어도 서버가 바로 처리한다
     } catch (e) {
       pending.delete(id); override = null;
-      toast(e.status === 409 ? (/^raid_/.test(cmd.action) ? T.raidAwake : T.asleep('')) : e.status === 429 ? T.tooMany : T.why[e.message] || T.failed);
+      if (cmd.action === 'market_find') ui.item = null;
+      toast(e.status === 409 ? (/^raid_/.test(cmd.action) ? T.raidAwake : /^(market_|note)/.test(cmd.action) ? T.awakeOnly : T.asleep('')) : e.status === 429 ? T.tooMany : T.why[e.message] || T.failed);
     }
     if (data) render(); // 결과를 받은 버튼은 render 가 다시 풀어 준다
     clearTimeout(timer); timer = setTimeout(refresh, pending.size ? 1000 : 5000);

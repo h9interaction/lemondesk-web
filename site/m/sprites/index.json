@@ -131,6 +131,91 @@
 50,
 1
 ],
+"crop-cabbage": [
+42,
+46,
+3
+],
+"crop-cucumber": [
+44,
+46,
+3
+],
+"crop-ginseng": [
+44,
+46,
+3
+],
+"crop-kimchi": [
+44,
+46,
+3
+],
+"crop-lettuce": [
+42,
+46,
+3
+],
+"crop-pepper": [
+44,
+46,
+3
+],
+"crop-potato": [
+42,
+46,
+3
+],
+"crop-radish": [
+42,
+46,
+3
+],
+"crop-strawberry": [
+44,
+46,
+3
+],
+"crop-tomato": [
+42,
+46,
+3
+],
+"crop-watermelon": [
+44,
+46,
+3
+],
+"crop2-abalone": [
+42,
+44,
+3
+],
+"crop2-kelp": [
+56,
+46,
+3
+],
+"crop2-laver": [
+52,
+46,
+3
+],
+"crop2-oyster": [
+40,
+44,
+3
+],
+"crop2-pearl": [
+42,
+44,
+3
+],
+"crop2-seaweed": [
+56,
+46,
+3
+],
 "dog-a-bark": [
 42,
 36,
@@ -221,9 +306,159 @@
 26,
 1
 ],
+"farm-coop-cart": [
+68,
+44,
+2
+],
+"farm-field-barrow-0": [
+52,
+28,
+1
+],
+"farm-field-beanteepee-0": [
+82,
+92,
+1
+],
+"farm-field-bed-0": [
+94,
+22,
+1
+],
+"farm-field-birdpole-0": [
+82,
+92,
+1
+],
+"farm-field-can-0": [
+34,
+20,
+1
+],
+"farm-field-corn-0": [
+82,
+92,
+1
+],
+"farm-field-cosmos-0": [
+52,
+30,
+1
+],
+"farm-field-crate-0": [
+44,
+32,
+1
+],
+"farm-field-far-0": [
+832,
+48,
+1
+],
+"farm-field-greenhouse-0": [
+108,
+56,
+1
+],
+"farm-field-ground-0": [
+434,
+30,
+1
+],
+"farm-field-hills-0": [
+598,
+30,
+1
+],
+"farm-field-hollyhock-0": [
+82,
+92,
+1
+],
+"farm-field-pinwheel-0": [
+82,
+92,
+1
+],
+"farm-field-pumpkins-0": [
+50,
+44,
+1
+],
+"farm-field-scarecrow-0": [
+48,
+54,
+1
+],
+"farm-field-seedstand-0": [
+50,
+44,
+1
+],
+"farm-field-sunflower-0": [
+80,
+100,
+1
+],
+"farm-field-trellis": [
+80,
+100,
+3
+],
+"farm-flag-field-0": [
+74,
+54,
+1
+],
+"farm-flag-orchard-0": [
+74,
+54,
+1
+],
+"farm-flag-ranch-0": [
+74,
+54,
+1
+],
+"farm-flag-sea-0": [
+74,
+54,
+1
+],
+"farm-fx-breath": [
+20,
+14,
+3
+],
+"farm-fx-bubble": [
+14,
+10,
+2
+],
+"farm-fx-bubbles-0": [
+12,
+8,
+1
+],
+"farm-fx-crack-0": [
+34,
+12,
+1
+],
 "farm-fx-forecast-0": [
 22,
 20,
+1
+],
+"farm-fx-gust": [
+38,
+22,
+2
+],
+"farm-fx-hat-0": [
+30,
+22,
 1
 ],
 "farm-fx-heat-0": [
@@ -236,6 +471,31 @@
 14,
 1
 ],
+"farm-fx-letter-0": [
+14,
+8,
+1
+],
+"farm-fx-seed-0": [
+14,
+14,
+1
+],
+"farm-fx-shirt-0": [
+30,
+26,
+1
+],
+"farm-fx-smoke": [
+22,
+16,
+3
+],
+"farm-fx-splash-0": [
+16,
+10,
+1
+],
 "farm-fx-storm-0": [
 52,
 38,
@@ -245,6 +505,691 @@
 26,
 22,
 1
+],
+"farm-guest-butterfly-w": [
+20,
+10,
+2
+],
+"farm-guest-butterfly-y": [
+22,
+10,
+2
+],
+"farm-guest-cat-sit": [
+32,
+30,
+2
+],
+"farm-guest-cat-sleep-0": [
+34,
+22,
+1
+],
+"farm-guest-cat-walk": [
+38,
+30,
+4
+],
+"farm-guest-clerk-0": [
+54,
+66,
+1
+],
+"farm-guest-clerk-stamp": [
+54,
+66,
+2
+],
+"farm-guest-clerk-walk": [
+36,
+66,
+8
+],
+"farm-guest-crab": [
+20,
+12,
+2
+],
+"farm-guest-gull": [
+30,
+22,
+4
+],
+"farm-guest-hermit": [
+28,
+18,
+4
+],
+"farm-guest-ladybug-0": [
+52,
+30,
+1
+],
+"farm-guest-peddler-bell-0": [
+54,
+64,
+1
+],
+"farm-guest-peddler-cart": [
+80,
+54,
+2
+],
+"farm-guest-peddler-walk": [
+40,
+64,
+4
+],
+"farm-guest-rabbit-0": [
+52,
+30,
+1
+],
+"farm-guest-sandpiper": [
+28,
+20,
+4
+],
+"farm-guest-sparrow": [
+20,
+16,
+5
+],
+"farm-guest-starfish": [
+26,
+16,
+2
+],
+"farm-guest-worm": [
+22,
+14,
+2
+],
+"farm-mailbox": [
+26,
+26,
+2
+],
+"farm-orchard-crate-0": [
+32,
+22,
+1
+],
+"farm-orchard-crocks-0": [
+44,
+32,
+1
+],
+"farm-orchard-flag-0": [
+72,
+46,
+1
+],
+"farm-orchard-shelf-0": [
+52,
+50,
+1
+],
+"farm-orchard-shop": [
+144,
+110,
+5
+],
+"farm-ranch-barn-0": [
+102,
+104,
+1
+],
+"farm-ranch-bee": [
+14,
+12,
+2
+],
+"farm-ranch-beehive-0": [
+40,
+40,
+1
+],
+"farm-ranch-calf": [
+46,
+34,
+4
+],
+"farm-ranch-calf-drink": [
+48,
+34,
+4
+],
+"farm-ranch-cheesetable-0": [
+54,
+30,
+1
+],
+"farm-ranch-chicken-idle": [
+30,
+30,
+4
+],
+"farm-ranch-chicken-peck": [
+36,
+30,
+4
+],
+"farm-ranch-chicken-rest": [
+34,
+30,
+4
+],
+"farm-ranch-chicken-walk": [
+34,
+30,
+4
+],
+"farm-ranch-churns-0": [
+50,
+44,
+1
+],
+"farm-ranch-compost-0": [
+38,
+24,
+1
+],
+"farm-ranch-coop-0": [
+84,
+96,
+1
+],
+"farm-ranch-cow-graze": [
+72,
+54,
+4
+],
+"farm-ranch-cow-idle": [
+66,
+58,
+4
+],
+"farm-ranch-cow-moo": [
+74,
+58,
+4
+],
+"farm-ranch-cow-tail": [
+72,
+56,
+4
+],
+"farm-ranch-crate-0": [
+46,
+38,
+1
+],
+"farm-ranch-dandelion-0": [
+22,
+24,
+1
+],
+"farm-ranch-duck-idle": [
+34,
+28,
+4
+],
+"farm-ranch-duck-swim": [
+36,
+22,
+4
+],
+"farm-ranch-duck-walk": [
+32,
+28,
+4
+],
+"farm-ranch-duckling-walk": [
+22,
+18,
+4
+],
+"farm-ranch-egg-0": [
+10,
+8,
+1
+],
+"farm-ranch-far-0": [
+784,
+48,
+1
+],
+"farm-ranch-fence-0": [
+48,
+22,
+1
+],
+"farm-ranch-flowers-0": [
+40,
+28,
+1
+],
+"farm-ranch-goose-flap": [
+40,
+36,
+4
+],
+"farm-ranch-goose-honk": [
+62,
+40,
+4
+],
+"farm-ranch-goose-idle": [
+34,
+38,
+4
+],
+"farm-ranch-goose-walk": [
+34,
+36,
+4
+],
+"farm-ranch-goosehouse-0": [
+68,
+60,
+1
+],
+"farm-ranch-ground-0": [
+470,
+30,
+1
+],
+"farm-ranch-haybale-0": [
+50,
+40,
+1
+],
+"farm-ranch-haystack": [
+122,
+118,
+2
+],
+"farm-ranch-hills-0": [
+696,
+36,
+1
+],
+"farm-ranch-lamb": [
+42,
+30,
+4
+],
+"farm-ranch-milkcan-0": [
+24,
+24,
+1
+],
+"farm-ranch-pig-eat": [
+58,
+40,
+4
+],
+"farm-ranch-pig-idle": [
+56,
+40,
+4
+],
+"farm-ranch-pig-mud": [
+62,
+40,
+4
+],
+"farm-ranch-pig-walk": [
+56,
+38,
+4
+],
+"farm-ranch-pond-0": [
+94,
+52,
+1
+],
+"farm-ranch-sheep-eat": [
+52,
+42,
+4
+],
+"farm-ranch-sheep-idle": [
+52,
+42,
+4
+],
+"farm-ranch-sheep-rest": [
+50,
+34,
+2
+],
+"farm-ranch-sheep-shake": [
+62,
+44,
+4
+],
+"farm-ranch-sheep-shorn": [
+54,
+42,
+2
+],
+"farm-ranch-shelter-0": [
+78,
+62,
+1
+],
+"farm-ranch-snowman-0": [
+26,
+36,
+1
+],
+"farm-ranch-sty-0": [
+90,
+46,
+1
+],
+"farm-ranch-tree-0": [
+122,
+118,
+1
+],
+"farm-ranch-trough-0": [
+32,
+16,
+1
+],
+"farm-ranch-weathervane-0": [
+50,
+44,
+1
+],
+"farm-ranch-windmill-0": [
+122,
+118,
+1
+],
+"farm-ranch-woolbasket-0": [
+30,
+24,
+1
+],
+"farm-sea-flatfish": [
+22,
+12,
+2
+],
+"farm-sea-floats-0": [
+50,
+44,
+1
+],
+"farm-sea-giftraft-0": [
+56,
+28,
+1
+],
+"farm-sea-jumper": [
+28,
+14,
+2
+],
+"farm-sea-lighthouse-0": [
+50,
+44,
+1
+],
+"farm-sea-redtide-0": [
+842,
+52,
+1
+],
+"farm-sea-rowboat-0": [
+66,
+32,
+1
+],
+"farm-sea-shrimp": [
+20,
+12,
+2
+],
+"farm-sea-sign-abalone": [
+30,
+24,
+1
+],
+"farm-sea-sign-blank": [
+30,
+24,
+1
+],
+"farm-sea-sign-flatfish": [
+30,
+24,
+1
+],
+"farm-sea-sign-fry": [
+30,
+24,
+1
+],
+"farm-sea-sign-giftSet": [
+30,
+24,
+1
+],
+"farm-sea-sign-kelp": [
+30,
+24,
+1
+],
+"farm-sea-sign-laver": [
+30,
+24,
+1
+],
+"farm-sea-sign-oyster": [
+30,
+24,
+1
+],
+"farm-sea-sign-pearl": [
+30,
+24,
+1
+],
+"farm-sea-sign-seabream": [
+30,
+24,
+1
+],
+"farm-sea-sign-seaweed": [
+30,
+24,
+1
+],
+"farm-sea-sign-shrimp": [
+30,
+24,
+1
+],
+"farm-sea2-beam": [
+54,
+74,
+2
+],
+"farm-sea2-bed-0": [
+542,
+22,
+1
+],
+"farm-sea2-bit": [
+44,
+20,
+6
+],
+"farm-sea2-blue": [
+24,
+14,
+2
+],
+"farm-sea2-bream": [
+26,
+16,
+2
+],
+"farm-sea2-bunting-0": [
+52,
+14,
+1
+],
+"farm-sea2-buoy-0": [
+24,
+30,
+1
+],
+"farm-sea2-coral": [
+58,
+52,
+6
+],
+"farm-sea2-cottage-0": [
+84,
+62,
+1
+],
+"farm-sea2-crab": [
+24,
+16,
+2
+],
+"farm-sea2-crate-0": [
+36,
+24,
+1
+],
+"farm-sea2-dock-0": [
+220,
+134,
+1
+],
+"farm-sea2-dolphin": [
+56,
+24,
+2
+],
+"farm-sea2-far-0": [
+364,
+12,
+1
+],
+"farm-sea2-jelly": [
+28,
+24,
+2
+],
+"farm-sea2-land-0": [
+350,
+96,
+1
+],
+"farm-sea2-lighthouse-0": [
+92,
+68,
+1
+],
+"farm-sea2-nursery-0": [
+50,
+28,
+1
+],
+"farm-sea2-octopus": [
+24,
+18,
+2
+],
+"farm-sea2-otter": [
+48,
+28,
+2
+],
+"farm-sea2-parasol": [
+38,
+30,
+2
+],
+"farm-sea2-pen-0": [
+86,
+52,
+1
+],
+"farm-sea2-pier-0": [
+72,
+24,
+1
+],
+"farm-sea2-puffer": [
+26,
+18,
+2
+],
+"farm-sea2-rope-0": [
+120,
+40,
+1
+],
+"farm-sea2-sailboat-0": [
+60,
+54,
+1
+],
+"farm-sea2-school": [
+32,
+18,
+2
+],
+"farm-sea2-seahorse": [
+22,
+18,
+2
+],
+"farm-sea2-stripe": [
+24,
+14,
+2
+],
+"farm-sea2-towel-0": [
+20,
+10,
+1
+],
+"farm-sea2-tree-0": [
+54,
+46,
+1
+],
+"farm-sea2-turtle": [
+32,
+18,
+2
+],
+"farm-sea2-twinkle": [
+16,
+12,
+2
+],
+"farm-sea2-water-0": [
+1394,
+74,
+1
+],
+"farm-sea2-yellow": [
+22,
+16,
+2
 ],
 "fruit-bergamot": [
 24,
@@ -1961,6 +2906,42 @@
 28,
 1
 ],
+"w-caretaker-0-bottle": [
+44,
+66,
+8,
+[
+"576f83",
+"7498bc"
+]
+],
+"w-caretaker-0-brush": [
+46,
+66,
+8,
+[
+"426e92",
+"5f90ba"
+]
+],
+"w-caretaker-0-cheer": [
+50,
+66,
+8,
+[
+"407090",
+"6292bb"
+]
+],
+"w-caretaker-0-feed": [
+42,
+66,
+8,
+[
+"3d6866",
+"6b9698"
+]
+],
 "w-caretaker-0-habit": [
 58,
 64,
@@ -1976,6 +2957,69 @@
 [
 "3f6d86",
 "6a96bf"
+]
+],
+"w-caretaker-0-rest": [
+44,
+56,
+8
+],
+"w-caretaker-0-row": [
+48,
+68,
+8,
+[
+"3f6796",
+"598882",
+"6a9ac9"
+]
+],
+"w-caretaker-0-smoke": [
+42,
+66,
+8,
+[
+"3e607f",
+"6b98bd"
+]
+],
+"w-caretaker-0-stir": [
+40,
+66,
+8,
+[
+"3b6072",
+"6a96be"
+]
+],
+"w-caretaker-0-swim": [
+62,
+56,
+8,
+[
+"3e6579",
+"7aa3b8",
+"a2c8eb"
+]
+],
+"w-caretaker-0-thump": [
+40,
+64,
+8,
+[
+"57646e",
+"628bab",
+"7b91a4"
+]
+],
+"w-caretaker-0-tie": [
+42,
+64,
+8,
+[
+"366571",
+"6192c0",
+"8ea7bc"
 ]
 ],
 "w-caretaker-0-walk": [
@@ -2453,6 +3497,48 @@
 "fc9414"
 ]
 ],
+"w-harvester-0-cheer": [
+52,
+70,
+8,
+[
+"d34907",
+"e3681a",
+"f97e13",
+"fc8e1d"
+]
+],
+"w-harvester-0-crate": [
+44,
+66,
+8,
+[
+"d84f04",
+"e46408",
+"e47d19",
+"fc9610"
+]
+],
+"w-harvester-0-cut": [
+50,
+70,
+8,
+[
+"ff8424"
+]
+],
+"w-harvester-0-egg": [
+52,
+74,
+8,
+[
+"d05916",
+"d44504",
+"f37e16",
+"fb8317",
+"fc8d1d"
+]
+],
 "w-harvester-0-habit": [
 44,
 64,
@@ -2460,6 +3546,17 @@
 [
 "d55b15",
 "fc8e11"
+]
+],
+"w-harvester-0-haul": [
+62,
+72,
+8,
+[
+"c64106",
+"e75606",
+"ea921c",
+"fc8d1e"
 ]
 ],
 "w-harvester-0-idle": [
@@ -2473,6 +3570,16 @@
 "fc8e17"
 ]
 ],
+"w-harvester-0-milk": [
+40,
+64,
+8,
+[
+"de590e",
+"f9780d",
+"fd9318"
+]
+],
 "w-harvester-0-pick": [
 48,
 68,
@@ -2480,6 +3587,47 @@
 [
 "db5009",
 "fb8723"
+]
+],
+"w-harvester-0-pratfall": [
+70,
+60,
+8
+],
+"w-harvester-0-pull": [
+56,
+70,
+8,
+[
+"ea7d20",
+"eb6822",
+"fc871b"
+]
+],
+"w-harvester-0-row": [
+52,
+72,
+8,
+[
+"e26c1c",
+"e44e05",
+"f47e1c",
+"fc9510"
+]
+],
+"w-harvester-0-scoop": [
+62,
+70,
+8
+],
+"w-harvester-0-shear": [
+44,
+72,
+8,
+[
+"e47320",
+"f49005",
+"fb7515"
 ]
 ],
 "w-harvester-0-sit": [
@@ -2501,6 +3649,22 @@
 [
 "e66618",
 "f97f21"
+]
+],
+"w-harvester-0-snip": [
+58,
+72,
+8
+],
+"w-harvester-0-taste": [
+50,
+72,
+8,
+[
+"da6705",
+"ed7c20",
+"f24f0a",
+"fc8f1b"
 ]
 ],
 "w-harvester-0-walk": [
@@ -3168,6 +4332,22 @@
 "fc8f19"
 ]
 ],
+"w-planter-0-cheer": [
+48,
+64,
+8,
+[
+"635623",
+"6e741a",
+"959722",
+"9f8a38",
+"a1a121",
+"cab53c",
+"ecd528",
+"fce874",
+"fde21c"
+]
+],
 "w-planter-0-dig": [
 46,
 64,
@@ -3215,6 +4395,63 @@
 "fdd209"
 ]
 ],
+"w-planter-0-pour": [
+42,
+66,
+8,
+[
+"464314",
+"605b32",
+"6d8146",
+"a5a42b",
+"fade2f",
+"fcc50c",
+"fceca9",
+"fddc0c"
+]
+],
+"w-planter-0-rake": [
+44,
+64,
+8,
+[
+"656a11",
+"937c30",
+"a29f15",
+"eacf44",
+"fce662",
+"fddc06"
+]
+],
+"w-planter-0-rest": [
+52,
+54,
+8,
+[
+"32350b",
+"695d1f",
+"73800f",
+"958927",
+"9ca11b",
+"afb416",
+"f1ce09",
+"f9dd1f",
+"fdd605"
+]
+],
+"w-planter-0-row": [
+42,
+68,
+8,
+[
+"584f1b",
+"787e13",
+"dfbd42",
+"fccf0e",
+"fce986",
+"fddf1a"
+]
+],
 "w-planter-0-seed": [
 42,
 64,
@@ -3229,6 +4466,46 @@
 "fbe967",
 "fcc817",
 "fde31a"
+]
+],
+"w-planter-0-slice": [
+42,
+64,
+8,
+[
+"5a5819",
+"7e801d",
+"a1a04a",
+"b9b425",
+"ebcf21",
+"fbe554",
+"fddf1d"
+]
+],
+"w-planter-0-stake": [
+44,
+66,
+8,
+[
+"837235",
+"9b9b30",
+"ab954a",
+"ba9f3f",
+"d4c43e",
+"dabb49",
+"e8d84c",
+"f7db43",
+"fcdf14",
+"fced5f",
+"fde99f",
+"fee427",
+"fef351",
+"fef4a1",
+"ffd94e",
+"ffeebc",
+"fff99e",
+"fffb45",
+"fffc65"
 ]
 ],
 "w-planter-0-tamp": [

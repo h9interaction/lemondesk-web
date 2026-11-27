@@ -1,5 +1,58 @@
 [
   {
+    "version": "2.3.3",
+    "date": "2026-11-27",
+    "url": "https://github.com/cbs9799/lemondesk-web/releases/download/v2.3.3/LemonDesk-2.3.3.dmg",
+    "notes": {
+      "ko": [
+        "폰으로 보기에서 밭·목장·바다 일도 모두 할 수 있어요. 들이기와 바꿔 들이기, 해금, 일꾼, 창고 넓히기, 보관함 팔기까지 Mac 관리 창과 똑같이 돼요",
+        "직군 고르기와 점수 주기, 조합의 공판장·보험·대출·행상·납품도 폰에서 다룰 수 있어요. 되돌리기 어려운 것은 한 번 더 물어봐요",
+        "Mac이 깨어 있으면 폰에서도 장터를 둘러보고, 사고, 진열하고, 이웃에게 쪽지를 보낼 수 있어요",
+        "폰 화면 아래에 띠가 늘 떠 있어요. 일터에서 밭·목장·바다를 고르면 그 띠에서 일꾼들이 일하는 모습을 그대로 볼 수 있어요",
+        "바닷가에 배가 기다리는 높은 부두가 생겼어요. 레몬 지붕 망대와 깃발 줄이 달려 있어요",
+        "AI 연결로도 장터를 둘러보고 조합 알림을 닫을 수 있어요"
+      ],
+      "en": [
+        "Phone View now handles your field, ranch, and seaside too. Plant and replant, unlock, hire, expand the crate, and sell from storage, just like the Mac's manager window",
+        "Choose a career, assign points, and use the co-op's market, insurance, loans, peddler, and deliveries from your phone. Anything hard to undo asks once more",
+        "While your Mac is awake, you can browse, buy, and list on the market and send notes to neighbors from your phone",
+        "The strip now stays at the bottom of the phone screen. Pick the field, ranch, or seaside under Work to watch your crew working on that strip",
+        "The seaside has a tall new pier where the boat waits, with a lemon-roofed lookout and a string of pennants",
+        "AI Connection can now browse the market and dismiss co-op notices too"
+      ]
+    },
+    "shots": [
+      {
+        "src": "updates/2.3.3/phone.webp",
+        "dark": "updates/2.3.3/phone-dark.webp",
+        "w": 780,
+        "h": 1688,
+        "title": {
+          "ko": "폰에서 모든 일터 일",
+          "en": "Every workplace on your phone"
+        },
+        "text": {
+          "ko": "밭·목장·바닷가의 들이기와 해금, 직군·조합·장터까지 폰에서 해요. 아래 띠에는 고른 일터가 보여요.",
+          "en": "Plant, unlock, and manage careers, the co-op, and the market from your phone. The strip below shows the workplace you pick."
+        }
+      },
+      {
+        "video": "updates/2.3.3/pier.mp4",
+        "src": "updates/2.3.3/pier.webp",
+        "w": 760,
+        "h": 144,
+        "title": {
+          "ko": "바닷가 부두",
+          "en": "Seaside pier"
+        },
+        "text": {
+          "ko": "레몬 지붕 망대가 있는 높은 부두가 생기고, 배는 사다리 앞에서 기다려요.",
+          "en": "A tall pier with a lemon-roofed lookout, and the boat waits by its ladder."
+        }
+      }
+    ]
+  },
+  {
     "version": "2.3.2",
     "date": "2026-11-26",
     "url": "https://github.com/cbs9799/lemondesk-web/releases/download/v2.3.2/LemonDesk-2.3.2.dmg",

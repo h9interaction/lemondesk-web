@@ -121,9 +121,35 @@
   .why summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
   .why ul { margin: 20px 0 0; padding-left: 1.2em; }
   .why li + li { margin-top: 8px; }
+  /* 사용자가 만든 도우미(레몬 로봇). 그림은 레몬 로봇 사이트의 것(한 칸 48×70) */
   .robot { padding-top: var(--gap); }
-  .robot p { margin-top: 24px; max-width: 30em; }
-  .robot .meta { margin-top: 16px; }
+  .robot .card { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; align-items: center; padding: clamp(28px, 4vw, 56px); background: var(--lemon-soft); border-radius: 20px; }
+  .robot .tag { display: inline-block; margin-bottom: 20px; padding: 6px 12px; border-radius: 999px; background: var(--lemon); color: #23511F; font-size: 14px; font-weight: 700; line-height: 1.4; }
+  .robot h2 + p { margin-top: 20px; }
+  .robot ul { margin: 16px 0 0; padding-left: 1.2em; }
+  .robot li + li { margin-top: 4px; }
+  .robot ul + .meta { margin-top: 16px; }
+  .robot .download { margin-top: 28px; }
+  .robot .download + .meta { margin-top: 14px; }
+  .scene { position: relative; margin: 0; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #F6EDCC, #DAEDF5 39%); }
+  .scene video { position: absolute; left: 0; bottom: 0; width: 100%; height: 62%; object-fit: cover; object-position: left bottom; }
+  .scene .bot { position: absolute; height: 33%; aspect-ratio: 48 / 70; background-size: 800% 100%; background-repeat: no-repeat; image-rendering: pixelated; }
+  .scene .idle { left: 4%; bottom: 3%; background-image: url(robot/robot-idle.png); animation: rb-f8 1.6s steps(8) infinite, rb-home 9s linear infinite; }
+  .scene .drone { left: 4%; bottom: 3%; opacity: 0; background-image: url(robot/robot-fly.png); background-size: 400% 100%; animation: rb-f4 .4s steps(4) infinite, rb-fly 9s ease-in-out infinite; }
+  @keyframes rb-f8 { to { background-position-x: 114.2857%; } }
+  @keyframes rb-f4 { to { background-position-x: 133.333%; } }
+  @keyframes rb-home { 0%, 12.9% { visibility: visible; } 13%, 91.9% { visibility: hidden; } 92%, 100% { visibility: visible; } }
+  @keyframes rb-fly {
+    0%, 12.9% { left: 4%; bottom: 3%; opacity: 0; }
+    13% { left: 4%; bottom: 3%; opacity: 1; }
+    32% { left: 38%; bottom: 58%; }
+    48%, 62% { left: 68%; bottom: 10%; }
+    80% { left: 30%; bottom: 60%; }
+    91.9% { left: 4%; bottom: 3%; opacity: 1; }
+    92%, 100% { left: 4%; bottom: 3%; opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .scene .bot { animation: none; } .scene .drone { display: none; } .scene .idle { opacity: 1; } }
+  @media (max-width: 860px) { .robot .card { grid-template-columns: 1fr; gap: 32px; } }
   .feature { padding-top: var(--gap); display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
   .feature p { margin-top: 24px; max-width: 22em; }
   .feature figure { margin: 0; }
@@ -177,7 +203,7 @@
   <div class="win w2" aria-hidden="true"><i></i><b></b><b class="s"></b><b></b></div>
   <video class="strip" src="hero-strip.mp4?v=1" poster="hero-strip.webp?v=1" width="1240" height="144" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
 </div>
-<script>if(matchMedia('(prefers-reduced-motion: reduce)').matches){const v=document.querySelector('.desk .strip');v.removeAttribute('autoplay');v.pause()}</script>
+<script>if(matchMedia('(prefers-reduced-motion: reduce)').matches){document.querySelectorAll('.desk .strip').forEach(v=>{v.removeAttribute('autoplay');v.pause()})}</script>
 
 <main>
   <section class="wrap feature">
@@ -200,6 +226,28 @@
       <p>설정에서 '폰으로 보기'를 켜고 QR을 한 번 찍으면, 폰 브라우저에 내 과수원이 띠와 같은 모습으로 보이고(일하는 일꾼, 강아지, 구름·나비까지), 창고와 가득 찰 때까지 남은 시간을 Mac과 똑같이 보면서 팔고, 심고, 일꾼을 고용하고, 이웃을 돕고, 서리를 보내고, 소품 자리와 옷 색까지 바꿀 수 있어요. Mac이 잠들거나 꺼져 있어도 폰에서 한 일은 예약해 두었다가 Mac이 깨어날 때 그 시각에 한 것처럼 반영하고, 이웃 물 주기와 선물은 바로 보내요. 앱 설치나 로그인은 필요 없고 집 밖에서도 돼요. Mac·Windows PC에서는 설정의 'AI 연결'을 켜고 Claude·Codex 옆 [연결]을 누르면, AI에게 "다 팔아줘", "이웃 도와줘"처럼 말로 과수원을 맡길 수도 있어요. 회사 Mac·집 Mac·Windows PC 를 같이 쓴다면 '기기 연동'을 켜고 코드 하나로 묶어 한 과수원을 이어 키울 수 있어요(한 번에 한 기기에서만 자라고, 기기를 바꿀 때도 그대로 옮겨져요).</p>
     </div>
     <figure><img src="shot-06.webp?v=3" width="1600" height="756" loading="lazy" decoding="async" alt="폰 화면 세 장: 일꾼과 강아지, 나비가 있는 과수원과 창고·모두 팔기 버튼, 나무 심기 타일, 랜턴이 켜진 밤 과수원."></figure>
+  </section>
+  <section class="wrap robot" id="robot">
+    <div class="card">
+      <div>
+        <span class="tag">사용자가 만든 도우미</span>
+        <h2>바쁜 날엔<br>레몬 로봇에게 맡겨요</h2>
+        <p>한 사용자가 Lemon Desk를 위해 만든 레몬 로봇은 띠 왼쪽 끝에 서 있다가, 일할 때면 드론으로 변신해 날아가요.</p>
+        <ul>
+          <li>5분마다 창고를 팔아요</li>
+          <li>지금 사면 가장 빨리 본전을 뽑는 업그레이드를 골라 사요</li>
+          <li>마우스를 올리면 오늘 한 일과 다음 할 일을 보여 줘요</li>
+        </ul>
+        <p class="meta">Claude·Codex 구독은 필요 없어요. Lemon Desk 설정에서 '폰으로 보기'만 켜면 돼요(목장 사기까지 맡기려면 'AI 연결'도). Mac·Windows.</p>
+        <a class="download" href="https://lemonrobot.interaction.hnine.com/">레몬 로봇 보러 가기<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9h11M10 4.5 14.5 9 10 13.5"/></svg></a>
+        <p class="meta">Lemon Desk 팀이 만든 앱이 아니에요. 문의와 업데이트는 레몬 로봇 페이지에서 확인해 주세요. 로봇 그림: 레몬 로봇.</p>
+      </div>
+      <figure class="scene" role="img" aria-label="과수원 띠 왼쪽 끝에 레몬 모자를 쓴 작은 로봇이 서 있다가, 드론으로 변신해 과수원 위를 날아갔다 돌아오는 모습">
+        <video src="hero-strip.mp4?v=1" poster="hero-strip.webp?v=1" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+        <span class="bot idle"></span><span class="bot drone"></span>
+      </figure>
+      <script>if(matchMedia('(prefers-reduced-motion: reduce)').matches){const v=document.querySelector('.scene video');v.removeAttribute('autoplay');v.pause()}</script>
+    </div>
   </section>
   <details class="wrap more">
     <summary>더 보기: 새 일터, 조합과 장터, 이웃, 일꾼, 꾸미기, 레몬 공방, 도감</summary>
@@ -273,12 +321,6 @@
         <li>Windows 11의 '스마트 앱 컨트롤'을 켠 PC에서는 서명 전까지 어느 방법으로도 열리지 않을 수 있어요.</li>
       </ul>
     </details>
-  </section>
-
-  <section class="wrap robot">
-    <h2>사용자가 만든 도우미,<br>레몬 로봇</h2>
-    <p>바쁜 날엔 과수원을 로봇에게 맡길 수도 있어요. 한 사용자가 만든 <a href="https://lemonrobot.interaction.hnine.com/">레몬 로봇</a>은 띠 왼쪽 끝에 서서 창고를 팔고, 지금 사면 가장 빨리 본전을 뽑는 업그레이드를 골라 사요. 일할 땐 드론으로 변신해 그 자리로 날아가요. Claude나 Codex 구독은 필요 없고, Lemon Desk 설정에서 '폰으로 보기'만 켜 두면 돼요(목장 사기까지 맡기려면 'AI 연결'도).</p>
-    <p class="meta">레몬 로봇은 Lemon Desk 팀이 만든 앱이 아니에요. 문의와 업데이트는 레몬 로봇 페이지에서 확인해 주세요.</p>
   </section>
 
   <section class="wrap promise">

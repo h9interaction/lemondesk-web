@@ -121,9 +121,35 @@
   .why summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
   .why ul { margin: 20px 0 0; padding-left: 1.2em; }
   .why li + li { margin-top: 8px; }
+  /* 사용자가 만든 도우미(레몬 로봇). 그림은 레몬 로봇 사이트의 것(한 칸 48×70) */
   .robot { padding-top: var(--gap); }
-  .robot p { margin-top: 24px; max-width: 30em; }
-  .robot .meta { margin-top: 16px; }
+  .robot .card { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; align-items: center; padding: clamp(28px, 4vw, 56px); background: var(--lemon-soft); border-radius: 20px; }
+  .robot .tag { display: inline-block; margin-bottom: 20px; padding: 6px 12px; border-radius: 999px; background: var(--lemon); color: #23511F; font-size: 14px; font-weight: 700; line-height: 1.4; }
+  .robot h2 + p { margin-top: 20px; }
+  .robot ul { margin: 16px 0 0; padding-left: 1.2em; }
+  .robot li + li { margin-top: 4px; }
+  .robot ul + .meta { margin-top: 16px; }
+  .robot .download { margin-top: 28px; }
+  .robot .download + .meta { margin-top: 14px; }
+  .scene { position: relative; margin: 0; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #F6EDCC, #DAEDF5 39%); }
+  .scene video { position: absolute; left: 0; bottom: 0; width: 100%; height: 62%; object-fit: cover; object-position: left bottom; }
+  .scene .bot { position: absolute; height: 33%; aspect-ratio: 48 / 70; background-size: 800% 100%; background-repeat: no-repeat; image-rendering: pixelated; }
+  .scene .idle { left: 4%; bottom: 3%; background-image: url(../robot/robot-idle.png); animation: rb-f8 1.6s steps(8) infinite, rb-home 9s linear infinite; }
+  .scene .drone { left: 4%; bottom: 3%; opacity: 0; background-image: url(../robot/robot-fly.png); background-size: 400% 100%; animation: rb-f4 .4s steps(4) infinite, rb-fly 9s ease-in-out infinite; }
+  @keyframes rb-f8 { to { background-position-x: 114.2857%; } }
+  @keyframes rb-f4 { to { background-position-x: 133.333%; } }
+  @keyframes rb-home { 0%, 12.9% { visibility: visible; } 13%, 91.9% { visibility: hidden; } 92%, 100% { visibility: visible; } }
+  @keyframes rb-fly {
+    0%, 12.9% { left: 4%; bottom: 3%; opacity: 0; }
+    13% { left: 4%; bottom: 3%; opacity: 1; }
+    32% { left: 38%; bottom: 58%; }
+    48%, 62% { left: 68%; bottom: 10%; }
+    80% { left: 30%; bottom: 60%; }
+    91.9% { left: 4%; bottom: 3%; opacity: 1; }
+    92%, 100% { left: 4%; bottom: 3%; opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .scene .bot { animation: none; } .scene .drone { display: none; } .scene .idle { opacity: 1; } }
+  @media (max-width: 860px) { .robot .card { grid-template-columns: 1fr; gap: 32px; } }
   .feature { padding-top: var(--gap); display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
   .feature p { margin-top: 24px; max-width: 22em; }
   .feature figure { margin: 0; }
@@ -178,7 +204,7 @@
   <div class="win w2" aria-hidden="true"><i></i><b></b><b class="s"></b><b></b></div>
   <video class="strip" src="../hero-strip.mp4?v=1" poster="../hero-strip.webp?v=1" width="1240" height="144" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
 </div>
-<script>if(matchMedia('(prefers-reduced-motion: reduce)').matches){const v=document.querySelector('.desk .strip');v.removeAttribute('autoplay');v.pause()}</script>
+<script>if(matchMedia('(prefers-reduced-motion: reduce)').matches){document.querySelectorAll('.desk .strip').forEach(v=>{v.removeAttribute('autoplay');v.pause()})}</script>
 
 <main>
   <section class="wrap feature">
@@ -201,6 +227,28 @@
       <p>Turn on Phone view in Settings and scan the QR code once. Your orchard shows up in your phone’s browser looking just like the strip (busy workers, dogs, clouds and butterflies included), with the same crate and time-until-full as on your computer, and you can sell, plant, hire workers, help neighbors, send scrumping raids, and even rearrange decorations and outfit colors. If your computer is asleep or off, what you do on the phone is queued and applied as if it happened at that moment when it wakes up; watering and gifts for neighbors go out right away. No app to install, no sign-in, and it works away from home. On Mac or Windows you can also turn on AI Connection in Settings, click [Connect] next to Claude or Codex, and hand the orchard over in plain words: “sell everything,” “help my neighbors.” Using a work Mac, a home Mac, and a Windows PC? Turn on Device Sync and link them with one code to keep growing the same orchard (it grows on one device at a time and moves with you when you switch).</p>
     </div>
     <figure><img src="../shot-06.webp?v=3" width="1600" height="756" loading="lazy" decoding="async" alt="Three phone screens: the orchard with workers, dogs, and butterflies plus the crate and Sell All button; tree planting tiles; the orchard at night with lanterns lit."></figure>
+  </section>
+  <section class="wrap robot" id="robot">
+    <div class="card">
+      <div>
+        <span class="tag">Made by a player</span>
+        <h2>Busy day?<br>Let Lemon Robot handle it</h2>
+        <p>Lemon Robot, made by one of our players, stands at the left end of the strip and turns into a drone to fly off and do the work.</p>
+        <ul>
+          <li>Sells your crate every five minutes</li>
+          <li>Buys whichever upgrade pays for itself fastest</li>
+          <li>Hover over it to see what it did today and what’s next</li>
+        </ul>
+        <p class="meta">No Claude or Codex subscription needed. Just turn on Phone view in Lemon Desk settings (and AI Connection if you want it to buy ranch animals too). Mac and Windows; its page is in Korean.</p>
+        <a class="download" href="https://lemonrobot.interaction.hnine.com/">Meet Lemon Robot<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9h11M10 4.5 14.5 9 10 13.5"/></svg></a>
+        <p class="meta">Lemon Robot isn’t made by the Lemon Desk team. For questions and updates, see its page. Robot art: Lemon Robot.</p>
+      </div>
+      <figure class="scene" role="img" aria-label="A small robot in a lemon hat stands at the left end of the orchard strip, then turns into a drone and flies over the orchard and back.">
+        <video src="../hero-strip.mp4?v=1" poster="../hero-strip.webp?v=1" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+        <span class="bot idle"></span><span class="bot drone"></span>
+      </figure>
+      <script>if(matchMedia('(prefers-reduced-motion: reduce)').matches){const v=document.querySelector('.scene video');v.removeAttribute('autoplay');v.pause()}</script>
+    </div>
   </section>
   <details class="wrap more">
     <summary>More: new workplaces, co-op and market, neighbors, workers, style, the Lemon Workshop, the Book</summary>
@@ -274,12 +322,6 @@
         <li>On Windows 11 PCs with Smart App Control turned on, the app may not open either way until it’s signed.</li>
       </ul>
     </details>
-  </section>
-
-  <section class="wrap robot">
-    <h2>A helper made by a player:<br>Lemon Robot</h2>
-    <p>On busy days you can even hand the orchard to a robot. <a href="https://lemonrobot.interaction.hnine.com/">Lemon Robot</a>, made by one of our players, stands at the left end of the strip, sells your crate, and buys whichever upgrade pays for itself fastest, turning into a drone to fly over and do the work. No Claude or Codex subscription needed: just turn on Phone view in Lemon Desk settings (and AI Connection if you want it to buy ranch animals too). The robot’s page is in Korean.</p>
-    <p class="meta">Lemon Robot isn’t made by the Lemon Desk team. For questions and updates, see its page.</p>
   </section>
 
   <section class="wrap promise">

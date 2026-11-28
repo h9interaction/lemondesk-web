@@ -18,9 +18,9 @@
 <meta name="theme-color" content="#1A1D12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="../icon.png?v=2">
 <link rel="icon" href="sprites/icon-64.png">
-<link rel="preload" href="fonts/galmuri11-bold.woff2?v=2005" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/galmuri11-bold.woff2?v=2006" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=2005) format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri"; src: url(fonts/galmuri11-bold.woff2?v=2006) format("woff2"); font-display: swap; }
   :root { --bg: #FFF6D8; --ink: #4A2E14; --soft: #7A5B3A; --page-ink: #4A2E14; --page-soft: #7A5B3A; --leaf: #5E9A12; --track: #E4D3A6; }
   @media (prefers-color-scheme: dark) { :root { --bg: #1A1D12; --page-ink: #F4E9C8; --page-soft: #C2B58E; } }
   * { box-sizing: border-box; }
@@ -33,7 +33,8 @@
   .px { font-family: "Galmuri", -apple-system, "Apple SD Gothic Neo", sans-serif; font-weight: 700; letter-spacing: 0; }
   .num { font-variant-numeric: tabular-nums; }
   :focus-visible { outline: 3px solid #2F6FD0; outline-offset: 2px; }
-  .wrap { max-width: 480px; margin: 0 auto; padding: 0 12px calc(96px + env(safe-area-inset-bottom)); }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 12px calc(96px + env(safe-area-inset-bottom));
+          min-height: calc(100dvh - env(safe-area-inset-top)); display: flex; flex-direction: column; } /* 내용이 짧아도 footer 는 아래 고정 띠 위(보이는 영역 맨 아래) */
   .wide .wrap { max-width: none; } /* 확인·캡처용 ?wide: 과수원 전체를 한 화면에 */
   /* 과수원 장면은 탭과 상관없이 탭 막대 바로 위에 늘 붙어 있다(Mac 띠처럼). 옆으로 밀기는 그대로 */
   .dock { position: fixed; left: 0; right: 0; bottom: calc(68px + env(safe-area-inset-bottom)); z-index: 4; }
@@ -202,7 +203,14 @@
   .gate ol { text-align: left; margin: 10px 0 0; padding-left: 1.3em; }
   /* 2.0 일터: 띠 탭(열린 띠만, Mac 띠에 걸린 것은 초록 점)·띠 카드·직군 줄. 다른 띠를 고르면 레몬 과수원 칸(.lemon)은 숨는다 */
   .away .lemon { display: none !important; }
-  .strips { margin: 0 0 8px; }
+  /* 2.3.x 폰 IA: 위 띠 탭은 오늘·밭·일꾼에서 늘 맨 위에 붙어 있다(아래 탭 오늘·밭·일꾼이 고른 띠를 따라간다) */
+  .strips { position: sticky; top: 0; z-index: 3; margin: 0 -12px 8px; padding: 6px 12px 8px; background: var(--bg); box-shadow: 0 1px 0 rgba(91, 58, 26, .2); }
+  #town-seg { margin: 6px 0 4px; }
+  .strips { gap: 4px; } /* 띠 넷이어도 그림·이름·초록 점이 한 줄에 */
+  .strips button { padding: 4px 2px; white-space: nowrap; font-size: 13px; }
+  .strips button img { height: 16px; margin-right: 2px; }
+  .strips button.shown::after { margin-left: 3px; }
+  .tabs button.dot > span::after, #town-seg button.dot::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: 4px; background: #E2574C; vertical-align: 1px; } /* 볼일(받을 전문 점수·직군 고르기)이 있을 때만 */
   .ico { height: 22px; width: auto; vertical-align: -5px; margin-right: 6px; }
   .labme { display: flex; gap: 10px; align-items: center; }
   .labme img { flex: none; }
@@ -211,7 +219,7 @@
   .work .pic img { max-width: 100%; height: auto; image-rendering: pixelated; }
   #lab > .seg { margin: 10px 0; }
   .seg button.shown::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: 5px; background: #58B02C; vertical-align: 1px; }
-  #strip > .panel, #career > .panel, #market > .panel, #coop > .panel { margin-top: 10px; }
+  #strip > .panel, #strip-field > .panel, #strip-crew > .panel, #today-x > .panel, #career > .panel, #market > .panel, #coop > .panel { margin-top: 10px; }
   /* 2.3.3 폰 조작(맥 관리 창 일터·직군·조합·장터): 한 줄(그림·이름·설명·버튼), 물건 칸, 시트 안 입력 */
   .irow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
   .irow > div { flex: 1; min-width: 0; }
@@ -233,7 +241,7 @@
   .shelf img { height: 24px; width: auto; }
   #plots.form { margin: 10px 0; max-height: 62vh; overflow-y: auto; }
   #plots.form > * + * { margin-top: 8px; }
-  footer { margin-top: 20px; font-size: 14px; color: var(--page-soft); text-align: center; }
+  footer { margin-top: auto; padding-top: 20px; font-size: 14px; color: var(--page-soft); text-align: center; }
   footer a { color: inherit; }
   @media (prefers-reduced-motion: reduce) {
     .party .panel { animation: fadeonly 2.6s forwards; }
@@ -250,8 +258,8 @@
 
   <main id="app" hidden>
     <div class="dock" id="dock"><div class="scene lemon" id="scene"><div class="sky" id="sky"></div><div class="pan" id="pan" role="group" tabindex="0" aria-label="과수원"><div class="world" id="world"><div class="ground"></div><div class="yard" id="yard"></div></div></div><div class="sky front" id="sky2"></div></div></div>
-    <section id="tab-orchard" role="tabpanel" aria-labelledby="t-orchard">
-      <div class="seg strips" id="strips" role="tablist" hidden></div>
+    <div class="seg strips" id="strips" role="tablist" hidden></div>
+    <section id="tab-today" role="tabpanel" aria-labelledby="t-today">
       <p class="hint num lemon" id="clear" hidden></p>
       <p class="hint lemon" id="seedling" hidden></p>
       <p class="hint lemon" id="hint" hidden></p>
@@ -270,8 +278,7 @@
       <div id="suggest" class="lemon"></div>
       <div id="farm" class="lemon"></div>
       <div id="stand" class="lemon"></div>
-      <div id="career"></div>
-      <div id="coop"></div>
+      <div id="today-x"></div>
       <p class="raid-note" id="raid-note" role="status" hidden></p>
       <div class="panel banner" id="banner" hidden><p id="banner-text"></p><button class="btn y px" id="retry" type="button" hidden></button></div>
       <div class="panel week lemon" id="week" hidden>
@@ -286,22 +293,33 @@
       <div id="deco-sec" class="lemon" hidden><h2 class="sec px" data-t="decoH">꾸미기</h2><div id="deco"></div></div>
     </section>
 
-    <section id="tab-plant" role="tabpanel" aria-labelledby="t-plant" hidden>
-      <h2 class="sec px" id="field"></h2>
-      <div class="grid" id="kinds"></div>
-      <div id="map-sec" hidden><h2 class="sec px" data-t="mapH">밭 지도</h2><div class="panel"><div class="plots" id="map"></div></div></div>
+    <section id="tab-field" role="tabpanel" aria-labelledby="t-field" hidden>
+      <div class="lemon">
+        <h2 class="sec px" id="field"></h2>
+        <div class="grid" id="kinds"></div>
+        <div id="map-sec" hidden><h2 class="sec px" data-t="mapH">밭 지도</h2><div class="panel"><div class="plots" id="map"></div></div></div>
+      </div>
+      <div id="strip-field"></div>
     </section>
 
     <section id="tab-crew" role="tabpanel" aria-labelledby="t-crew" hidden>
-      <h2 class="sec px" data-t="crew">일꾼</h2>
-      <div id="crew"></div>
-      <h2 class="sec px" data-t="mgrH">매니저</h2>
-      <div id="mgr"></div>
-      <h2 class="sec px" data-t="crateUp">창고 넓히기</h2>
-      <div id="crate"></div>
+      <div class="lemon">
+        <h2 class="sec px" data-t="crew">일꾼</h2>
+        <div id="crew"></div>
+        <h2 class="sec px" data-t="mgrH">매니저</h2>
+        <div id="mgr"></div>
+        <h2 class="sec px" data-t="crateUp">창고 넓히기</h2>
+        <div id="crate"></div>
+      </div>
+      <div id="strip-crew"></div>
     </section>
 
-    <section id="tab-nb" role="tabpanel" aria-labelledby="t-nb" hidden>
+    <section id="tab-town" role="tabpanel" aria-labelledby="t-town" hidden>
+      <div class="seg" id="town-seg" role="tablist" hidden></div>
+      <div id="career"></div>
+      <div id="coop"></div>
+      <div id="market"></div>
+      <div id="town-nb">
       <p class="panel" id="nb-old" hidden></p>
       <div id="nb-main">
         <div id="nb-req"></div>
@@ -316,7 +334,6 @@
           <div class="seg" id="stamps"></div>
         </div>
         <div id="lab"></div>
-        <div id="market"></div>
         <h2 class="sec px num" id="nb-h"></h2>
         <div id="nb-list"></div>
         <h2 class="sec px" data-t="findH">이웃 찾기</h2>
@@ -327,6 +344,7 @@
         </div>
         <h2 class="sec px" data-t="raidH">서리</h2>
         <div id="raid"></div>
+      </div>
       </div>
     </section>
 
@@ -351,10 +369,10 @@
 
 <p class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></p>
 <nav class="tabs px" id="tabs" role="tablist" hidden>
-  <button type="button" role="tab" id="t-orchard" aria-controls="tab-orchard" aria-selected="true"><img src="sprites/icon-orchard.png" alt=""><span data-t="tOrchard">과수원</span></button>
-  <button type="button" role="tab" id="t-plant" aria-controls="tab-plant" aria-selected="false"><img src="sprites/icon-plant.png" alt=""><span data-t="tPlant">심기</span></button>
+  <button type="button" role="tab" id="t-today" aria-controls="tab-today" aria-selected="true"><img src="sprites/crate-2.png" alt=""><span data-t="tToday">오늘</span></button>
+  <button type="button" role="tab" id="t-field" aria-controls="tab-field" aria-selected="false"><img src="sprites/icon-plant.png" alt=""><span>밭</span></button>
   <button type="button" role="tab" id="t-crew" aria-controls="tab-crew" aria-selected="false"><img src="sprites/icon-crew.png" alt=""><span data-t="tCrew">일꾼</span></button>
-  <button type="button" role="tab" id="t-nb" aria-controls="tab-nb" aria-selected="false"><img src="sprites/emote-heart.png" alt=""><span data-t="tNb">이웃</span></button>
+  <button type="button" role="tab" id="t-town" aria-controls="tab-town" aria-selected="false"><img src="sprites/market-sign.png" alt=""><span data-t="tTown">마을</span></button>
   <button type="button" role="tab" id="t-col" aria-controls="tab-col" aria-selected="false"><img src="sprites/prop-chest-0.png" alt=""><span data-t="tCol">모음</span></button>
 </nav>
 
@@ -380,7 +398,7 @@
   const obj = s => { const c = s.charCodeAt(s.length - 1) - 0xAC00; return s + (c >= 0 && c < 11172 && c % 28 ? '을' : '를'); };
   const T = en ? {
     crate: 'Crate', sell: 'Sell all', sellFor: v => `Sell all +${v}`, week: 'This week', picked: 'picked', soldN: 'sold', earned: 'coins earned',
-    crew: 'Workers', crateUp: 'Bigger crate', privacy: 'Privacy Policy', tOrchard: 'Orchard', tPlant: 'Plant', tCrew: 'Workers',
+    crew: 'Workers', crateUp: 'Bigger crate', privacy: 'Privacy Policy', tCrew: 'Workers', tToday: 'Today', tTown: 'Town',
     fullIn: t => `Full in ${t}`, full: 'The crate is full', slow: 'Filling slowly', field: (n, m) => `Field ${n} / ${m}`, fieldFull: (n, m) => `Field ${n} / ${m} · full, so you can replant`,
     kinds: {eureka: 'Eureka lemon', kumquat: 'Kumquat', meyer: 'Meyer lemon', calamansi: 'Calamansi', lime: 'Lime', blood: 'Blood orange', yuja: 'Yuja',
       grapefruit: 'Grapefruit', pink: 'Pink lemon', hallabong: 'Hallabong', buddha: "Buddha's hand", golden: 'Golden lemon', rainbow: 'Rainbow lemon',
@@ -497,6 +515,7 @@
     buyAt: 'At level 10 Dodam can also buy things for you.', buyAtCustom: 'Dodam buys what is in the slots now. From level 10, other things too.', planH: 'What to buy first', mgrPlans: {cheap: 'Cheapest', fruit: 'Trees first', crew: 'Workers first'},
     keepH: 'Coins to keep', keepV: n => n ? `Keep ${n}%` : 'Spend all',
     update15: 'Update Lemon Desk on your Mac to 1.15 to hire Dodam the manager and open the lemonade stand.',
+    update233: 'Update Lemon Desk on your Mac to 2.3.3 to manage plots and workers here.',
     suggestH: 'Good to buy next', sug: {tree: k => `Plant a ${k}`, unlock: k => `Unlock ${k}`, replant: (k, n) => `Replant plot ${n} with ${k}`,
       worker: (r, l) => l ? `Level up the ${r.toLowerCase()}` : `Hire a ${r.toLowerCase()}`, second: r => `One more ${r.toLowerCase()}`, crate: () => 'Expand the crate', land: () => 'Clear more land'},
     standH: 'Lemonade stand', standLocked: 'You can open the stand at crate level 6.', standNone: 'Turn crate fruit into bottles that sell for more.', openBtn: 'Open the stand',
@@ -550,7 +569,7 @@
     // 2.3.3 폰 조작(영어는 맥 Localizable.xcstrings 그대로, 폰에만 있는 줄은 새로)
     w: {coins: n => `${n} co-op coins`, buy: 'Buy', short: v => `${v} co-op coins short`, sellFor: v => `Sell All ◎${v}`, nowHit: k => `Now: ${k}`, auto: 'Auto-plant in season',
       suggestH: 'Suggested', putIn: (n, k) => `Put ${k} in plot ${n}`, unlockX: k => `Unlock ${k}`, growShop: 'Expand the Workshop', growCrate: 'Expand the Crate',
-      part: {field: 'Plots', ranch: 'Pens', sea: 'Sea'}, benchH: n => `Workshop Bench · Stage ${n}`, plotsH: (k, n, m) => `${k} · Stage ${n} · ${m} plots`,
+      part: {orchard: 'Plots', field: 'Plots', ranch: 'Pens', sea: 'Sea'}, benchH: n => `Workshop Bench · Stage ${n}`, plotsH: (k, n, m) => `${k} · Stage ${n} · ${m} plots`,
       put: 'Add', swap: 'Replace', emptyPlot: n => `Plot ${n} · Empty`, empty: 'Empty', slotTitle: (n, k) => `Plot ${n} · ${k}`,
       slot: {empty: 'Choose a kind to add', rest: 'Resting · Not enough expertise', grow: p => `Growing ${p}%`, stack: (n, m) => `Stacked ${n} / ${m}`, ready: n => `Ready ${n}`,
         waitN: n => `Waiting for ingredients · Done ${n}`, wait: 'Waiting for ingredients', full: n => `Done ${n} · Shelf full`, make: (p, n) => `Making ${p}% · Done ${n}`},
@@ -724,6 +743,7 @@
     buyAt: '레벨 10이 되면 도담이 대신 사 주기도 해요.', buyAtCustom: '슬롯에 넣은 것은 지금도 사요. 레벨 10부터는 다른 것도 사요.', planH: '먼저 살 것', mgrPlans: {cheap: '가장 싼 것', fruit: '나무 먼저', crew: '일꾼 먼저'},
     keepH: '남겨 둘 코인', keepV: n => n ? `${n}% 남기기` : '다 쓰기',
     update15: 'Mac의 Lemon Desk를 1.15로 올리면 매니저 도담과 가판대를 쓸 수 있어요.',
+    update233: 'Mac의 Lemon Desk를 2.3.3으로 올리면 여기서 칸과 일꾼을 다룰 수 있어요.',
     suggestH: '다음에 사면 좋은 것', sug: {tree: k => `${obj(k)} 심기`, unlock: k => `${k} 해금`, replant: (k, n) => `${n}번 밭을 ${ro(k)} 바꿔 심기`,
       worker: (r, l) => l ? `${r} 레벨업` : `${r} 고용`, second: r => `${r} 한 명 더`, crate: () => '창고 넓히기', land: () => '땅 넓히기'},
     standH: '가판대', standLocked: '창고 레벨 6이 되면 가판대를 열 수 있어요.', standNone: '창고 과일로 병을 만들어 더 비싸게 팔아요.', openBtn: '가판대 열기',
@@ -739,7 +759,7 @@
     needFruit: (k, x) => `${k} ${fmt(x)}개가 더 있어야 해요`, needBottle: (r, x) => `${r} ${fmt(x)}병이 더 있어야 해요`,
     mgrHired: '도담이 과수원에 왔어요', mgrUp: '도담 레벨이 올랐어요', standOpen: '가판대를 열었어요', standUp: '가판대 레벨이 올랐어요', started: r => `${r} 만들기를 시작했어요`,
     filled: e => `주문을 채웠어요 · +${fmt(e)} 코인`,
-    tOrchard: '과수원', tWork: '일터', strip: {orchard: '과수원', field: '텃밭', ranch: '목장', sea: '바닷가'}, workshop: '과수원 공방', stage: n => `${n}단계`, resting: '쉬는 중',
+    tToday: '오늘', tTown: '마을', tWork: '일터', strip: {orchard: '과수원', field: '텃밭', ranch: '목장', sea: '바닷가'}, workshop: '과수원 공방', stage: n => `${n}단계`, resting: '쉬는 중',
     crateOf: (n, m) => `창고 ${n} / ${m}`, keepN: n => `보관함 ${n}개`, priceLine: (a, b) => `시세 오늘 ${a}% · 내일 ${b}%`,
     showBtn: 'Mac 띠에 걸기', shownNow: 'Mac 띠에 걸려 있어요', insureH: '보험', insure: {disaster: '재해 보험', price: '판매 보험'},
     share: {field: '인삼 씨앗 보내기', ranch: '새끼 보내기', sea: '치어 보내기'}, shareWho: '어느 이웃에게 보낼까요?', shareWeek: '이번 주에는 이미 보냈어요',
@@ -776,7 +796,7 @@
     // 2.3.3 폰 조작(맥 관리 창 FarmWorkView·CareerView·CoopView·MarketView·NoteSheet 문구 그대로)
     w: {coins: n => `조합 코인 ${n}`, buy: '사기', short: v => `조합 코인이 ${v} 모자라요`, sellFor: v => `모두 팔기 ◎${v}`, nowHit: k => `지금 ${k}`, auto: '제철 자동 심기',
       suggestH: '추천', putIn: (n, k) => `${n}번 칸에 ${k} 들이기`, unlockX: k => `${k} 해금`, growShop: '공방 넓히기', growCrate: '창고 넓히기',
-      part: {field: '밭', ranch: '우리', sea: '바다'}, benchH: n => `공방 작업대 · ${n}단계`, plotsH: (k, n, m) => `${k} · ${n}단계 · ${m}칸`,
+      part: {orchard: '밭', field: '밭', ranch: '우리', sea: '바다'}, benchH: n => `공방 작업대 · ${n}단계`, plotsH: (k, n, m) => `${k} · ${n}단계 · ${m}칸`,
       put: '들이기', swap: '바꿔 들이기', emptyPlot: n => `${n}번 칸 · 빈 칸`, empty: '빈 칸', slotTitle: (n, k) => `${n}번 칸 · ${k}`,
       slot: {empty: '들일 종류를 골라 주세요', rest: '쉬는 중 · 전문 점수가 모자라요', grow: p => `자라는 중 ${p}%`, stack: (n, m) => `쌓인 것 ${n} / ${m}`, ready: n => `거둘 것 ${n}`,
         waitN: n => `재료를 기다려요 · 다 된 것 ${n}`, wait: '재료를 기다려요', full: n => `다 된 것 ${n} · 선반이 찼어요`, make: (p, n) => `만드는 중 ${p}% · 다 된 것 ${n}`},
@@ -2270,29 +2290,55 @@
   const line = (img, text, cls = 'num') => { const p = el(cls === 'px' ? 'b' : 'p', cls); p.append(pic(`${S}${img}.png${V}`, 'ico'), text); return p; };
   const FX = {typhoon: 'storm', drought: 'heat', cold: 'icicle', poor: 'wilt'}; // 예보 줄 재해 기호(띠 장면 효과 그림, 적조는 예보 구름)
   const openStrips = s => STRIPS.filter(k => k === 'orchard' || stripOf(s, k)?.open);
-  let pick = null; // 폰에서 보고 있는 띠(처음엔 Mac 띠에 걸린 것)
+  let pick = null, wantPick = null, stripsN = 0, tab = 'today', town = null; // 폰에서 보고 있는 띠(처음엔 지난번에 고른 띠, 없으면 Mac 띠에 걸린 것)·아래 탭·마을 칸
+  try { wantPick = localStorage.getItem('ld-pick'); town = localStorage.getItem('ld-town'); } catch (e) {}
+  const stripBar = () => { $('strips').hidden = stripsN < 2 || !['today', 'field', 'crew'].includes(tab); };
   function titleText(t) { // 맥 Career.title 키: wish-<직군> / <직군>-<단계> / <직군>-master / <직군>-solo
     const m = /^(wish-)?(orchard|field|ranch|sea)(?:-(\d|master|solo))?$/.exec(t || ''); if (!m) return t || '';
     const k = jobName(m[2]); return m[1] ? T.titles.wish(k) : m[3] === 'master' ? T.titles.master(k) : m[3] === 'solo' ? T.titles.solo(k) : T.titles.stage(k, m[3]);
   }
+  // 2.3.x 폰 IA(docs/research/phone-ia-2.3.x.md): 아래 탭 오늘·밭·일꾼은 위 띠(pick)를 따라가고, 직군·조합·장터·이웃은 마을 안쪽 칸(town)
   function renderWork() {
-    const s = state(), on = !!s && v20(), open = on ? openStrips(s) : ['orchard'], shown = on ? s.shown : null;
-    if (!open.includes(pick)) pick = open.includes(shown) ? shown : 'orchard';
-    $('tab-orchard').classList.toggle('away', pick !== 'orchard');
-    $('t-orchard').querySelector('span').textContent = on ? T.tWork : T.tOrchard;
-    $('strips').hidden = open.length < 2; $('strips').ariaLabel = T.tWork;
+    const s = state(), on = !!s && v20(), shown = on ? s.shown : null;
+    // 2.0 전 앱·직군 전(과수원뿐)은 띠 탭 없이 과수원. 2.3.2 이하(칸 정보 없음)는 띠 탭과 옛 띠 카드(오늘), 밭·일꾼은 업데이트 안내
+    const open = on ? openStrips(s) : ['orchard'];
+    if (s && !open.includes(pick)) pick = [wantPick, shown].find(k => open.includes(k)) || 'orchard';
+    for (const t of ['today', 'field', 'crew']) $('tab-' + t).classList.toggle('away', !!pick && pick !== 'orchard');
+    const fk = pick || 'orchard', fi = fk === 'orchard' ? `${S}icon-plant.png` : `${S}menu-${fk}.png${V}`, ft = $('t-field');
+    ft.querySelector('span').textContent = T.w.part[fk];
+    if (ft.querySelector('img').getAttribute('src') !== fi) ft.querySelector('img').src = fi;
+    stripsN = open.length; stripBar(); $('strips').ariaLabel = T.tWork;
     keep('strips', [open, pick, shown, en], () => open.map(k => {
       const b = el('button', k === shown ? 'shown' : ''); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', k === pick);
       b.append(pic(`${S}menu-${k}.png${V}`), document.createTextNode(T.strip[k]));
       if (k === shown) b.ariaLabel = `${T.strip[k]}, ${T.shownNow}`;
-      b.onclick = () => { pick = k; renderWork(); if (index) renderScene(); }; // 아래 띠도 고른 띠 장면으로(2.3.3)
+      b.onclick = () => { pick = wantPick = k; try { localStorage.setItem('ld-pick', k); } catch (e) {} renderWork(); if (index) renderScene(); }; // 아래 띠도 고른 띠 장면으로(2.3.3)
       return b;
     }));
     const st = on && stripOf(s, pick);
-    // 열린 띠면 카드(과수원 open = 공방이 열림). 다시 고르기로 점수가 없어진 띠는 stage 0 = 쉬는 중
+    // 열린 띠면 카드(과수원 open = 공방이 열림). 다시 고르기로 점수가 없어진 띠는 stage 0 = 쉬는 중. 띠 카드는 오늘·밭·일꾼 셋으로 나뉜다
     const C = on && s.coop;
-    keep('strip', [st, shown, on && (s.prices || {})[pick], on && (s.neighbors || []).map(n => [n.id, n.look?.career]), on && s.wallet, C && C.premiums, C && C.loan.overdue, en], () => st && st.open ? stripCards(s, st) : []);
-    keep('career', [on && s.career, on && s.wallet, on && s.forecast, on && s.strips.map(x => [x?.lock, x?.value]), open, ui, en], () => on ? careerPanel(s, open) : []);
+    let parts = null; const part = k => (parts ||= st && st.open ? stripCards(s, st) : {})[k] || [];
+    const sig = [st, shown, on && (s.prices || {})[pick], on && (s.neighbors || []).map(n => [n.id, n.look?.career]), on && s.wallet, C && C.premiums, C && C.loan.overdue, en];
+    keep('strip', sig, () => part('today')); keep('strip-field', sig, () => part('field')); keep('strip-crew', sig, () => part('crew'));
+    keep('today-x', [on && s.forecast, on && s.strips.map(x => x?.value), open, en], () => on ? todayPanel(s, open) : []);
+    // 마을: [직군 · 조합 · 장터 · 이웃]. 조합·장터는 직군을 고른 뒤에만(맥 사이드바와 같다)
+    const c = on && s.career || {}, due = c.unspent > 0 || !!c.due;
+    const towns = on ? ['career', ...(C ? ['coop'] : []), ...(c.main ? ['market'] : []), 'nb'] : ['nb'];
+    if (!towns.includes(town)) town = towns[0];
+    const TN = {career: T.careerH, coop: T.w.coopH, market: T.marketH, nb: T.tNb};
+    $('t-town').classList.toggle('dot', due); $('t-town').ariaLabel = due ? `${T.tTown}, ${c.unspent > 0 ? T.w.pointsH(c.unspent) : T.w.gateOpen}` : '';
+    if (!$('t-town').ariaLabel) $('t-town').removeAttribute('aria-label');
+    $('town-seg').hidden = towns.length < 2; $('town-seg').ariaLabel = T.tTown;
+    keep('town-seg', [towns, town, due, c.main || c.wish, en], () => towns.map(k => {
+      const b = el('button', k === 'career' && due ? 'dot' : '', TN[k]); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', k === town);
+      b.prepend(pic(k === 'career' ? `${S}career-emblem-${c.main || c.wish || 'orchard'}.png${V}` : `${S}${{coop: 'coop-coin', market: 'market-sign', nb: 'note-mailbox-flag'}[k]}.png${V}`));
+      b.onclick = () => { town = k; try { localStorage.setItem('ld-town', k); } catch (e) {} renderWork(); scrollTo(0, 0); };
+      return b;
+    }));
+    for (const k of ['career', 'coop', 'market']) $(k).hidden = town !== k;
+    $('town-nb').hidden = town !== 'nb';
+    keep('career', [on && s.career, on && s.wallet, on && s.strips.map(x => [x?.lock, x?.value]), ui, en], () => on ? careerPanel(s) : []);
     keep('coop', [C, on && s.wallet, on && s.career?.main, en], () => C ? coopPanels(s) : []);
     keep('market', [on && s.stall, on && s.notes, on && s.market, C, on && s.wallet, on && s.career?.main, ui, en], () => on ? marketPanels(s) : []);
   }
@@ -2341,7 +2387,7 @@
   /** 확인 창(대표 결정 P4: 직군 고르기·다시 고르기·빌리기에만) */
   const ask = (title, msg, ok, cmd) => sheet(title, () => [msg && el('p', '', msg), row(act(ok, () => { closeSheet(); send(cmd); }))]);
 
-  /** 띠 하나: 머리(창고·시세·모두 팔기·보험·보내기) · 추천 · 칸 · 해금 · 보관함 · 창고 · 일꾼 */
+  /** 띠 하나: {today: 머리(창고·시세·모두 팔기·보험·보내기) · 추천, field: 칸 · 해금 · 보관함, crew: 일꾼 · 창고}. 과수원 공방은 지금처럼 오늘에 전부 */
   function stripCards(s, st) {
     const k = st.kind, ins = st.insured || [], P = (s.prices || {})[k], cap = Math.max(1, st.cap || 0), w = s.wallet || 0, shop = k === 'orchard';
     const prem = (s.coop?.premiums || {})[k] || {}, overdue = !!s.coop?.loan?.overdue;
@@ -2370,8 +2416,8 @@
       const can = n => !n.look?.career || (n.look.career.main === k && n.look.career.stage >= 4), nbs = (s.neighbors || []).filter(can);
       p.append(row(act(T.share[k], () => choose(T.shareWho, nbs.map(n => ({label: nameOf(n), value: n.id})), target => send({action: 'farm_share', strip: k, target})), {cls: 'y', off: !nbs.length || !(st.keep > 0)}))); // 보관함이 비면 보낼 것이 없다
     }
-    const out = [p];
-    if (!st.plots) return out; // 2.3.2 이하 앱
+    const out = [p], field = [];
+    if (!st.plots) { const old = () => shop ? [] : [panel(el('p', 'note', T.update233))]; return {today: out, field: old(), crew: old()}; } // 2.3.2 이하 앱
     if (st.suggest) { // 맥 FarmSuggestion
       const g = st.suggest, title = g.what === 'plant' ? T.w.putIn(g.plot + 1, cropName(g.item)) : g.what === 'unlock' ? T.w.unlockX(cropName(g.item))
         : g.what === 'worker' ? T.roles[g.role] || g.role : shop ? T.w.growShop : T.w.growCrate;
@@ -2386,21 +2432,21 @@
         item => send({action: 'farm_buy', strip: k, what: 'plant', plot: i, item}));
       plots.append(irow(x.c ? itemPic(x.c) : null, name, slotText(x), act(x.c ? T.w.swap : T.w.put, go, {cls: 'y', off: !opts.length || !!x.order})));
     });
-    out.push(plots);
+    field.push(plots);
     const lk = st.unlocks || [], now = lk.filter(u => u.stage <= st.stage), next = lk.find(u => u.stage > st.stage);
-    if (lk.length) out.push(panel(head(T.w.unlockH), ...now.map(u => irow(itemPic(u.item), cropName(u.item), u.need && T.w.need(cropName(u.need.item), u.need.n, u.need.have),
+    if (lk.length) field.push(panel(head(T.w.unlockH), ...now.map(u => irow(itemPic(u.item), cropName(u.item), u.need && T.w.need(cropName(u.need.item), u.need.n, u.need.have),
       wbtn(T.w.unlock, u.cost ?? null, {action: 'farm_buy', strip: k, what: 'unlock', item: u.item}))),
       next && el('p', 'note', T.w.opensAt(next.stage, lk.filter(u => u.stage === next.stage).map(u => cropName(u.item)).join('·')))));
-    if ((st.kept || []).length) out.push(panel(head(T.w.keptH(st.keep, st.keepCap)), ...st.kept.map(a => a.item === 'fry'
+    if ((st.kept || []).length) field.push(panel(head(T.w.keptH(st.keep, st.keepCap)), ...st.kept.map(a => a.item === 'fry'
       ? irow(itemPic(a.item), T.w.nOf(cropName(a.item), a.n), T.w.releaseOnly, act(T.w.release, {action: 'farm_release', item: 'fry'}, {cls: 'y'}))
       : irow(itemPic(a.item), T.w.nOf(cropName(a.item), a.n), T.w.bonus(a.bonus), act(T.w.sellV(short(a.value || 0)), {action: 'sell_kept', item: a.item}, {cls: 'y', off: !(a.value > 0)})))));
     const items = Object.entries(st.items || {}).sort((a, b) => ORDER2.indexOf(a[0]) - ORDER2.indexOf(b[0])).map(([c, n]) => `${cropName(c)} ${fmt(n)}`).join(' · ');
-    out.push(panel(head(shop ? T.w.shelfH : T.crate), irow(null, T.w.crateLv(st.crateLevel, fmt(st.cap || 0)), items,
-      wbtn(st.crateCost == null ? T.maxed : T.w.grow, st.crateCost ?? null, {action: 'farm_buy', strip: k, what: 'crate'}))));
-    out.push(panel(head(shop ? T.w.shopCrew : T.w.crew), ...(st.workers || []).map(h => irow(null, T.roles[h.role] || h.role, h.level ? T.level(h.level, FARM_MAX) : T.w.noneYet,
+    const crate = panel(head(shop ? T.w.shelfH : T.crate), irow(null, T.w.crateLv(st.crateLevel, fmt(st.cap || 0)), items,
+      wbtn(st.crateCost == null ? T.maxed : T.w.grow, st.crateCost ?? null, {action: 'farm_buy', strip: k, what: 'crate'})));
+    const crew = panel(head(shop ? T.w.shopCrew : T.w.crew), ...(st.workers || []).map(h => irow(null, T.roles[h.role] || h.role, h.level ? T.level(h.level, FARM_MAX) : T.w.noneYet,
       wbtn(h.cost == null && h.level >= FARM_MAX ? T.maxed : h.level ? T.w.levelUp : T.hireBtn, h.cost ?? null, {action: 'farm_buy', strip: k, what: 'worker', role: h.role}))),
-      el('p', 'note', T.w.crewNote)));
-    return out;
+      el('p', 'note', T.w.crewNote));
+    return shop ? {today: [...out, ...field, crate, crew]} : {today: out, field, crew: [crew, crate]};
   }
   const slotText = x => { const t = T.w.slot; if (!x.c) return t.empty;
     switch (x.st) {
@@ -2408,19 +2454,24 @@
       case 'wait': return x.cap != null ? t.waitN(x.n) : t.wait; case 'full': return t.full(x.n); case 'make': return t.make(x.pct || 0, x.n); default: return '';
     } };
 
-  /** 직군 줄 + (관문 전) 뜻 세우기·직군 고르기 / (고른 뒤) 전문 점수 카드·다시 고르기 */
-  function careerPanel(s, open) {
-    const c = s.career || {}, pts = c.points || {}, job = c.main || c.wish, master = /-(master|solo)$/.test(c.title || '');
-    const p = panel(job ? line(master ? 'career-rosette' : `career-emblem-${job}`, titleText(c.title) || T.careerH, 'px') : el('b', 'px', titleText(c.title) || T.careerH));
-    if (c.main) p.append(el('p', 'note num', [T.mainLine(jobName(c.main), pts[c.main] || 0), c.sub && T.subLine(jobName(c.sub), pts[c.sub] || 0)].filter(Boolean).join(' · ')));
-    else { const g = s.strips.find(x => x && !x.open && Array.isArray(x.lock))?.lock; if (g) p.append(el('p', 'note num', T.gateLine(g.filter(x => x.have >= x.need).length, g.length))); }
-    if (c.main || s.wallet > 0) p.append(line('coop-coin', T.wallet(fmt(s.wallet || 0))));
+  /** 오늘 탭 끝(띠와 무관, 열린 띠 모두): 예보 · 열린 띠 모두 팔기 */
+  function todayPanel(s, open) {
+    const p = panel();
     for (const f of s.forecast || []) { // 열린 띠에 닿는 예보만
       const w = (f.strips || []).filter(k => open.includes(k)); if (!w.length) continue;
       p.append(line(`farm-fx-${FX[f.kind] || 'forecast'}-0`, T.fcLine(T.days[f.day] || T.days[2], T.disasters[f.kind] || f.kind, w.map(jobName).join('·')), 'why'));
     }
     const all = s.strips.reduce((a, x) => a + (x?.value || 0), 0);
     if (s.strips.some(x => x?.value != null)) p.append(row(act(T.w.sellAll(short(all)), {action: 'sell_farms'}, {cls: 'y', off: !(all > 0)})));
+    return p.children.length ? [p] : [];
+  }
+  /** 마을 › 직군: 직군 줄 + (관문 전) 뜻 세우기·직군 고르기 / (고른 뒤) 전문 점수 카드·다시 고르기 */
+  function careerPanel(s) {
+    const c = s.career || {}, pts = c.points || {}, job = c.main || c.wish, master = /-(master|solo)$/.test(c.title || '');
+    const p = panel(job ? line(master ? 'career-rosette' : `career-emblem-${job}`, titleText(c.title) || T.careerH, 'px') : el('b', 'px', titleText(c.title) || T.careerH));
+    if (c.main) p.append(el('p', 'note num', [T.mainLine(jobName(c.main), pts[c.main] || 0), c.sub && T.subLine(jobName(c.sub), pts[c.sub] || 0)].filter(Boolean).join(' · ')));
+    else { const g = s.strips.find(x => x && !x.open && Array.isArray(x.lock))?.lock; if (g) p.append(el('p', 'note num', T.gateLine(g.filter(x => x.have >= x.need).length, g.length))); }
+    if (c.main || s.wallet > 0) p.append(line('coop-coin', T.wallet(fmt(s.wallet || 0))));
     const out = [p];
     if (!c.main) {
       if (c.due) out.push(panel(head(T.w.gateOpen), el('p', 'note', T.w.gateOpenText), row(act(T.w.chooseBtn, () => pickCareer()))));
@@ -2469,7 +2520,7 @@
 
   /** 조합(맥 CoopView): 권하는 대출 · 피해 카드 · 보험 자동 갱신 · 대출 · 납품 */
   function coopPanels(s) {
-    const c = s.coop, L = c.loan, w = s.wallet || 0, t = nowSec(), out = [el('h2', 'sec px', T.w.coopH)];
+    const c = s.coop, L = c.loan, w = s.wallet || 0, t = nowSec(), out = [];
     const borrow = n => ask(T.w.borrowQ(short(n)), T.w.borrowNote, T.w.borrowV(short(n)), {action: 'coop_borrow', n});
     if (L.offer) out.push(panel(line('coop-coin', T.w.offer[L.offer] || '', 'px'), el('p', 'note', T.w.offerText[L.offer] || ''),
       row(act(T.w.borrowV(short(L.limit)), () => borrow(L.limit), {cls: 'y', off: L.limit < 1}), act(T.w.noThanks, {action: 'coop_dismiss', what: 'loan'}, {cls: 'y'}))));
@@ -2498,7 +2549,7 @@
 
   /** 장터(맥 MarketView): 재료 선반 · 행상 · [둘러보기 | 내 진열 | 공판장] · 내 구해요. 둘러보기·진열·구해요는 Mac 이 깨어 있을 때만(지갑이 앱에 있다) */
   function marketPanels(s) {
-    const out = [el('h2', 'sec px', T.marketH)], stall = s.stall || [], M = s.market, C = s.coop, t = nowSec();
+    const out = [], stall = s.stall || [], M = s.market, C = s.coop, t = nowSec();
     if (s.notes > 0) out.push(panel(line('note-mailbox-flag', (M ? T.notesLine2 : T.notesLine)(fmt(s.notes))))); // notes = 안 본 쪽지가 있는 이웃 수
     if (!M || !C) { // 2.3.2 이하 앱: 보기만
       out.push(panel(line('market-sign', T.stallH, 'px'), ...(stall.length ? stall.map(x => line('item-' + x.item, T.stallRow(cropName(x.item), fmt(x.n), fmt(x.price)))) : [el('p', 'note', T.stallEmpty)]), el('p', 'note', T.stallMac)));
@@ -2689,11 +2740,18 @@
   };
   $('retry').onclick = refresh;
 
-  // 탭
-  const tabs = ['orchard', 'plant', 'crew', 'nb', 'col'];
-  const showTab = name => tabs.forEach(t => { $('tab-' + t).hidden = t !== name; $('t-' + t).setAttribute('aria-selected', t === name); });
+  // 탭(마지막에 본 탭·띠·마을 칸은 localStorage). 확인·캡처용 ?tab=today|field|crew|town|col(옛 orchard|plant|nb 도) · ?strip=sea · ?town=coop
+  const tabs = ['today', 'field', 'crew', 'town', 'col'], OLD = {orchard: 'today', plant: 'field', nb: 'town'};
+  const showTab = name => {
+    tab = name; tabs.forEach(t => { $('tab-' + t).hidden = t !== name; $('t-' + t).setAttribute('aria-selected', t === name); }); stripBar();
+    try { localStorage.setItem('ld-tab', name); } catch (e) {}
+  };
   tabs.forEach(t => { $('t-' + t).onclick = () => { showTab(t); scrollTo(0, 0); }; }); // 장면은 아래에 고정이라 탭을 바꿔도 그대로
-  const startTab = new URLSearchParams(location.search).get('tab'); // 확인·캡처용 ?tab=plant|crew|nb|col
+  const qs = new URLSearchParams(location.search), qt = qs.get('tab');
+  if (qt === 'nb') town = 'nb';
+  if (qs.get('town')) town = qs.get('town');
+  if (qs.get('strip')) wantPick = qs.get('strip');
+  let startTab = OLD[qt] || qt; try { startTab = startTab || localStorage.getItem('ld-tab'); } catch (e) {}
   if (tabs.includes(startTab)) showTab(startTab);
 
   // 마지막으로 본 과수원을 바로 그린다(서버가 Mac 을 기다리는 동안 빈 화면이 없게). 타임라인이 있어 숫자는 계속 흐른다.

@@ -1,5 +1,55 @@
 [
   {
+    "version": "2.3.4",
+    "date": "2026-11-28",
+    "url": "https://github.com/cbs9799/lemondesk-web/releases/download/v2.3.4/LemonDesk-2.3.4.dmg",
+    "notes": {
+      "ko": [
+        "게임 안내서가 생겼어요. '처음이라면'부터 직군·일터·조합·재해와 보험·장터·이웃·레몬 공방까지, 실제 화면 그림과 함께 '이게 뭐예요 · 왜 해요 · 이렇게 하면 좋아요'로 쉽게 알려 줘요",
+        "화면 제목 옆 (?)를 누르면 안내서의 그 부분이 바로 열려요. 관리 창 사이드바 맨 아래와 메뉴에서도 열 수 있어요",
+        "추천 옆에 이유가 붙어요. 본전까지 걸리는 시간, 재해 보험이 없는 일터, 거의 찬 보관함을 알려 줘요",
+        "과수원 직군의 공방은 '과수원 공방', 나무와 친구를 만드는 곳은 '레몬 공방'으로 이름을 나눠 덜 헷갈려요",
+        "폰으로 보기에서도 모음 탭에서 안내서를 보고, 화면마다 (?)로 설명을 열 수 있어요"
+      ],
+      "en": [
+        "A new in-game Guide explains everything from Getting Started to careers, workplaces, the co-op, disasters and insurance, the market, neighbors, and the Lemon Workshop, with real screenshots and simple 'What is it · Why · How to do it well' notes",
+        "Click the (?) next to a screen's title to jump straight to that part of the Guide. You can also open it from the bottom of the sidebar or the menu",
+        "Recommendations now come with a reason: how long until it pays for itself, workplaces without disaster insurance, and a nearly full keep box",
+        "The career workshop is now called the Orchard Workshop and the place where you make trees and friends is the Lemon Workshop, so they're easier to tell apart",
+        "Phone View has the Guide too, in the Book tab, and (?) buttons on each screen"
+      ]
+    },
+    "shots": [
+      {
+        "src": "updates/2.3.4/guide.webp",
+        "dark": "updates/2.3.4/guide-dark.webp",
+        "w": 1520,
+        "h": 1304,
+        "title": {
+          "ko": "게임 안내서",
+          "en": "Game Guide"
+        },
+        "text": {
+          "ko": "그림과 함께 '이게 뭐예요 · 왜 해요 · 이렇게 하면 좋아요'로 알려 줘요.",
+          "en": "Real screenshots with 'What is it · Why · How to do it well' notes."
+        }
+      },
+      {
+        "src": "updates/2.3.4/tips.webp",
+        "w": 1200,
+        "h": 540,
+        "title": {
+          "ko": "추천의 이유",
+          "en": "Why it's recommended"
+        },
+        "text": {
+          "ko": "본전까지 걸리는 시간과 재해 보험이 없는 일터를 알려 줘요.",
+          "en": "See how long until it pays off and which workplaces lack insurance."
+        }
+      }
+    ]
+  },
+  {
     "version": "2.3.3",
     "date": "2026-11-27",
     "url": "https://github.com/cbs9799/lemondesk-web/releases/download/v2.3.3/LemonDesk-2.3.3.dmg",

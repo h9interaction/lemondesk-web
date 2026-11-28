@@ -49,6 +49,12 @@
   .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 16.5px; }
   .brand img { width: 26px; height: 26px; border-radius: 6px; image-rendering: auto; }
   .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--page-soft); }
+  /* 2.3.3 맥 관리 창 사이드바처럼 직군을 고른 뒤엔 레몬 코인·조합 코인을 늘 위에(짧게, 정확한 값은 띠 오늘·조합 칸) */
+  .purse { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font-size: 14px; color: var(--page-ink); white-space: nowrap; }
+  .purse img { width: 14px; height: 13px; }
+  header.top:has(#purse:not([hidden])) .brand { font-size: 0; gap: 0; } /* 코인이 보이면 이름 글자는 빼고 아이콘만(한 줄에) */
+  header.top:has(#purse:not([hidden])) .chip { white-space: nowrap; }
+  .purse img + img, .purse span + img { margin-left: 6px; }
   .chip::before { content: ""; width: 8px; height: 8px; background: #A89A78; }
   .chip.on::before { background: #58B02C; }
 
@@ -253,6 +259,7 @@
 <div class="wrap">
   <header class="top">
     <span class="brand px"><img src="sprites/icon-64.png" alt="" width="26" height="26">Lemon Desk</span>
+    <span class="purse px num" id="purse" role="status" hidden></span>
     <span class="chip" id="chip" hidden></span>
   </header>
 
@@ -2298,6 +2305,13 @@
     const k = jobName(m[2]); return m[1] ? T.titles.wish(k) : m[3] === 'master' ? T.titles.master(k) : m[3] === 'solo' ? T.titles.solo(k) : T.titles.stage(k, m[3]);
   }
   // 2.3.x 폰 IA(docs/research/phone-ia-2.3.x.md): 아래 탭 오늘·밭·일꾼은 위 띠(pick)를 따라가고, 직군·조합·장터·이웃은 마을 안쪽 칸(town)
+  function renderPurse() {
+    const s = state(), on = !!s && v20() && !!(s.career?.main || s.wallet > 0), p = $('purse');
+    p.hidden = !on; if (!on) return;
+    const n = el('span', '', short(s.coins || 0)), m = el('span', '', short(s.wallet || 0));
+    p.replaceChildren(coin(), n, (() => { const i = el('img'); i.src = `${S}coop-coin.png${V}`; i.alt = ''; return i; })(), m);
+    p.ariaLabel = `${fmt(s.coins || 0)} ${en ? 'coins' : '코인'}, ${T.wallet(fmt(s.wallet || 0))}`;
+  }
   function renderWork() {
     const s = state(), on = !!s && v20(), shown = on ? s.shown : null;
     // 2.0 전 앱·직군 전(과수원뿐)은 띠 탭 없이 과수원. 2.3.2 이하(칸 정보 없음)는 띠 탭과 옛 띠 카드(오늘), 밭·일꾼은 업데이트 안내
@@ -2395,6 +2409,7 @@
     if (k === s.shown) top.append(el('span', 'note', T.shownNow));
     const bar = el('div', 'bar'), fill = el('i'); fill.style.width = `${Math.min(100, 100 * (st.crate || 0) / cap)}%`; bar.append(fill); bar.ariaHidden = 'true';
     const p = panel(top, el('p', 'num', T.crateOf(fmt(st.crate || 0), fmt(st.cap || 0))), bar);
+    if (!shop || s.career?.main) p.append(line('coop-coin', T.wallet(fmt(w)))); // 맥 일터 머리처럼 조합 코인
     if (st.disaster) p.append(line(`farm-fx-${FX[st.disaster] || 'forecast'}-0`, T.w.nowHit(T.disasters[st.disaster] || st.disaster), 'why'));
     if (st.keep > 0) p.append(el('p', 'note num', T.keepN(fmt(st.keep))));
     if (Array.isArray(P)) p.append(el('p', 'note num', T.priceLine(...P.map(x => Math.round(x * 100)))));
@@ -2520,7 +2535,7 @@
 
   /** 조합(맥 CoopView): 권하는 대출 · 피해 카드 · 보험 자동 갱신 · 대출 · 납품 */
   function coopPanels(s) {
-    const c = s.coop, L = c.loan, w = s.wallet || 0, t = nowSec(), out = [];
+    const c = s.coop, L = c.loan, w = s.wallet || 0, t = nowSec(), out = [panel(line('coop-coin', T.wallet(fmt(w)), 'px'))];
     const borrow = n => ask(T.w.borrowQ(short(n)), T.w.borrowNote, T.w.borrowV(short(n)), {action: 'coop_borrow', n});
     if (L.offer) out.push(panel(line('coop-coin', T.w.offer[L.offer] || '', 'px'), el('p', 'note', T.w.offerText[L.offer] || ''),
       row(act(T.w.borrowV(short(L.limit)), () => borrow(L.limit), {cls: 'y', off: L.limit < 1}), act(T.w.noThanks, {action: 'coop_dismiss', what: 'loan'}, {cls: 'y'}))));
@@ -2692,7 +2707,7 @@
       $('w-h').textContent = short(s.week.harvested); $('w-s').textContent = short(s.week.sold); $('w-e').textContent = short(s.week.earned);
       $('w-more').textContent = [T.seasons[s.season], s.dex != null && s.secrets != null ? T.dex(s.dex, s.secrets) : ''].filter(Boolean).join(' · ');
     }
-    renderWork(); renderScene(); renderPlant(); renderCrew(); renderMgr(); renderSuggest(); renderFarm(); renderStand(); renderDeco(); renderMap(); renderNb(); renderRaid(); renderCol(); tick();
+    renderPurse(); renderWork(); renderScene(); renderPlant(); renderCrew(); renderMgr(); renderSuggest(); renderFarm(); renderStand(); renderDeco(); renderMap(); renderNb(); renderRaid(); renderCol(); tick();
   }
 
   let timer;
